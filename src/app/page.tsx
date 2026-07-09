@@ -9,7 +9,7 @@ export default async function Home() {
       <main className="flex flex-1 w-full max-w-3xl flex-col items-center gap-4 py-32 px-16 bg-white dark:bg-black sm:items-start">
         <p>
           This is a Super Auto Pets fangame. It has no relation to Team Wood
-          Games.
+          Games. (Test)
         </p>
         {session ? (
           <form
