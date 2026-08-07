@@ -1,0 +1,56 @@
+"use client";
+
+import Image from "next/image";
+
+type ShopItemProps = {
+  name: string;
+  sprite: string;
+  subtitle: string;
+  isSelected: boolean;
+  isFrozen: boolean;
+  onSelect: () => void;
+  onFreeze: () => void;
+  onContextMenu: (e: React.MouseEvent) => void;
+};
+
+export default function ShopItem({
+  name,
+  sprite,
+  subtitle,
+  isSelected,
+  isFrozen,
+  onSelect,
+  onFreeze,
+  onContextMenu,
+}: ShopItemProps) {
+  return (
+    <div className="relative flex flex-col items-center gap-1">
+      <button
+        onClick={onSelect}
+        onContextMenu={onContextMenu}
+        className={[
+          "w-20 h-20 rounded-xl border-2 flex flex-col items-center justify-center p-1 cursor-pointer select-none transition-all overflow-hidden",
+          isSelected
+            ? "border-amber-400 ring-2 ring-amber-400 bg-amber-50 dark:bg-amber-900/20"
+            : isFrozen
+            ? "border-blue-400 bg-blue-50 dark:bg-blue-900/30"
+            : "border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 hover:border-zinc-400",
+        ].join(" ")}
+      >
+        <div className="relative w-12 h-12">
+          <Image src={sprite} alt={name} fill className="object-contain" />
+        </div>
+        <span className="text-xs text-zinc-500 dark:text-zinc-400 leading-tight">{subtitle}</span>
+        {isFrozen && <span className="absolute top-1 right-1 text-xs text-blue-500">❄</span>}
+      </button>
+      {isSelected && (
+        <button
+          onClick={onFreeze}
+          className="absolute -bottom-6 text-xs px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-600 hover:bg-blue-200 dark:hover:bg-blue-800/40"
+        >
+          {isFrozen ? "Unfreeze" : "Freeze"}
+        </button>
+      )}
+    </div>
+  );
+}

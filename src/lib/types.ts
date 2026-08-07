@@ -32,6 +32,7 @@ export type BattleStep = {
 
 export type PetType = {
   name: string;
+  sprite: string;
   tier: number;
   baseAttack: number;
   baseHealth: number;
@@ -40,6 +41,7 @@ export type PetType = {
 
 export type FoodType = {
   name: string;
+  sprite: string;
   tier: number;
   isPerk: boolean;
   effect: { attack?: number; health?: number };

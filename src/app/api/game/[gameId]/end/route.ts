@@ -7,11 +7,26 @@ import { TURTLE_PACK_PETS } from "@/lib/pets";
 import { TURTLE_PACK_FOODS } from "@/lib/foods";
 import type { PetInstance } from "@/lib/types";
 
-const GHOST_OPPONENT: PetInstance[] = [
-  { type: "Sloth", attack: 1, health: 1, perk: null, xp: 0, level: 1 },
-  { type: "Sloth", attack: 1, health: 1, perk: null, xp: 0, level: 1 },
-  { type: "Sloth", attack: 1, health: 1, perk: null, xp: 0, level: 1 },
-];
+function buildGhostTeam(turn: number): PetInstance[] {
+  const count = turn >= 2 ? 5 : 3;
+  const sloths: PetInstance[] = Array.from({ length: count }, () => ({
+    type: "Sloth", attack: 1, health: 1, perk: null, xp: 0, level: 1,
+  }));
+
+  const bonusRounds = turn - 2;
+  for (let r = 0; r < bonusRounds; r++) {
+    // Pick 2 distinct random indices
+    const a = Math.floor(Math.random() * count);
+    let b = Math.floor(Math.random() * (count - 1));
+    if (b >= a) b++;
+    sloths[a].attack += 1;
+    sloths[a].health += 1;
+    sloths[b].attack += 1;
+    sloths[b].health += 1;
+  }
+
+  return sloths;
+}
 
 export async function POST(
   _request: Request,
@@ -34,9 +49,9 @@ export async function POST(
     return Response.json({ error: "Game state not found" }, { status: 404 });
   }
 
-  const { result, steps } = simulateBattle(state.board, GHOST_OPPONENT);
-
   const { lives, trophies, turnNumber } = state.turn;
+  const ghostTeam = buildGhostTeam(turnNumber);
+  const { result, steps } = simulateBattle(state.board, ghostTeam);
   const newLives = result === "LOSS" ? lives - 1 : lives;
   const newTrophies = result === "WIN" ? trophies + 1 : trophies;
 
@@ -50,7 +65,7 @@ export async function POST(
     const battle = await tx.battle.create({
       data: {
         gameId,
-        opponentTeam: GHOST_OPPONENT,
+        opponentTeam: ghostTeam,
         result,
         steps,
       },
