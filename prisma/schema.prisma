@@ -20,4 +20,65 @@ model User {
   name      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  games Game[]
+}
+
+enum GameStatus {
+  ACTIVE
+  WON
+  LOST
+}
+
+enum BattleResult {
+  WIN
+  DRAW
+  LOSS
+}
+
+model Game {
+  id          String     @id @default(cuid())
+  playerId    String
+  player      User       @relation(fields: [playerId], references: [id])
+  status      GameStatus @default(ACTIVE)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  turns       GameTurn[]
+  boardStates BoardState[]
+  battles     Battle[]
+}
+
+model GameTurn {
+  id         String   @id @default(cuid())
+  gameId     String
+  game       Game     @relation(fields: [gameId], references: [id])
+  turnNumber Int
+  lives      Int      @default(5)
+  trophies   Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  boardStates BoardState[]
+}
+
+model BoardState {
+  id            String   @id @default(cuid())
+  gameId        String
+  game          Game     @relation(fields: [gameId], references: [id])
+  turnId        String
+  turn          GameTurn @relation(fields: [turnId], references: [id])
+  boardState    Json
+  shopState     Json
+  goldRemaining Int
+  createdAt     DateTime @default(now())
+}
+
+model Battle {
+  id           String       @id @default(cuid())
+  gameId       String
+  game         Game         @relation(fields: [gameId], references: [id])
+  opponentTeam Json
+  result       BattleResult
+  steps        Json
+  createdAt    DateTime     @default(now())
 }
