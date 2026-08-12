@@ -12,12 +12,13 @@ export async function GET(
 
   const { gameId, battleId } = await params;
 
-  const game = await prisma.game.findUnique({ where: { id: gameId } });
+  const [game, battle] = await Promise.all([
+    prisma.game.findUnique({ where: { id: gameId } }),
+    prisma.battle.findUnique({ where: { id: battleId } }),
+  ]);
   if (!game || game.playerId !== session.user.id) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
-
-  const battle = await prisma.battle.findUnique({ where: { id: battleId } });
   if (!battle || battle.gameId !== gameId) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }

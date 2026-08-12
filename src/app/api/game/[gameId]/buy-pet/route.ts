@@ -24,11 +24,6 @@ export async function POST(
 
   const { gameId } = await params;
 
-  const game = await prisma.game.findUnique({ where: { id: gameId } });
-  if (!game || game.playerId !== session.user.id) {
-    return Response.json({ error: "Not found" }, { status: 404 });
-  }
-
   const body = await request.json().catch(() => null);
   const parsed = BuyPetSchema.safeParse(body);
   if (!parsed.success) {
@@ -36,7 +31,13 @@ export async function POST(
   }
 
   const { shopPosition, boardPosition } = parsed.data;
-  const state = await getLastBoardState(gameId);
+  const [game, state] = await Promise.all([
+    prisma.game.findUnique({ where: { id: gameId } }),
+    getLastBoardState(gameId),
+  ]);
+  if (!game || game.playerId !== session.user.id) {
+    return Response.json({ error: "Not found" }, { status: 404 });
+  }
   if (!state) {
     return Response.json({ error: "Game state not found" }, { status: 404 });
   }

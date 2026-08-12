@@ -39,12 +39,13 @@ export async function POST(
 
   const { gameId } = await params;
 
-  const game = await prisma.game.findUnique({ where: { id: gameId } });
+  const [game, state] = await Promise.all([
+    prisma.game.findUnique({ where: { id: gameId } }),
+    getLastBoardState(gameId),
+  ]);
   if (!game || game.playerId !== session.user.id) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
-
-  const state = await getLastBoardState(gameId);
   if (!state) {
     return Response.json({ error: "Game state not found" }, { status: 404 });
   }
@@ -105,5 +106,16 @@ export async function POST(
     return { battle };
   });
 
-  return Response.json({ result, battleId: battle.id });
+  return Response.json({
+    result,
+    battleId: battle.id,
+    nextState: {
+      board: state.board,
+      shop: nextShop,
+      gold: 10,
+      lives: newLives,
+      trophies: newTrophies,
+      turn: turnNumber + 1,
+    },
+  });
 }

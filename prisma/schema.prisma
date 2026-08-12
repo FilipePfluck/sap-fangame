@@ -47,6 +47,8 @@ model Game {
   turns       GameTurn[]
   boardStates BoardState[]
   battles     Battle[]
+
+  @@index([playerId])
 }
 
 model GameTurn {
@@ -59,6 +61,8 @@ model GameTurn {
   createdAt  DateTime @default(now())
 
   boardStates BoardState[]
+
+  @@index([gameId])
 }
 
 model BoardState {
@@ -71,6 +75,8 @@ model BoardState {
   shopState     Json
   goldRemaining Int
   createdAt     DateTime @default(now())
+
+  @@index([gameId, createdAt(sort: Desc)])
 }
 
 model Battle {
@@ -81,4 +87,6 @@ model Battle {
   result       BattleResult
   steps        Json
   createdAt    DateTime     @default(now())
+
+  @@index([gameId])
 }

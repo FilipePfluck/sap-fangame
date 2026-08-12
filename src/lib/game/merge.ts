@@ -10,7 +10,7 @@ export function mergePets(a: PetInstance, b: PetInstance): PetInstance {
   if (a.type !== b.type) {
     throw new Error("Cannot merge pets of different types");
   }
-  const newXp = a.xp + 1;
+  const newXp = a.xp + b.xp;
   return {
     type: a.type,
     attack: Math.max(a.attack, b.attack) + 1,

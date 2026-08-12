@@ -3,10 +3,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Board, ShopState, PetInstance } from "@/lib/types";
+import { TURTLE_PACK_PETS } from "@/lib/pets";
+import { TURTLE_PACK_FOODS } from "@/lib/foods";
+import { mergePets, openSlot, applyReorder } from "@/lib/game/merge";
 import { PET_SPRITES, FOOD_SPRITES } from "@/lib/sprites";
 import ShopItem from "./ShopItem";
 import BoardSlot from "./BoardSlot";
 import BattleView from "./BattleView";
+
+const PET_MAP = Object.fromEntries(TURTLE_PACK_PETS.map((p) => [p.name, p]));
+const FOOD_MAP = Object.fromEntries(TURTLE_PACK_FOODS.map((f) => [f.name, f]));
 
 type BattleData = {
   opponentTeam: PetInstance[];
@@ -16,6 +22,15 @@ type BattleData = {
     defenderTeam: PetInstance[];
     description: string;
   }>;
+};
+
+type NextState = {
+  board: Board;
+  shop: ShopState;
+  gold: number;
+  lives: number;
+  trophies: number;
+  turn: number;
 };
 
 type GameClientProps = {
@@ -43,9 +58,9 @@ export default function GameClient({
   const [board, setBoard] = useState<Board>(initialBoard);
   const [shop, setShop] = useState<ShopState>(initialShop);
   const [gold, setGold] = useState(initialGold);
-  const [lives] = useState(initialLives);
-  const [trophies] = useState(initialTrophies);
-  const [turn] = useState(initialTurn);
+  const [lives, setLives] = useState(initialLives);
+  const [trophies, setTrophies] = useState(initialTrophies);
+  const [turn, setTurn] = useState(initialTurn);
 
   const [selectedItem, setSelectedItem] = useState<{
     kind: "pet" | "food";
@@ -60,6 +75,7 @@ export default function GameClient({
   );
 
   const [battleData, setBattleData] = useState<BattleData | null>(null);
+  const [nextState, setNextState] = useState<NextState | null>(null);
   const [gameWon, setGameWon] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -109,38 +125,144 @@ export default function GameClient({
         setError("Select a pet to feed");
         return;
       }
-      // Buy mode: place shop item onto board
-      const endpoint = selectedItem.kind === "pet" ? "buy-pet" : "buy-food";
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/game/${gameId}/${endpoint}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ shopPosition: selectedItem.index, boardPosition }),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          setError(data.error ?? "Something went wrong");
-          return;
-        }
-        setBoard(data.board);
-        setShop(data.shop);
-        setGold(data.gold);
-        setSelectedItem(null);
-      } finally {
-        setLoading(false);
+
+      if (selectedItem.kind === "pet") {
+        await handleBuyPet(selectedItem.index, boardPosition);
+      } else {
+        await handleBuyFood(selectedItem.index, boardPosition);
       }
     } else {
-      // Select/deselect a board pet for selling/moving/merging
       const pet = board[boardPosition];
       if (!pet) return;
       setSelectedBoardIndex((prev) => (prev === boardPosition ? null : boardPosition));
     }
   }
 
+  async function handleBuyPet(shopPosition: number, boardPosition: number) {
+    if (gold < 3) { setError("Not enough gold"); return; }
+
+    const shopPet = shop.shopPets[shopPosition];
+    if (!shopPet) return;
+    const petDef = PET_MAP[shopPet.type];
+    if (!petDef) return;
+
+    const freshPet: PetInstance = {
+      type: petDef.name,
+      attack: petDef.baseAttack,
+      health: petDef.baseHealth,
+      perk: null,
+      xp: 1,
+      level: 1,
+    };
+
+    const occupant = board[boardPosition];
+    let optimisticBoard: Board = [...board];
+    if (occupant === null) {
+      optimisticBoard[boardPosition] = freshPet;
+    } else if (occupant.type === shopPet.type) {
+      optimisticBoard[boardPosition] = mergePets(occupant, freshPet);
+    } else {
+      const shifted = openSlot(board, boardPosition);
+      if (!shifted) { setError("Board is full"); return; }
+      optimisticBoard = shifted;
+      optimisticBoard[boardPosition] = freshPet;
+    }
+
+    const newShopPets = [...shop.shopPets];
+    newShopPets.splice(shopPosition, 1);
+    const optimisticShop: ShopState = { shopPets: newShopPets, shopFoods: shop.shopFoods };
+
+    const prevBoard = board, prevShop = shop, prevGold = gold;
+    setBoard(optimisticBoard);
+    setShop(optimisticShop);
+    setGold(gold - 3);
+    setSelectedItem(null);
+    setLoading(true);
+
+    try {
+      const res = await fetch(`/api/game/${gameId}/buy-pet`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shopPosition, boardPosition }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setBoard(prevBoard); setShop(prevShop); setGold(prevGold);
+        setError(data.error ?? "Something went wrong");
+        return;
+      }
+      setBoard(data.board as Board);
+      setShop(data.shop as ShopState);
+      setGold(data.gold);
+    } catch {
+      setBoard(prevBoard); setShop(prevShop); setGold(prevGold);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleBuyFood(shopPosition: number, boardPosition: number) {
+    if (gold < 3) { setError("Not enough gold"); return; }
+
+    const shopFood = shop.shopFoods[shopPosition];
+    if (!shopFood) return;
+    const foodDef = FOOD_MAP[shopFood.type];
+    if (!foodDef) return;
+
+    const pet = board[boardPosition];
+    if (!pet) return;
+
+    const updatedPet: PetInstance = {
+      ...pet,
+      attack: pet.attack + (foodDef.effect.attack ?? 0),
+      health: pet.health + (foodDef.effect.health ?? 0),
+      perk: foodDef.isPerk ? foodDef.name : pet.perk,
+    };
+    const optimisticBoard: Board = [...board];
+    optimisticBoard[boardPosition] = updatedPet;
+
+    const newShopFoods = [...shop.shopFoods];
+    newShopFoods.splice(shopPosition, 1);
+    const optimisticShop: ShopState = { shopPets: shop.shopPets, shopFoods: newShopFoods };
+
+    const prevBoard = board, prevShop = shop, prevGold = gold;
+    setBoard(optimisticBoard);
+    setShop(optimisticShop);
+    setGold(gold - 3);
+    setSelectedItem(null);
+    setLoading(true);
+
+    try {
+      const res = await fetch(`/api/game/${gameId}/buy-food`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shopPosition, boardPosition }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setBoard(prevBoard); setShop(prevShop); setGold(prevGold);
+        setError(data.error ?? "Something went wrong");
+        return;
+      }
+      setBoard(data.board as Board);
+      setShop(data.shop as ShopState);
+      setGold(data.gold);
+    } catch {
+      setBoard(prevBoard); setShop(prevShop); setGold(prevGold);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleMove(targetPosition: number) {
     if (selectedBoardIndex === null) return;
+
+    const optimisticBoard = applyReorder(board, selectedBoardIndex, targetPosition);
+    const prevBoard = board;
+    setBoard(optimisticBoard);
+    setSelectedBoardIndex(null);
     setLoading(true);
+
     try {
       const res = await fetch(`/api/game/${gameId}/reorder`, {
         method: "POST",
@@ -149,11 +271,13 @@ export default function GameClient({
       });
       const data = await res.json();
       if (!res.ok) {
+        setBoard(prevBoard);
         setError(data.error ?? "Something went wrong");
         return;
       }
-      setBoard(data.board);
-      setSelectedBoardIndex(null);
+      setBoard(data.board as Board);
+    } catch {
+      setBoard(prevBoard);
     } finally {
       setLoading(false);
     }
@@ -161,7 +285,21 @@ export default function GameClient({
 
   async function handleMerge(targetPosition: number) {
     if (selectedBoardIndex === null) return;
+
+    const petFrom = board[selectedBoardIndex];
+    const petTo = board[targetPosition];
+    if (!petFrom || !petTo) return;
+
+    const merged = mergePets(petFrom, petTo);
+    const optimisticBoard: Board = [...board];
+    optimisticBoard[targetPosition] = merged;
+    optimisticBoard[selectedBoardIndex] = null;
+
+    const prevBoard = board;
+    setBoard(optimisticBoard);
+    setSelectedBoardIndex(null);
     setLoading(true);
+
     try {
       const res = await fetch(`/api/game/${gameId}/merge`, {
         method: "POST",
@@ -170,11 +308,13 @@ export default function GameClient({
       });
       const data = await res.json();
       if (!res.ok) {
+        setBoard(prevBoard);
         setError(data.error ?? "Something went wrong");
         return;
       }
-      setBoard(data.board);
-      setSelectedBoardIndex(null);
+      setBoard(data.board as Board);
+    } catch {
+      setBoard(prevBoard);
     } finally {
       setLoading(false);
     }
@@ -182,7 +322,20 @@ export default function GameClient({
 
   async function handleSellPet() {
     if (selectedBoardIndex === null) return;
+
+    const pet = board[selectedBoardIndex];
+    if (!pet) return;
+
+    const goldGain = pet.level;
+    const optimisticBoard: Board = [...board];
+    optimisticBoard[selectedBoardIndex] = null;
+
+    const prevBoard = board, prevGold = gold;
+    setBoard(optimisticBoard);
+    setGold(gold + goldGain);
+    setSelectedBoardIndex(null);
     setLoading(true);
+
     try {
       const res = await fetch(`/api/game/${gameId}/sell-pet`, {
         method: "POST",
@@ -191,12 +344,14 @@ export default function GameClient({
       });
       const data = await res.json();
       if (!res.ok) {
+        setBoard(prevBoard); setGold(prevGold);
         setError(data.error ?? "Something went wrong");
         return;
       }
-      setBoard(data.board);
+      setBoard(data.board as Board);
       setGold(data.gold);
-      setSelectedBoardIndex(null);
+    } catch {
+      setBoard(prevBoard); setGold(prevGold);
     } finally {
       setLoading(false);
     }
@@ -218,13 +373,13 @@ export default function GameClient({
         setError(data.error ?? "Something went wrong");
         return;
       }
-      setShop(data.shop);
+      setShop(data.shop as ShopState);
       setGold(data.gold);
       setFrozenPets(
-        new Set(data.shop.shopPets.flatMap((p: { frozen: boolean }, i: number) => (p.frozen ? [i] : [])))
+        new Set((data.shop as ShopState).shopPets.flatMap((p, i) => (p.frozen ? [i] : [])))
       );
       setFrozenFoods(
-        new Set(data.shop.shopFoods.flatMap((f: { frozen: boolean }, i: number) => (f.frozen ? [i] : [])))
+        new Set((data.shop as ShopState).shopFoods.flatMap((f, i) => (f.frozen ? [i] : [])))
       );
     } finally {
       setLoading(false);
@@ -246,6 +401,7 @@ export default function GameClient({
       );
       const battle = await watchRes.json();
       setBattleData(battle);
+      setNextState(endData.nextState ?? null);
       setGameWon(endData.result === "WIN" && trophies + 1 >= 10);
       setPhase("battle");
     } finally {
@@ -254,7 +410,23 @@ export default function GameClient({
   }
 
   function handleBackToShop() {
-    router.refresh();
+    if (nextState && nextState.lives > 0) {
+      setBoard(nextState.board as Board);
+      setShop(nextState.shop as ShopState);
+      setGold(nextState.gold);
+      setLives(nextState.lives);
+      setTrophies(nextState.trophies);
+      setTurn(nextState.turn);
+      setFrozenPets(new Set());
+      setFrozenFoods(new Set());
+      setBattleData(null);
+      setNextState(null);
+      setSelectedItem(null);
+      setSelectedBoardIndex(null);
+      setPhase("shop");
+    } else {
+      router.refresh();
+    }
   }
 
   const hasShopSelection = selectedItem !== null;

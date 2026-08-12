@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import type { PetInstance } from "@/lib/types";
+import { computeLevel } from "@/lib/game/merge";
 
 type BoardSlotProps = {
   pet: PetInstance | null;
@@ -29,7 +30,7 @@ export default function BoardSlot({ pet, sprite, isSelected, isTargetable, onCli
       {pet && sprite ? (
         <>
           <span className="text-xs text-zinc-400 dark:text-zinc-500">
-            Lv{pet.level} · {pet.xp}xp
+            Lv{computeLevel(pet.xp)} · {pet.xp}xp
           </span>
           <div className="relative w-10 h-10">
             <Image src={sprite} alt={pet.type} fill className="object-contain" />
