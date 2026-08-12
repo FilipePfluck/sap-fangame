@@ -2,8 +2,9 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { TURTLE_PACK_PETS } from "@/lib/pets";
+import { mergePets, openSlot } from "@/lib/game/merge";
 import { z } from "zod";
-import type { Board, ShopState } from "@/lib/types";
+import type { Board, PetInstance, ShopState } from "@/lib/types";
 
 const BuyPetSchema = z.object({
   shopPosition: z.number().int().min(0).max(4),
@@ -44,10 +45,6 @@ export async function POST(
     return Response.json({ error: "Not enough gold" }, { status: 400 });
   }
 
-  if (state.board[boardPosition] !== null) {
-    return Response.json({ error: "Board position is occupied" }, { status: 400 });
-  }
-
   const shopPet = state.shop.shopPets[shopPosition];
   if (!shopPet) {
     return Response.json({ error: "Invalid shop position" }, { status: 400 });
@@ -58,15 +55,30 @@ export async function POST(
     return Response.json({ error: "Unknown pet type" }, { status: 400 });
   }
 
-  const newBoard: Board = [...state.board];
-  newBoard[boardPosition] = {
+  const freshPet: PetInstance = {
     type: petDef.name,
     attack: petDef.baseAttack,
     health: petDef.baseHealth,
     perk: null,
-    xp: 0,
+    xp: 1,
     level: 1,
   };
+
+  const occupant = state.board[boardPosition];
+  let newBoard: Board = [...state.board];
+
+  if (occupant === null) {
+    newBoard[boardPosition] = freshPet;
+  } else if (occupant.type === shopPet.type) {
+    newBoard[boardPosition] = mergePets(occupant, freshPet);
+  } else {
+    const shifted = openSlot(state.board, boardPosition);
+    if (!shifted) {
+      return Response.json({ error: "Board is full" }, { status: 400 });
+    }
+    newBoard = shifted;
+    newBoard[boardPosition] = freshPet;
+  }
 
   const newShopPets = [...state.shop.shopPets];
   newShopPets.splice(shopPosition, 1);

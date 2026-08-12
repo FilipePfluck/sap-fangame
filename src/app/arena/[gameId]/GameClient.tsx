@@ -105,6 +105,10 @@ export default function GameClient({
 
   async function handleBoardSlotClick(boardPosition: number) {
     if (selectedItem) {
+      if (selectedItem.kind === "food" && !board[boardPosition]) {
+        setError("Select a pet to feed");
+        return;
+      }
       // Buy mode: place shop item onto board
       const endpoint = selectedItem.kind === "pet" ? "buy-pet" : "buy-food";
       setLoading(true);
@@ -127,10 +131,52 @@ export default function GameClient({
         setLoading(false);
       }
     } else {
-      // Select/deselect a board pet for selling
+      // Select/deselect a board pet for selling/moving/merging
       const pet = board[boardPosition];
       if (!pet) return;
       setSelectedBoardIndex((prev) => (prev === boardPosition ? null : boardPosition));
+    }
+  }
+
+  async function handleMove(targetPosition: number) {
+    if (selectedBoardIndex === null) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/game/${gameId}/reorder`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ from: selectedBoardIndex, to: targetPosition }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Something went wrong");
+        return;
+      }
+      setBoard(data.board);
+      setSelectedBoardIndex(null);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleMerge(targetPosition: number) {
+    if (selectedBoardIndex === null) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/game/${gameId}/merge`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ from: selectedBoardIndex, to: targetPosition }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Something went wrong");
+        return;
+      }
+      setBoard(data.board);
+      setSelectedBoardIndex(null);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -211,7 +257,8 @@ export default function GameClient({
     router.refresh();
   }
 
-  const hasSelection = selectedItem !== null;
+  const hasShopSelection = selectedItem !== null;
+  const hasBoardSelection = selectedBoardIndex !== null && selectedItem === null;
 
   return (
     <div className="flex flex-col flex-1 items-center bg-zinc-50 dark:bg-black font-sans py-8 px-4">
@@ -256,15 +303,44 @@ export default function GameClient({
                 {Array.from({ length: 5 }, (_, displayIdx) => {
                   const i = 4 - displayIdx;
                   const pet = board[i];
+                  const isOtherSlot = hasBoardSelection && i !== selectedBoardIndex;
+                  const canMerge =
+                    isOtherSlot &&
+                    pet !== null &&
+                    pet.type === board[selectedBoardIndex!]!.type;
                   return (
-                    <BoardSlot
-                      key={i}
-                      pet={pet}
-                      sprite={pet ? (PET_SPRITES[pet.type] ?? null) : null}
-                      isSelected={selectedBoardIndex === i}
-                      isTargetable={hasSelection && (selectedItem.kind === "pet" ? pet === null : pet !== null)}
-                      onClick={() => handleBoardSlotClick(i)}
-                    />
+                    <div key={i} className="flex flex-col items-center gap-1">
+                      <BoardSlot
+                        pet={pet}
+                        sprite={pet ? (PET_SPRITES[pet.type] ?? null) : null}
+                        isSelected={selectedBoardIndex === i}
+                        isTargetable={
+                          hasShopSelection &&
+                          (selectedItem!.kind === "pet" ? true : pet !== null)
+                        }
+                        onClick={() => handleBoardSlotClick(i)}
+                      />
+                      {isOtherSlot && (
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => handleMove(i)}
+                            disabled={loading}
+                            className="text-xs px-2 py-0.5 rounded bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-40 transition-colors"
+                          >
+                            Move
+                          </button>
+                          {canMerge && (
+                            <button
+                              onClick={() => handleMerge(i)}
+                              disabled={loading}
+                              className="text-xs px-2 py-0.5 rounded bg-purple-500 text-white hover:bg-purple-600 disabled:opacity-40 transition-colors"
+                            >
+                              Merge
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>
