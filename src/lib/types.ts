@@ -10,6 +10,7 @@ export type PetInstance = {
 export type ShopPet = {
   type: string;
   frozen: boolean;
+  tempHealthBonus?: number;
 };
 
 export type ShopFood = {
@@ -30,13 +31,42 @@ export type BattleStep = {
   description: string;
 };
 
+export type BattleAbilityContext = {
+  self: PetInstance;
+  selfIndex: number;
+  team: PetInstance[];
+  enemyTeam: PetInstance[];
+  level: number;
+  summon: (pet: PetInstance, afterIndex: number) => void;
+  summonedIndex?: number;
+};
+
+export type ShopAbilityContext = {
+  self: PetInstance;
+  selfIndex: number;
+  board: (PetInstance | null)[];
+  shop: ShopState;
+  level: number;
+  goldGain: (amount: number) => void;
+  addShopFood: (foodName: string) => void;
+};
+
+export type Ability =
+  | { trigger: "sell"; fn: (ctx: ShopAbilityContext) => void }
+  | { trigger: "buy"; fn: (ctx: ShopAbilityContext) => void }
+  | { trigger: "faint"; fn: (ctx: BattleAbilityContext) => void }
+  | { trigger: "start-of-battle"; fn: (ctx: BattleAbilityContext) => void }
+  | { trigger: "level-up"; fn: (ctx: ShopAbilityContext) => void }
+  | { trigger: "friend-summoned"; fn: (ctx: BattleAbilityContext) => void };
+
 export type PetType = {
   name: string;
   sprite: string;
   tier: number;
   baseAttack: number;
   baseHealth: number;
-  ability: null;
+  isToken: boolean;
+  ability: Ability | null;
 };
 
 export type FoodType = {
@@ -44,5 +74,7 @@ export type FoodType = {
   sprite: string;
   tier: number;
   isPerk: boolean;
+  isToken: boolean;
+  cost?: number;
   effect: { attack?: number; health?: number };
 };

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import type { PetInstance } from "@/lib/types";
 import { computeLevel } from "@/lib/game/merge";
+import { FOOD_SPRITES } from "@/lib/sprites";
 
 type BoardSlotProps = {
   pet: PetInstance | null;
@@ -17,7 +18,7 @@ export default function BoardSlot({ pet, sprite, isSelected, isTargetable, onCli
     <button
       onClick={onClick}
       className={[
-        "w-20 h-20 rounded-xl border-2 flex flex-col items-center justify-center p-1 transition-all overflow-hidden",
+        "relative w-20 h-20 rounded-xl border-2 flex flex-col items-center justify-center p-1 transition-all overflow-hidden",
         isSelected
           ? "border-green-400 ring-2 ring-green-400 bg-green-50 dark:bg-green-900/20 cursor-pointer"
           : pet
@@ -38,7 +39,11 @@ export default function BoardSlot({ pet, sprite, isSelected, isTargetable, onCli
           <span className="text-xs text-zinc-500 dark:text-zinc-400">
             {pet.attack}/{pet.health}
           </span>
-          {pet.perk && <span className="text-xs text-purple-500">{pet.perk}</span>}
+          {pet.perk && FOOD_SPRITES[pet.perk] && (
+            <div className="absolute top-1 right-1 w-4 h-4">
+              <Image src={FOOD_SPRITES[pet.perk]} alt={pet.perk} fill className="object-contain" />
+            </div>
+          )}
         </>
       ) : (
         <span className="text-zinc-300 dark:text-zinc-600 text-lg">+</span>

@@ -5,5 +5,6 @@ export const Apple: FoodType = {
   sprite: "/sap/apple.png",
   tier: 1,
   isPerk: false,
+  isToken: false,
   effect: { attack: 1, health: 1 },
 };

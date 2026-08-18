@@ -3,16 +3,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Board, ShopState, PetInstance } from "@/lib/types";
-import { TURTLE_PACK_PETS } from "@/lib/pets";
-import { TURTLE_PACK_FOODS } from "@/lib/foods";
+import { PET_REGISTRY } from "@/lib/pets";
+import { FOOD_REGISTRY } from "@/lib/foods";
 import { mergePets, openSlot, applyReorder } from "@/lib/game/merge";
 import { PET_SPRITES, FOOD_SPRITES } from "@/lib/sprites";
 import ShopItem from "./ShopItem";
 import BoardSlot from "./BoardSlot";
 import BattleView from "./BattleView";
 
-const PET_MAP = Object.fromEntries(TURTLE_PACK_PETS.map((p) => [p.name, p]));
-const FOOD_MAP = Object.fromEntries(TURTLE_PACK_FOODS.map((f) => [f.name, f]));
+const PET_MAP = PET_REGISTRY;
+const FOOD_MAP = FOOD_REGISTRY;
 
 type BattleData = {
   opponentTeam: PetInstance[];
@@ -535,19 +535,22 @@ export default function GameClient({
               <div className="min-w-0">
                 <p className="text-xs text-zinc-400 mb-3 uppercase tracking-wide">Pet Shop</p>
                 <div className="flex gap-3 pb-8 overflow-x-auto">
-                  {shop.shopPets.map((pet, i) => (
-                    <ShopItem
+                  {shop.shopPets.map((pet, i) => {
+                    const def = PET_MAP[pet.type];
+                    const atk = def?.baseAttack ?? "?";
+                    const hp = (def?.baseHealth ?? 0) + (pet.tempHealthBonus ?? 0);
+                    return <ShopItem
                       key={i}
                       name={pet.type}
                       sprite={PET_SPRITES[pet.type] ?? ""}
-                      subtitle="1/1"
+                      subtitle={`${atk}/${hp}`}
                       isSelected={selectedItem?.kind === "pet" && selectedItem.index === i}
                       isFrozen={frozenPets.has(i)}
                       onSelect={() => handleSelectShopPet(i)}
                       onFreeze={() => handleFreezeToggle("pet", i)}
                       onContextMenu={(e) => handleContextMenu(e, "pet", i)}
-                    />
-                  ))}
+                    />;
+                  })}
                 </div>
               </div>
 
@@ -555,19 +558,30 @@ export default function GameClient({
               <div className="shrink-0">
                 <p className="text-xs text-zinc-400 mb-3 uppercase tracking-wide">Food Shop</p>
                 <div className="flex gap-3 pb-8">
-                  {shop.shopFoods.map((food, i) => (
-                    <ShopItem
+                  {shop.shopFoods.map((food, i) => {
+                    const def = FOOD_MAP[food.type];
+                    let subtitle = "";
+                    if (def?.isPerk) {
+                      subtitle = "Perk";
+                    } else if (def) {
+                      const a = def.effect.attack;
+                      const h = def.effect.health;
+                      if (a && h) subtitle = `+${a}/+${h}`;
+                      else if (a) subtitle = `+${a} atk`;
+                      else if (h) subtitle = `+${h} hp`;
+                    }
+                    return <ShopItem
                       key={i}
                       name={food.type}
                       sprite={FOOD_SPRITES[food.type] ?? ""}
-                      subtitle="+1/+1"
+                      subtitle={subtitle}
                       isSelected={selectedItem?.kind === "food" && selectedItem.index === i}
                       isFrozen={frozenFoods.has(i)}
                       onSelect={() => handleSelectShopFood(i)}
                       onFreeze={() => handleFreezeToggle("food", i)}
                       onContextMenu={(e) => handleContextMenu(e, "food", i)}
-                    />
-                  ))}
+                    />;
+                  })}
                 </div>
               </div>
             </div>

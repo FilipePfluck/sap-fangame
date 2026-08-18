@@ -11,7 +11,7 @@ function getFoodSlotCount(turn: number): number {
   return 1;
 }
 
-function getUnlockedTiers(turn: number): number[] {
+export function getUnlockedTiers(turn: number): number[] {
   const tiers: number[] = [1];
   if (turn >= 3) tiers.push(2);
   if (turn >= 5) tiers.push(3);

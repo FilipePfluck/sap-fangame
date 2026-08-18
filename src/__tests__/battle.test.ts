@@ -57,4 +57,62 @@ describe("simulateBattle", () => {
     expect(playerTeam[0].health).toBe(1);
     expect(opponentTeam[0].health).toBe(1);
   });
+
+  it("results in DRAW when both teams are all-null", () => {
+    const { result } = simulateBattle([null, null, null], [null, null, null]);
+    expect(result).toBe("DRAW");
+  });
+
+  it("front pet dies and next pet in team takes over", () => {
+    // Player: 1/1, 2/5. Opponent: 1/1.
+    // Round 1: front 1/1 vs 1/1 → both die. Player's 2/5 now fights empty opponent → WIN.
+    const { result, steps } = simulateBattle(
+      [sloth(), sloth({ attack: 2, health: 5 })],
+      [sloth()]
+    );
+    expect(result).toBe("WIN");
+    const lastStep = steps[steps.length - 1];
+    expect(lastStep.attackerTeam).toHaveLength(1);
+    expect(lastStep.attackerTeam[0].attack).toBe(2);
+    expect(lastStep.defenderTeam).toHaveLength(0);
+  });
+
+  it("2v2: both fronts die in round 1, second pets fight to conclusion", () => {
+    // Player: 1/1, 3/2. Opponent: 1/1, 1/1.
+    // Round 1: both fronts (1/1 each) die simultaneously.
+    // Round 2: player's 3/2 vs opponent's 1/1 → opponent takes 3 dmg and dies, player takes 1 dmg → 3/1 survives → WIN.
+    const { result, steps } = simulateBattle(
+      [sloth(), sloth({ attack: 3, health: 2 })],
+      [sloth(), sloth()]
+    );
+    expect(result).toBe("WIN");
+    const lastStep = steps[steps.length - 1];
+    expect(lastStep.attackerTeam).toHaveLength(1);
+    expect(lastStep.attackerTeam[0].health).toBe(1);
+  });
+
+  it("nulls interspersed in team are treated as empty slots", () => {
+    // Only the non-null pet should fight
+    const { result } = simulateBattle(
+      [null, sloth({ attack: 2, health: 2 }), null],
+      [sloth()]
+    );
+    expect(result).toBe("WIN");
+  });
+
+  it("step description includes attacker and defender stats", () => {
+    const { steps } = simulateBattle([sloth({ attack: 2, health: 3 })], [sloth()]);
+    const combatStep = steps[1];
+    expect(combatStep.description).toContain("2/3");
+    expect(combatStep.description).toContain("1/1");
+  });
+
+  it("ends in DRAW after hitting max rounds", () => {
+    // Both sides have 1 attack and 100 health → 99 rounds needed, exceeds MAX_ROUNDS (50)
+    const { result } = simulateBattle(
+      [sloth({ attack: 1, health: 100 })],
+      [sloth({ attack: 1, health: 100 })]
+    );
+    expect(result).toBe("DRAW");
+  });
 });

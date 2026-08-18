@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
-import { TURTLE_PACK_FOODS } from "@/lib/foods";
+import { FOOD_REGISTRY } from "@/lib/foods";
 import { z } from "zod";
 import type { Board, ShopState, PetInstance } from "@/lib/types";
 
@@ -9,8 +9,6 @@ const BuyFoodSchema = z.object({
   shopPosition: z.number().int().min(0).max(4),
   boardPosition: z.number().int().min(0).max(4),
 });
-
-const FOOD_MAP = Object.fromEntries(TURTLE_PACK_FOODS.map((f) => [f.name, f]));
 
 export async function POST(
   request: Request,
@@ -41,10 +39,6 @@ export async function POST(
     return Response.json({ error: "Game state not found" }, { status: 404 });
   }
 
-  if (state.goldRemaining < 3) {
-    return Response.json({ error: "Not enough gold" }, { status: 400 });
-  }
-
   const pet = state.board[boardPosition];
   if (!pet) {
     return Response.json({ error: "No pet at board position" }, { status: 400 });
@@ -55,9 +49,14 @@ export async function POST(
     return Response.json({ error: "Invalid shop position" }, { status: 400 });
   }
 
-  const foodDef = FOOD_MAP[shopFood.type];
+  const foodDef = FOOD_REGISTRY[shopFood.type];
   if (!foodDef) {
     return Response.json({ error: "Unknown food type" }, { status: 400 });
+  }
+
+  const cost = foodDef.cost ?? 3;
+  if (state.goldRemaining < cost) {
+    return Response.json({ error: "Not enough gold" }, { status: 400 });
   }
 
   const updatedPet: PetInstance = {
@@ -81,7 +80,7 @@ export async function POST(
       turnId: state.turnId,
       boardState: newBoard,
       shopState: newShop,
-      goldRemaining: state.goldRemaining - 3,
+      goldRemaining: state.goldRemaining - cost,
     },
   });
 

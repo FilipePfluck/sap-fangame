@@ -1,11 +1,11 @@
 import type { PetType } from "@/lib/types";
 
-export const Sloth: PetType = {
-  name: "Sloth",
-  sprite: "/sap/sloth.webp",
+export const Bee: PetType = {
+  name: "Bee",
+  sprite: "/sap/bee.webp",
   tier: 1,
   baseAttack: 1,
   baseHealth: 1,
-  isToken: false,
+  isToken: true,
   ability: null,
 };

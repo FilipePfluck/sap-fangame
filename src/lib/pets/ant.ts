@@ -1,0 +1,21 @@
+import type { PetType } from "@/lib/types";
+import { pickRandom } from "@/lib/utils/random";
+
+export const Ant: PetType = {
+  name: "Ant",
+  sprite: "/sap/ant.webp",
+  tier: 1,
+  baseAttack: 2,
+  baseHealth: 2,
+  isToken: false,
+  ability: {
+    trigger: "faint",
+    fn: (ctx) => {
+      const friends = ctx.team.filter((_, i) => i !== ctx.selfIndex);
+      if (friends.length === 0) return;
+      const target = pickRandom(friends);
+      target.attack += ctx.level;
+      target.health += ctx.level;
+    },
+  },
+};

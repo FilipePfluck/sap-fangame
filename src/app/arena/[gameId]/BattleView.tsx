@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { BattleStep, PetInstance } from "@/lib/types";
-import { PET_SPRITES } from "@/lib/sprites";
+import { PET_SPRITES, FOOD_SPRITES } from "@/lib/sprites";
 import { startGame } from "@/app/actions/game";
 
 type BattleData = {
@@ -174,7 +174,7 @@ function PetCard({
   return (
     <div
       className={[
-        "w-20 h-20 rounded-xl border-2 border-zinc-400 dark:border-zinc-500 bg-zinc-50 dark:bg-zinc-800 flex flex-col items-center justify-center p-1",
+        "relative w-20 h-20 rounded-xl border-2 border-zinc-400 dark:border-zinc-500 bg-zinc-50 dark:bg-zinc-800 flex flex-col items-center justify-center p-1",
         animClass,
       ].join(" ")}
     >
@@ -191,6 +191,11 @@ function PetCard({
       <span className="text-xs text-zinc-500 dark:text-zinc-400">
         {pet.attack}/{pet.health}
       </span>
+      {pet.perk && FOOD_SPRITES[pet.perk] && (
+        <div className="absolute top-1 right-1 w-4 h-4">
+          <Image src={FOOD_SPRITES[pet.perk]} alt={pet.perk} fill className="object-contain" />
+        </div>
+      )}
     </div>
   );
 }

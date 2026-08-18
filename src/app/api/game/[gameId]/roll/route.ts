@@ -2,8 +2,8 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { generateShop } from "@/lib/game/shop";
-import { TURTLE_PACK_PETS } from "@/lib/pets";
-import { TURTLE_PACK_FOODS } from "@/lib/foods";
+import { SHOP_PET_POOL } from "@/lib/pets";
+import { SHOP_FOOD_POOL } from "@/lib/foods";
 import { z } from "zod";
 
 const RollSchema = z.object({
@@ -54,8 +54,8 @@ export async function POST(
 
   const newShop = generateShop({
     turn: state.turn.turnNumber,
-    pack: TURTLE_PACK_PETS,
-    foodTypes: TURTLE_PACK_FOODS,
+    pack: SHOP_PET_POOL,
+    foodTypes: SHOP_FOOD_POOL,
     frozenPets,
     frozenFoods,
   });

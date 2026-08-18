@@ -2,30 +2,30 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { simulateBattle } from "@/lib/game/battle";
-import { generateShop } from "@/lib/game/shop";
-import { TURTLE_PACK_PETS } from "@/lib/pets";
-import { TURTLE_PACK_FOODS } from "@/lib/foods";
+import { generateShop, getUnlockedTiers } from "@/lib/game/shop";
+import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
+import { SHOP_FOOD_POOL } from "@/lib/foods";
+import { pickRandom } from "@/lib/utils/random";
 import type { PetInstance } from "@/lib/types";
 
 function buildGhostTeam(turn: number): PetInstance[] {
   const count = turn >= 2 ? 5 : 3;
-  const sloths: PetInstance[] = Array.from({ length: count }, () => ({
-    type: "Sloth", attack: 1, health: 1, perk: null, xp: 0, level: 1,
-  }));
+  const unlockedTiers = getUnlockedTiers(turn);
+  const pool = SHOP_PET_POOL.filter((p) => unlockedTiers.includes(p.tier));
 
-  const bonusRounds = turn - 2;
-  for (let r = 0; r < bonusRounds; r++) {
-    // Pick 2 distinct random indices
-    const a = Math.floor(Math.random() * count);
-    let b = Math.floor(Math.random() * (count - 1));
-    if (b >= a) b++;
-    sloths[a].attack += 1;
-    sloths[a].health += 1;
-    sloths[b].attack += 1;
-    sloths[b].health += 1;
-  }
+  if (pool.length === 0) return [];
 
-  return sloths;
+  return Array.from({ length: count }, () => {
+    const petDef = pickRandom(pool);
+    return {
+      type: petDef.name,
+      attack: petDef.baseAttack,
+      health: petDef.baseHealth,
+      perk: null,
+      xp: 1,
+      level: 1,
+    };
+  });
 }
 
 export async function POST(
@@ -52,14 +52,14 @@ export async function POST(
 
   const { lives, trophies, turnNumber } = state.turn;
   const ghostTeam = buildGhostTeam(turnNumber);
-  const { result, steps } = simulateBattle(state.board, ghostTeam);
+  const { result, steps } = simulateBattle(state.board, ghostTeam, PET_REGISTRY);
   const newLives = result === "LOSS" ? lives - 1 : lives;
   const newTrophies = result === "WIN" ? trophies + 1 : trophies;
 
   const nextShop = generateShop({
     turn: turnNumber + 1,
-    pack: TURTLE_PACK_PETS,
-    foodTypes: TURTLE_PACK_FOODS,
+    pack: SHOP_PET_POOL,
+    foodTypes: SHOP_FOOD_POOL,
   });
 
   const { battle } = await prisma.$transaction(async (tx) => {
