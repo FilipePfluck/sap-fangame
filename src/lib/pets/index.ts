@@ -42,9 +42,10 @@ export const TURTLE_PACK_PETS: PetType[] = [
   Bee,
 ];
 
-export const PET_REGISTRY: Record<string, PetType> = Object.fromEntries(
-  TURTLE_PACK_PETS.map((p) => [p.name, p])
-);
+export const PET_REGISTRY: Record<string, PetType> = Object.fromEntries([
+  ...TURTLE_PACK_PETS.map((p) => [p.name, p]),
+  [Sloth.name, Sloth],
+]);
 
 export const SHOP_PET_POOL: PetType[] = TURTLE_PACK_PETS.filter(
   (p) => !p.isToken
