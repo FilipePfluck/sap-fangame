@@ -7,4 +7,5 @@ export const Apple: FoodType = {
   isPerk: false,
   isToken: false,
   effect: { attack: 1, health: 1 },
+  description: "Give one pet +1 attack and +1 health.",
 };

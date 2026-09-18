@@ -18,4 +18,6 @@ export const Ant: PetType = {
       target.health += ctx.level;
     },
   },
+  description: (level: number) =>
+    `Faint: Give one random friend +${level} attack and +${level} health.`,
 };

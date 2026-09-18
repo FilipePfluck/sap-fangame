@@ -1,8 +1,9 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
-import { mergePets } from "@/lib/game/merge";
-import { PET_REGISTRY } from "@/lib/pets";
+import { mergePets, levelUpRewardEarned } from "@/lib/game/merge";
+import { addLevelUpReward, applyFrozenFlags } from "@/lib/game/shop";
+import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
 import { FOOD_REGISTRY } from "@/lib/foods";
 import { fireShopAbility } from "@/lib/game/shop-ability";
 import { z } from "zod";
@@ -11,6 +12,8 @@ import type { Board, ShopState } from "@/lib/types";
 const MergeSchema = z.object({
   from: z.number().int().min(0).max(4),
   to: z.number().int().min(0).max(4),
+  frozenPetPositions: z.array(z.number().int().min(0)).default([]),
+  frozenFoodPositions: z.array(z.number().int().min(0)).default([]),
 });
 
 export async function POST(
@@ -30,7 +33,7 @@ export async function POST(
     return Response.json({ error: "Invalid request", details: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { from, to } = parsed.data;
+  const { from, to, frozenPetPositions, frozenFoodPositions } = parsed.data;
 
   if (from === to) {
     return Response.json({ error: "Source and target are the same" }, { status: 400 });
@@ -67,7 +70,7 @@ export async function POST(
   let currentBoard: Board = [...state.board];
   currentBoard[to] = merged;
   currentBoard[from] = null;
-  let currentShop: ShopState = state.shop;
+  let currentShop: ShopState = applyFrozenFlags(state.shop, frozenPetPositions, frozenFoodPositions);
   let extraGold = 0;
 
   if (didLevelUp) {
@@ -76,6 +79,10 @@ export async function POST(
     currentBoard = result.board as Board;
     currentShop = result.shop;
     extraGold = result.goldDelta;
+  }
+
+  if (levelUpRewardEarned(petFrom, petTo)) {
+    currentShop = addLevelUpReward(currentShop, state.turn.turnNumber, SHOP_PET_POOL);
   }
 
   const boardState = await prisma.boardState.create({

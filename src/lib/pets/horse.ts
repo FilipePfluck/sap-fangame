@@ -11,7 +11,11 @@ export const Horse: PetType = {
     trigger: "friend-summoned",
     fn: (ctx) => {
       const target = ctx.team[ctx.summonedIndex!];
-      if (target) target.attack += ctx.level;
+      if (!target) return;
+      target.attack += ctx.level;
+      if (ctx.inShop) target.tempAttack = (target.tempAttack ?? 0) + ctx.level;
     },
   },
+  description: (level: number) =>
+    `Friend summoned: Give it +${level} attack until next turn.`,
 };

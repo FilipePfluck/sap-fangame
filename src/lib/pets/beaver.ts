@@ -23,4 +23,5 @@ export const Beaver: PetType = {
       }
     },
   },
+  description: "Sell: Give two random friends +1 attack.",
 };

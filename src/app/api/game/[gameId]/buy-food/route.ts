@@ -2,11 +2,13 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { FOOD_REGISTRY } from "@/lib/foods";
+import { PET_REGISTRY } from "@/lib/pets";
+import { fireShopFaint, applySushiBuff } from "@/lib/game/shop-ability";
 import { z } from "zod";
 import type { Board, ShopState, PetInstance } from "@/lib/types";
 
 const BuyFoodSchema = z.object({
-  shopPosition: z.number().int().min(0).max(4),
+  shopPosition: z.number().int().min(0).max(9),
   boardPosition: z.number().int().min(0).max(4),
 });
 
@@ -59,15 +61,21 @@ export async function POST(
     return Response.json({ error: "Not enough gold" }, { status: 400 });
   }
 
-  const updatedPet: PetInstance = {
-    ...pet,
-    attack: pet.attack + (foodDef.effect.attack ?? 0),
-    health: pet.health + (foodDef.effect.health ?? 0),
-    perk: foodDef.isPerk ? foodDef.name : pet.perk,
-  };
-
-  const newBoard: Board = [...state.board];
-  newBoard[boardPosition] = updatedPet;
+  let newBoard: Board;
+  if (foodDef.name === "Pill") {
+    newBoard = fireShopFaint(state.board, boardPosition, PET_REGISTRY);
+  } else if (foodDef.name === "Sushi") {
+    newBoard = applySushiBuff(state.board);
+  } else {
+    const updatedPet: PetInstance = {
+      ...pet,
+      attack: pet.attack + (foodDef.effect.attack ?? 0),
+      health: pet.health + (foodDef.effect.health ?? 0),
+      perk: foodDef.isPerk ? foodDef.name : pet.perk,
+    };
+    newBoard = [...state.board];
+    newBoard[boardPosition] = updatedPet;
+  }
 
   const newShopFoods = [...state.shop.shopFoods];
   newShopFoods.splice(shopPosition, 1);

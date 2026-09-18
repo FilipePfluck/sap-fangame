@@ -3,13 +3,29 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Board, ShopState, PetInstance } from "@/lib/types";
-import { PET_REGISTRY } from "@/lib/pets";
+import { PET_REGISTRY, getPetDescription } from "@/lib/pets";
 import { FOOD_REGISTRY } from "@/lib/foods";
 import { mergePets, openSlot, applyReorder } from "@/lib/game/merge";
 import { PET_SPRITES, FOOD_SPRITES } from "@/lib/sprites";
 import ShopItem from "./ShopItem";
 import BoardSlot from "./BoardSlot";
 import BattleView from "./BattleView";
+
+function frozenFromShop(shop: ShopState) {
+  return {
+    pets: new Set(shop.shopPets.flatMap((p, i) => (p.frozen ? [i] : []))),
+    foods: new Set(shop.shopFoods.flatMap((f, i) => (f.frozen ? [i] : []))),
+  };
+}
+
+function removeFrozenIndices(frozen: Set<number>, removed: number[]): Set<number> {
+  const next = new Set<number>();
+  for (const i of frozen) {
+    if (removed.includes(i)) continue;
+    next.add(i - removed.filter((r) => r < i).length);
+  }
+  return next;
+}
 
 const PET_MAP = PET_REGISTRY;
 const FOOD_MAP = FOOD_REGISTRY;
@@ -168,13 +184,17 @@ export default function GameClient({
       optimisticBoard[boardPosition] = freshPet;
     }
 
-    const newShopPets = [...shop.shopPets];
-    newShopPets.splice(shopPosition, 1);
+    // Buying one half of a chained level-up reward removes the other half.
+    const removedPetIdx = shop.shopPets.flatMap((p, i) =>
+      i === shopPosition || (shopPet.chainId && p.chainId === shopPet.chainId) ? [i] : []
+    );
+    const newShopPets = shop.shopPets.filter((_, i) => !removedPetIdx.includes(i));
     const optimisticShop: ShopState = { shopPets: newShopPets, shopFoods: shop.shopFoods };
 
-    const prevBoard = board, prevShop = shop, prevGold = gold;
+    const prevBoard = board, prevShop = shop, prevGold = gold, prevFrozen = frozenPets;
     setBoard(optimisticBoard);
     setShop(optimisticShop);
+    setFrozenPets(removeFrozenIndices(frozenPets, removedPetIdx));
     setGold(gold - 3);
     setSelectedItem(null);
     setLoading(true);
@@ -183,19 +203,27 @@ export default function GameClient({
       const res = await fetch(`/api/game/${gameId}/buy-pet`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ shopPosition, boardPosition }),
+        body: JSON.stringify({
+          shopPosition,
+          boardPosition,
+          frozenPetPositions: [...frozenPets],
+          frozenFoodPositions: [...frozenFoods],
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setBoard(prevBoard); setShop(prevShop); setGold(prevGold);
+        setBoard(prevBoard); setShop(prevShop); setGold(prevGold); setFrozenPets(prevFrozen);
         setError(data.error ?? "Something went wrong");
         return;
       }
       setBoard(data.board as Board);
       setShop(data.shop as ShopState);
       setGold(data.gold);
+      const synced = frozenFromShop(data.shop as ShopState);
+      setFrozenPets(synced.pets);
+      setFrozenFoods(synced.foods);
     } catch {
-      setBoard(prevBoard); setShop(prevShop); setGold(prevGold);
+      setBoard(prevBoard); setShop(prevShop); setGold(prevGold); setFrozenPets(prevFrozen);
     } finally {
       setLoading(false);
     }
@@ -225,9 +253,10 @@ export default function GameClient({
     newShopFoods.splice(shopPosition, 1);
     const optimisticShop: ShopState = { shopPets: shop.shopPets, shopFoods: newShopFoods };
 
-    const prevBoard = board, prevShop = shop, prevGold = gold;
+    const prevBoard = board, prevShop = shop, prevGold = gold, prevFrozen = frozenFoods;
     setBoard(optimisticBoard);
     setShop(optimisticShop);
+    setFrozenFoods(removeFrozenIndices(frozenFoods, [shopPosition]));
     setGold(gold - 3);
     setSelectedItem(null);
     setLoading(true);
@@ -240,7 +269,7 @@ export default function GameClient({
       });
       const data = await res.json();
       if (!res.ok) {
-        setBoard(prevBoard); setShop(prevShop); setGold(prevGold);
+        setBoard(prevBoard); setShop(prevShop); setGold(prevGold); setFrozenFoods(prevFrozen);
         setError(data.error ?? "Something went wrong");
         return;
       }
@@ -248,7 +277,7 @@ export default function GameClient({
       setShop(data.shop as ShopState);
       setGold(data.gold);
     } catch {
-      setBoard(prevBoard); setShop(prevShop); setGold(prevGold);
+      setBoard(prevBoard); setShop(prevShop); setGold(prevGold); setFrozenFoods(prevFrozen);
     } finally {
       setLoading(false);
     }
@@ -267,7 +296,12 @@ export default function GameClient({
       const res = await fetch(`/api/game/${gameId}/reorder`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ from: selectedBoardIndex, to: targetPosition }),
+        body: JSON.stringify({
+          from: selectedBoardIndex,
+          to: targetPosition,
+          frozenPetPositions: [...frozenPets],
+          frozenFoodPositions: [...frozenFoods],
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -276,6 +310,10 @@ export default function GameClient({
         return;
       }
       setBoard(data.board as Board);
+      setShop(data.shop as ShopState);
+      const synced = frozenFromShop(data.shop as ShopState);
+      setFrozenPets(synced.pets);
+      setFrozenFoods(synced.foods);
     } catch {
       setBoard(prevBoard);
     } finally {
@@ -340,7 +378,11 @@ export default function GameClient({
       const res = await fetch(`/api/game/${gameId}/sell-pet`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ boardPosition: selectedBoardIndex }),
+        body: JSON.stringify({
+          boardPosition: selectedBoardIndex,
+          frozenPetPositions: [...frozenPets],
+          frozenFoodPositions: [...frozenFoods],
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -349,7 +391,11 @@ export default function GameClient({
         return;
       }
       setBoard(data.board as Board);
+      setShop(data.shop as ShopState);
       setGold(data.gold);
+      const synced = frozenFromShop(data.shop as ShopState);
+      setFrozenPets(synced.pets);
+      setFrozenFoods(synced.foods);
     } catch {
       setBoard(prevBoard); setGold(prevGold);
     } finally {
@@ -389,7 +435,14 @@ export default function GameClient({
   async function handleEndTurn() {
     setLoading(true);
     try {
-      const endRes = await fetch(`/api/game/${gameId}/end`, { method: "POST" });
+      const endRes = await fetch(`/api/game/${gameId}/end`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          frozenPetPositions: [...frozenPets],
+          frozenFoodPositions: [...frozenFoods],
+        }),
+      });
       const endData = await endRes.json();
       if (!endRes.ok) {
         setError(endData.error ?? "Something went wrong");
@@ -417,8 +470,9 @@ export default function GameClient({
       setLives(nextState.lives);
       setTrophies(nextState.trophies);
       setTurn(nextState.turn);
-      setFrozenPets(new Set());
-      setFrozenFoods(new Set());
+      const nextShop = nextState.shop as ShopState;
+      setFrozenPets(new Set(nextShop.shopPets.flatMap((p, i) => (p.frozen ? [i] : []))));
+      setFrozenFoods(new Set(nextShop.shopFoods.flatMap((f, i) => (f.frozen ? [i] : []))));
       setBattleData(null);
       setNextState(null);
       setSelectedItem(null);
@@ -542,8 +596,13 @@ export default function GameClient({
                     return <ShopItem
                       key={i}
                       name={pet.type}
-                      sprite={PET_SPRITES[pet.type] ?? ""}
+                      sprite={PET_SPRITES[pet.type] ?? null}
                       subtitle={`${atk}/${hp}`}
+                      description={
+                        (def ? getPetDescription(def, 1) : "") +
+                        (pet.chainId ? " (Level up reward: buying one removes the other.)" : "")
+                      }
+                      chained={!!pet.chainId}
                       isSelected={selectedItem?.kind === "pet" && selectedItem.index === i}
                       isFrozen={frozenPets.has(i)}
                       onSelect={() => handleSelectShopPet(i)}
@@ -557,7 +616,7 @@ export default function GameClient({
               {/* Food shop */}
               <div className="shrink-0">
                 <p className="text-xs text-zinc-400 mb-3 uppercase tracking-wide">Food Shop</p>
-                <div className="flex gap-3 pb-8">
+                <div className="flex gap-3 pb-8 overflow-x-auto">
                   {shop.shopFoods.map((food, i) => {
                     const def = FOOD_MAP[food.type];
                     let subtitle = "";
@@ -573,8 +632,9 @@ export default function GameClient({
                     return <ShopItem
                       key={i}
                       name={food.type}
-                      sprite={FOOD_SPRITES[food.type] ?? ""}
+                      sprite={FOOD_SPRITES[food.type] ?? null}
                       subtitle={subtitle}
+                      description={def?.description ?? ""}
                       isSelected={selectedItem?.kind === "food" && selectedItem.index === i}
                       isFrozen={frozenFoods.has(i)}
                       onSelect={() => handleSelectShopFood(i)}

@@ -5,7 +5,10 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { BattleStep, PetInstance } from "@/lib/types";
 import { PET_SPRITES, FOOD_SPRITES } from "@/lib/sprites";
+import { PET_REGISTRY, getPetDescription } from "@/lib/pets";
+import { FOOD_REGISTRY } from "@/lib/foods";
 import { startGame } from "@/app/actions/game";
+import Tooltip from "./Tooltip";
 
 type BattleData = {
   opponentTeam: PetInstance[];
@@ -179,12 +182,19 @@ function PetCard({
       ].join(" ")}
     >
       {sprite ? (
-        <div
-          className="relative w-10 h-10"
-          style={facing === "left" ? { transform: "scaleX(-1)" } : undefined}
+        <Tooltip
+          text={
+            PET_REGISTRY[pet.type] &&
+            getPetDescription(PET_REGISTRY[pet.type], pet.level)
+          }
         >
-          <Image src={sprite} alt={pet.type} fill className="object-contain" />
-        </div>
+          <div
+            className="relative w-10 h-10"
+            style={facing === "left" ? { transform: "scaleX(-1)" } : undefined}
+          >
+            <Image src={sprite} alt={pet.type} fill className="object-contain" />
+          </div>
+        </Tooltip>
       ) : (
         <span className="text-xs font-semibold">{pet.type}</span>
       )}
@@ -192,9 +202,12 @@ function PetCard({
         {pet.attack}/{pet.health}
       </span>
       {pet.perk && FOOD_SPRITES[pet.perk] && (
-        <div className="absolute top-1 right-1 w-4 h-4">
+        <Tooltip
+          text={FOOD_REGISTRY[pet.perk]?.description}
+          className="absolute top-1 right-1 w-4 h-4"
+        >
           <Image src={FOOD_SPRITES[pet.perk]} alt={pet.perk} fill className="object-contain" />
-        </div>
+        </Tooltip>
       )}
     </div>
   );

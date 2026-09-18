@@ -16,4 +16,8 @@ export const Mosquito: PetType = {
       }
     },
   },
+  description: (level: number) =>
+    level > 1
+      ? `Start of battle: Deal 1 damage to ${level} random enemies.`
+      : "Start of battle: Deal 1 damage to one random enemy.",
 };

@@ -5,12 +5,18 @@ export type PetInstance = {
   perk: string | null;
   xp: number;
   level: number;
+  // Portions of attack/health already included above that are removed at the
+  // start of the next turn (e.g. Horse's shop buff).
+  tempAttack?: number;
+  tempHealth?: number;
 };
 
 export type ShopPet = {
   type: string;
   frozen: boolean;
   tempHealthBonus?: number;
+  // Shop pets sharing a chainId are a level-up reward: buying one removes the rest.
+  chainId?: string;
 };
 
 export type ShopFood = {
@@ -39,6 +45,9 @@ export type BattleAbilityContext = {
   level: number;
   summon: (pet: PetInstance, afterIndex: number) => void;
   summonedIndex?: number;
+  triggerCount: number;
+  petRegistry: Record<string, PetType>;
+  inShop?: boolean;
 };
 
 export type ShopAbilityContext = {
@@ -49,6 +58,7 @@ export type ShopAbilityContext = {
   level: number;
   goldGain: (amount: number) => void;
   addShopFood: (foodName: string) => void;
+  lastBattleResult?: "WIN" | "DRAW" | "LOSS";
 };
 
 export type Ability =
@@ -57,7 +67,11 @@ export type Ability =
   | { trigger: "faint"; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: "start-of-battle"; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: "level-up"; fn: (ctx: ShopAbilityContext) => void }
-  | { trigger: "friend-summoned"; fn: (ctx: BattleAbilityContext) => void };
+  | { trigger: "friend-summoned"; fn: (ctx: BattleAbilityContext) => void }
+  | { trigger: "start-of-turn"; fn: (ctx: ShopAbilityContext) => void }
+  | { trigger: "end-turn"; fn: (ctx: ShopAbilityContext) => void }
+  | { trigger: "before-attack"; fn: (ctx: BattleAbilityContext) => void }
+  | { trigger: "knock-out"; fn: (ctx: BattleAbilityContext) => void };
 
 export type PetType = {
   name: string;
@@ -67,6 +81,8 @@ export type PetType = {
   baseHealth: number;
   isToken: boolean;
   ability: Ability | null;
+  innatePerk?: string;
+  description: string | ((level: number) => string);
 };
 
 export type FoodType = {
@@ -77,4 +93,5 @@ export type FoodType = {
   isToken: boolean;
   cost?: number;
   effect: { attack?: number; health?: number };
+  description: string;
 };

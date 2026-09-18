@@ -8,4 +8,5 @@ export const BreadCrumbs: FoodType = {
   isToken: true,
   cost: 0,
   effect: { attack: 1 },
+  description: "Give one pet +1 attack.",
 };

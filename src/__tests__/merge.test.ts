@@ -65,3 +65,18 @@ describe("mergePets", () => {
     expect(result.health).toBe(5); // max(2,4)+1
   });
 });
+
+describe("mergePets — temporary stats", () => {
+  it("keeps temp attack on the merged pet so it is still removed next turn", () => {
+    const buffed: PetInstance = { ...sloth(1), attack: 3, tempAttack: 2 };
+    const merged = mergePets(buffed, sloth(1));
+    expect(merged.attack).toBe(4);
+    expect(merged.tempAttack).toBe(2);
+  });
+
+  it("adds no temp fields when neither pet had any", () => {
+    const merged = mergePets(sloth(1), sloth(1));
+    expect(merged.tempAttack).toBeUndefined();
+    expect(merged.tempHealth).toBeUndefined();
+  });
+});

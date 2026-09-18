@@ -4,11 +4,14 @@ import { getLastBoardState } from "@/lib/game/board";
 import { PET_REGISTRY } from "@/lib/pets";
 import { FOOD_REGISTRY } from "@/lib/foods";
 import { fireShopAbility } from "@/lib/game/shop-ability";
+import { applyFrozenFlags } from "@/lib/game/shop";
 import { z } from "zod";
 import type { Board } from "@/lib/types";
 
 const SellPetSchema = z.object({
   boardPosition: z.number().int().min(0).max(4),
+  frozenPetPositions: z.array(z.number().int().min(0)).default([]),
+  frozenFoodPositions: z.array(z.number().int().min(0)).default([]),
 });
 
 export async function POST(
@@ -28,7 +31,7 @@ export async function POST(
     return Response.json({ error: "Invalid request", details: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { boardPosition } = parsed.data;
+  const { boardPosition, frozenPetPositions, frozenFoodPositions } = parsed.data;
   const [game, state] = await Promise.all([
     prisma.game.findUnique({ where: { id: gameId } }),
     getLastBoardState(gameId),
@@ -54,7 +57,7 @@ export async function POST(
     pet,
     boardPosition,
     newBoard,
-    state.shop,
+    applyFrozenFlags(state.shop, frozenPetPositions, frozenFoodPositions),
     PET_REGISTRY,
     FOOD_REGISTRY,
   );

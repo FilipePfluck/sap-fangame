@@ -8,4 +8,5 @@ export const ZombieCricket: PetType = {
   baseHealth: 1,
   isToken: true,
   ability: null,
+  description: "No special ability.",
 };

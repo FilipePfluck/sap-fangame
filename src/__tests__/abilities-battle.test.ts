@@ -170,3 +170,284 @@ describe("Honey perk — faint", () => {
     expect(opponent.health).toBe(2);
   });
 });
+
+describe("Dodo — start-of-battle", () => {
+  it("gives 50% of its attack to the nearest friend ahead", () => {
+    const { steps } = simulateBattle(
+      [pet("Sloth", 1, 5), pet("Dodo", 4, 2)],
+      [pet("Sloth", 1, 50)],
+      PET_REGISTRY,
+    );
+    // Dodo (4 atk) gives 50% = 2 to the Sloth ahead of it → Sloth becomes 3/5
+    expect(steps[1].description).toContain("(3/5)");
+  });
+});
+
+describe("Badger — faint", () => {
+  it("deals 50% attack damage to friends immediately ahead and behind on faint", () => {
+    const { result, steps } = simulateBattle(
+      [pet("Badger", 6, 1), pet("Sloth", 1, 5), pet("Sloth", 1, 5)],
+      [pet("Sloth", 5, 1)],
+      PET_REGISTRY,
+    );
+    // Badger (6/1) and the enemy Sloth (5/1) trade and both die.
+    // Badger's faint: no friend ahead, friend behind takes 3 dmg → 1/2.
+    expect(result).toBe("WIN");
+    expect(steps[1].attackerTeam[0].health).toBe(2);
+  });
+});
+
+describe("Dolphin — start-of-battle", () => {
+  it("deals 4 damage to the lowest-health enemy before combat begins", () => {
+    const { result, steps } = simulateBattle(
+      [pet("Dolphin", 4, 3)],
+      [pet("Sloth", 1, 4)],
+      PET_REGISTRY,
+    );
+    // Exactly enough to faint the only enemy before any rounds are fought.
+    expect(result).toBe("WIN");
+    expect(steps).toHaveLength(1);
+  });
+
+  it("repeats the hit `level` times, re-targeting whichever enemy is currently lowest health", () => {
+    const { result } = simulateBattle(
+      [petLevel("Dolphin", 4, 3, 2)],
+      [pet("Sloth", 1, 4), pet("Sloth", 1, 4)],
+      PET_REGISTRY,
+    );
+    // Level 2 hits the lowest-health enemy twice: the first Sloth dies, then
+    // the second (now lowest) is targeted too — both die pre-combat.
+    expect(result).toBe("WIN");
+  });
+});
+
+describe("Skunk — start-of-battle", () => {
+  it("cuts the highest-health enemy's health by 33%, rounded up", () => {
+    const { steps } = simulateBattle(
+      [pet("Skunk", 3, 5)],
+      [pet("Sloth", 1, 10)],
+      PET_REGISTRY,
+    );
+    // 10 - ceil(10 * 0.33) = 10 - 4 = 6
+    expect(steps[1].description).toContain("Sloth (1/6)");
+  });
+
+  it("cannot reduce a pet's health below 1", () => {
+    const { steps } = simulateBattle(
+      [pet("Skunk", 3, 5)],
+      [pet("Sloth", 1, 1)],
+      PET_REGISTRY,
+    );
+    expect(steps[1].description).toContain("Sloth (1/1)");
+  });
+});
+
+describe("Crab — start-of-battle", () => {
+  it("gains health equal to 25% of its healthiest friend's health", () => {
+    const { steps } = simulateBattle(
+      [pet("Crab", 4, 1), pet("Sloth", 1, 9)],
+      [pet("Sloth", 1, 50)],
+      PET_REGISTRY,
+    );
+    // 25% of 9 = 2.25 → rounds to 2. Crab: 1 + 2 = 3 health.
+    expect(steps[1].description).toContain("Crab (4/3)");
+  });
+
+  it("no-op when there are no friends", () => {
+    const { steps } = simulateBattle(
+      [pet("Crab", 4, 1)],
+      [pet("Sloth", 1, 50)],
+      PET_REGISTRY,
+    );
+    expect(steps[1].description).toContain("Crab (4/1)");
+  });
+});
+
+describe("Leopard — start-of-battle", () => {
+  it("deals 50% attack damage to a random enemy", () => {
+    const { steps } = simulateBattle(
+      [pet("Leopard", 10, 4)],
+      [pet("Sloth", 1, 10)],
+      PET_REGISTRY,
+    );
+    expect(steps[1].description).toContain("Sloth (1/5)");
+  });
+});
+
+describe("Boar — before-attack", () => {
+  it("gains +4/+2 immediately before each of its attacks", () => {
+    const { steps } = simulateBattle(
+      [pet("Boar", 10, 6)],
+      [pet("Sloth", 1, 100)],
+      PET_REGISTRY,
+    );
+    expect(steps[1].description).toContain("Boar (14/8)");
+    expect(steps[2].description).toContain("Boar (18/9)");
+  });
+});
+
+describe("Hippo — knock-out", () => {
+  it("gains +3/+3 per knock-out, capped at the first 3 per battle", () => {
+    const { result, steps } = simulateBattle(
+      [pet("Hippo", 4, 7)],
+      [
+        pet("Sloth", 1, 1),
+        pet("Sloth", 1, 1),
+        pet("Sloth", 1, 1),
+        pet("Sloth", 1, 1),
+        pet("Sloth", 1, 1),
+      ],
+      PET_REGISTRY,
+    );
+    expect(result).toBe("WIN");
+    const lastStep = steps[steps.length - 1];
+    // Knock-outs 1-3 each add +3/+3; the 4th and 5th no longer buff Hippo.
+    expect(lastStep.attackerTeam[0].attack).toBe(13);
+    expect(lastStep.attackerTeam[0].health).toBe(11);
+  });
+});
+
+describe("Rhino — knock-out", () => {
+  it("deals 4 damage to the next enemy in line, doubled against tier-1 pets", () => {
+    const { result, steps } = simulateBattle(
+      [pet("Rhino", 6, 7)],
+      [pet("Sloth", 1, 1), pet("Sloth", 1, 5)],
+      PET_REGISTRY,
+    );
+    // Rhino kills the first Sloth (tier 1), then its knock-out splash deals
+    // 8 (doubled) damage to the second Sloth (also tier 1), softening it up
+    // well ahead of Rhino's own attack finishing it off next round.
+    expect(result).toBe("WIN");
+    expect(steps).toHaveLength(3); // Battle start + 2 rounds
+  });
+});
+
+describe("Crocodile — start-of-battle", () => {
+  it("deals 8 damage to the last enemy, repeated `level` times", () => {
+    const { steps } = simulateBattle(
+      [petLevel("Crocodile", 8, 4, 2)],
+      [pet("Sloth", 1, 20), pet("Sloth", 1, 8)],
+      PET_REGISTRY,
+    );
+    // Level 2 hits the last enemy (8 hp) once, killing it, then re-targets
+    // the new last enemy (20 hp) for the second hit: 20 - 8 = 12. Round 1's
+    // own attack (8 more) then brings it to 4 by the time this step is captured.
+    expect(steps[0].defenderTeam).toHaveLength(2);
+    expect(steps[1].defenderTeam).toHaveLength(1);
+    expect(steps[1].defenderTeam[0].health).toBe(4);
+  });
+});
+
+describe("Peanut perk — lethal on hit", () => {
+  it("knocks out any pet it hits in combat, regardless of raw damage", () => {
+    const scorpion = pet("Scorpion", 1, 3, "Peanut");
+    const { result, steps } = simulateBattle([scorpion], [pet("Sloth", 1, 100)], PET_REGISTRY);
+    expect(result).toBe("WIN");
+    expect(steps).toHaveLength(2); // Battle start + 1 round: the single hit is lethal
+  });
+
+  it("does not trigger from a 0-attack pet (no connecting hit)", () => {
+    const scorpion = pet("Scorpion", 0, 3, "Peanut");
+    const { result } = simulateBattle([scorpion], [pet("Sloth", 1, 5)], PET_REGISTRY);
+    expect(result).toBe("LOSS");
+  });
+});
+
+describe("Tiger — ability repeat", () => {
+  it("makes the friend directly ahead repeat their battle ability a second time", () => {
+    const { steps } = simulateBattle(
+      [pet("Sloth", 1, 5), pet("Dodo", 4, 2), pet("Tiger", 6, 4)],
+      [pet("Sloth", 1, 50)],
+      PET_REGISTRY,
+    );
+    // Dodo normally gives the Sloth ahead +2 attack (50% of 4). With Tiger
+    // directly behind Dodo, the ability repeats, adding +2 again → total +4.
+    expect(steps[1].description).toContain("(5/5)");
+  });
+});
+
+describe("Garlic perk — damage reduction", () => {
+  it("reduces incoming damage by 2", () => {
+    const garlicSloth: PetInstance = { type: "Sloth", attack: 1, health: 10, perk: "Garlic", xp: 1, level: 1 };
+    const { steps } = simulateBattle([garlicSloth], [pet("Sloth", 5, 5)], PET_REGISTRY);
+    expect(steps[1].attackerTeam[0].health).toBe(7); // 10 - (5-2)
+  });
+
+  it("never reduces damage below 2, even against a weak attacker", () => {
+    const garlicSloth: PetInstance = { type: "Sloth", attack: 1, health: 10, perk: "Garlic", xp: 1, level: 1 };
+    const { steps } = simulateBattle([garlicSloth], [pet("Sloth", 1, 5)], PET_REGISTRY);
+    expect(steps[1].attackerTeam[0].health).toBe(8); // max(2, 1-2) = 2 taken
+  });
+});
+
+describe("Melon perk — damage block", () => {
+  it("blocks up to 20 damage on the first hit, then clears", () => {
+    const melonSloth: PetInstance = { type: "Sloth", attack: 1, health: 10, perk: "Melon", xp: 1, level: 1 };
+    const { steps } = simulateBattle([melonSloth], [pet("Sloth", 5, 100)], PET_REGISTRY);
+    expect(steps[1].attackerTeam[0].health).toBe(10);
+    expect(steps[1].attackerTeam[0].perk).toBeNull();
+  });
+
+  it("blocks exactly 20 and lets the remainder through on a bigger hit", () => {
+    const melonSloth: PetInstance = { type: "Sloth", attack: 1, health: 10, perk: "Melon", xp: 1, level: 1 };
+    const { steps } = simulateBattle([melonSloth], [pet("Sloth", 21, 100)], PET_REGISTRY);
+    expect(steps[1].attackerTeam[0].health).toBe(9); // 10 - (21-20)
+  });
+
+  it("no longer blocks a second hit once used up", () => {
+    const melonSloth: PetInstance = { type: "Sloth", attack: 1, health: 30, perk: "Melon", xp: 1, level: 1 };
+    const { steps } = simulateBattle([melonSloth], [pet("Sloth", 5, 100)], PET_REGISTRY);
+    expect(steps[1].attackerTeam[0].health).toBe(30); // round 1: blocked
+    expect(steps[2].attackerTeam[0].health).toBe(25); // round 2: perk gone, takes 5
+  });
+});
+
+describe("Peanut + Melon interaction", () => {
+  it("a fully-blocked hit does not count as a Peanut kill", () => {
+    const scorpion = pet("Scorpion", 1, 3, "Peanut");
+    const melonSloth: PetInstance = { type: "Sloth", attack: 1, health: 10, perk: "Melon", xp: 1, level: 1 };
+    const { steps } = simulateBattle([scorpion], [melonSloth], PET_REGISTRY);
+    // Scorpion's 1 dmg is fully blocked (min(20,1)=1) — Sloth takes 0, so it
+    // wasn't "hurt" and Peanut's instakill does not apply.
+    expect(steps[1].defenderTeam[0].health).toBe(10);
+  });
+});
+
+describe("Ability order — same-trigger pets fire highest attack first", () => {
+  it("start-of-battle resolves by attack, not board position", () => {
+    // Board order is A, B, C (A frontmost), but attack order is C > B > A.
+    // Dodo gives 50% of its OWN current attack to the friend ahead, so firing
+    // order changes the final numbers: if C fires before B, B is boosted
+    // before it hands anything to A.
+    const dodoA = pet("Dodo", 1, 5);
+    const dodoB = pet("Dodo", 4, 5);
+    const dodoC = pet("Dodo", 10, 5);
+    const { steps } = simulateBattle(
+      [dodoA, dodoB, dodoC],
+      [pet("Sloth", 0, 100)],
+      PET_REGISTRY,
+    );
+    const afterRound1 = steps[1].attackerTeam;
+    // Attack-order firing: C (10 atk) first -> gives round(10*0.5)=5 to B -> B is 9.
+    // Then B (now 9 atk) -> gives round(9*0.5)=5 to A -> A is 6.
+    // (Board-order firing would instead process A first (no-op, nothing ahead),
+    // then B at its original 4 atk -> A would only reach 1+2=3.)
+    expect(afterRound1[2].attack).toBe(10); // Dodo C — nobody targets the back
+    expect(afterRound1[1].attack).toBe(9); // Dodo B — boosted by C first
+    expect(afterRound1[0].attack).toBe(6); // Dodo A — only reachable via attack order
+  });
+});
+
+describe("engine fix — start-of-battle deaths route through faint", () => {
+  it("Badger's faint ability fires even when it dies during the start-of-battle phase", () => {
+    const { steps } = simulateBattle(
+      [pet("Sloth", 1, 5), pet("Badger", 6, 1)],
+      [pet("Dolphin", 4, 3)],
+      PET_REGISTRY,
+    );
+    // Dolphin's start-of-battle hit (4 dmg) kills the low-health Badger
+    // before combat begins. Badger's faint ability must still fire, dealing
+    // 3 dmg (50% of 6) to the Sloth ahead of it: 5 - 3 = 2.
+    expect(steps[1].description).toContain("Sloth (1/2)");
+  });
+});
