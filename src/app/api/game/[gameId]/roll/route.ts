@@ -1,15 +1,12 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
-import { generateShop } from "@/lib/game/shop";
+import { generateShop, pickFrozenItems, FrozenPositionsShape } from "@/lib/game/shop";
 import { SHOP_PET_POOL } from "@/lib/pets";
 import { SHOP_FOOD_POOL } from "@/lib/foods";
 import { z } from "zod";
 
-const RollSchema = z.object({
-  frozenPetPositions: z.array(z.number().int().min(0)).default([]),
-  frozenFoodPositions: z.array(z.number().int().min(0)).default([]),
-});
+const RollSchema = z.object(FrozenPositionsShape);
 
 export async function POST(
   request: Request,
@@ -44,13 +41,7 @@ export async function POST(
     return Response.json({ error: "Not enough gold" }, { status: 400 });
   }
 
-  const frozenPets = frozenPetPositions
-    .filter((i) => i < state.shop.shopPets.length)
-    .map((i) => state.shop.shopPets[i]);
-
-  const frozenFoods = frozenFoodPositions
-    .filter((i) => i < state.shop.shopFoods.length)
-    .map((i) => state.shop.shopFoods[i]);
+  const { frozenPets, frozenFoods } = pickFrozenItems(state.shop, frozenPetPositions, frozenFoodPositions);
 
   const newShop = generateShop({
     turn: state.turn.turnNumber,

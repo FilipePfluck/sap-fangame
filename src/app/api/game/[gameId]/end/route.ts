@@ -2,18 +2,15 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { simulateBattle } from "@/lib/game/battle";
-import { generateShop, getUnlockedTiers } from "@/lib/game/shop";
+import { generateShop, getUnlockedTiers, pickFrozenItems, FrozenPositionsShape } from "@/lib/game/shop";
 import { fireBoardShopAbility } from "@/lib/game/shop-ability";
 import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
 import { SHOP_FOOD_POOL } from "@/lib/foods";
 import { pickRandom } from "@/lib/utils/random";
 import { z } from "zod";
-import type { Board, PetInstance } from "@/lib/types";
+import type { PetInstance } from "@/lib/types";
 
-const EndTurnSchema = z.object({
-  frozenPetPositions: z.array(z.number().int().min(0)).default([]),
-  frozenFoodPositions: z.array(z.number().int().min(0)).default([]),
-});
+const EndTurnSchema = z.object(FrozenPositionsShape);
 
 function buildGhostTeam(turn: number): PetInstance[] {
   const count = turn >= 2 ? 5 : 3;
@@ -77,7 +74,7 @@ export async function POST(
     PET_REGISTRY,
     previousBattle?.result
   );
-  const preBattleBoard = endTurnResult.board as Board;
+  const preBattleBoard = endTurnResult.board;
 
   const ghostTeam = buildGhostTeam(turnNumber);
   const { result, steps } = simulateBattle(preBattleBoard, ghostTeam, PET_REGISTRY);
@@ -87,16 +84,10 @@ export async function POST(
   // Start-of-turn fires right after the battle, on the pre-battle board —
   // battle itself stays fully ephemeral and never mutates persisted state.
   const startOfTurnResult = fireBoardShopAbility("start-of-turn", preBattleBoard, emptyShop, PET_REGISTRY);
-  const nextBoard = startOfTurnResult.board as Board;
+  const nextBoard = startOfTurnResult.board;
   const turnGoldDelta = endTurnResult.goldDelta + startOfTurnResult.goldDelta;
 
-  const frozenPets = frozenPetPositions
-    .filter((i) => i < state.shop.shopPets.length)
-    .map((i) => state.shop.shopPets[i]);
-
-  const frozenFoods = frozenFoodPositions
-    .filter((i) => i < state.shop.shopFoods.length)
-    .map((i) => state.shop.shopFoods[i]);
+  const { frozenPets, frozenFoods } = pickFrozenItems(state.shop, frozenPetPositions, frozenFoodPositions);
 
   const nextShop = generateShop({
     turn: turnNumber + 1,

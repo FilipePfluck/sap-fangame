@@ -2,16 +2,14 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { PET_REGISTRY } from "@/lib/pets";
-import { FOOD_REGISTRY } from "@/lib/foods";
 import { fireShopAbility } from "@/lib/game/shop-ability";
-import { applyFrozenFlags } from "@/lib/game/shop";
+import { applyFrozenFlags, FrozenPositionsShape } from "@/lib/game/shop";
 import { z } from "zod";
 import type { Board } from "@/lib/types";
 
 const SellPetSchema = z.object({
   boardPosition: z.number().int().min(0).max(4),
-  frozenPetPositions: z.array(z.number().int().min(0)).default([]),
-  frozenFoodPositions: z.array(z.number().int().min(0)).default([]),
+  ...FrozenPositionsShape,
 });
 
 export async function POST(
@@ -59,7 +57,6 @@ export async function POST(
     newBoard,
     applyFrozenFlags(state.shop, frozenPetPositions, frozenFoodPositions),
     PET_REGISTRY,
-    FOOD_REGISTRY,
   );
 
   const boardState = await prisma.boardState.create({

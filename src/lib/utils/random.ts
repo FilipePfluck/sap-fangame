@@ -14,7 +14,7 @@ export function pickN<T>(arr: T[], n: number): T[] {
   return result;
 }
 
-export function shuffle<T>(arr: T[]): T[] {
+function shuffle<T>(arr: T[]): T[] {
   const result = [...arr];
   for (let i = result.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -27,5 +27,6 @@ export function shuffle<T>(arr: T[]): T[] {
 // randomly rather than by original array position — shuffle first, then a
 // stable sort keeps that random order for equal-attack entries.
 export function orderByAttack<T>(entries: T[], getAttack: (entry: T) => number): T[] {
+  if (entries.length < 2) return entries;
   return shuffle(entries).sort((a, b) => getAttack(b) - getAttack(a));
 }

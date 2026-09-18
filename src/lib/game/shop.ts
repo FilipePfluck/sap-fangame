@@ -1,5 +1,6 @@
 import type { PetType, FoodType, ShopPet, ShopFood, ShopState } from "@/lib/types";
-import { pickN } from "@/lib/utils/random";
+import { z } from "zod";
+import { pickN, pickRandom } from "@/lib/utils/random";
 
 // Hard ceiling on total shop size (pets + food combined). The turn-based
 // slot counts below are just how many *new* items generateShop rolls each
@@ -26,10 +27,6 @@ export function getUnlockedTiers(turn: number): number[] {
   if (turn >= 9) tiers.push(5);
   if (turn >= 11) tiers.push(6);
   return tiers;
-}
-
-function pickRandom<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
 }
 
 export type GenerateShopArgs = {
@@ -86,6 +83,24 @@ export function getRewardTier(turn: number): number {
 
 function totalSlots(shop: ShopState): number {
   return shop.shopPets.length + shop.shopFoods.length;
+}
+
+// Request-body fields carrying the client's currently frozen shop positions.
+export const FrozenPositionsShape = {
+  frozenPetPositions: z.array(z.number().int().min(0)).default([]),
+  frozenFoodPositions: z.array(z.number().int().min(0)).default([]),
+};
+
+// The shop items at the given positions (out-of-range positions are ignored).
+export function pickFrozenItems(
+  shop: ShopState,
+  petPositions: number[],
+  foodPositions: number[]
+): { frozenPets: ShopPet[]; frozenFoods: ShopFood[] } {
+  return {
+    frozenPets: petPositions.filter((i) => i < shop.shopPets.length).map((i) => shop.shopPets[i]),
+    frozenFoods: foodPositions.filter((i) => i < shop.shopFoods.length).map((i) => shop.shopFoods[i]),
+  };
 }
 
 // Marks which shop items the player has frozen. The client only reports

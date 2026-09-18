@@ -7,7 +7,6 @@ import {
   applySushiBuff,
 } from "@/lib/game/shop-ability";
 import { PET_REGISTRY } from "@/lib/pets";
-import { FOOD_REGISTRY } from "@/lib/foods";
 import type { PetInstance, ShopState, Board } from "@/lib/types";
 
 function makePet(type: string, level = 1): PetInstance {
@@ -34,7 +33,7 @@ describe("Duck — sell", () => {
     const board = makeBoard([null, null, null, null, null]);
     board[0] = duck;
 
-    const { shop: result } = fireShopAbility("sell", duck, 0, board, shop, PET_REGISTRY, FOOD_REGISTRY);
+    const { shop: result } = fireShopAbility("sell", duck, 0, board, shop, PET_REGISTRY);
     expect(result.shopPets[0].tempHealthBonus).toBe(1);
     expect(result.shopPets[1].tempHealthBonus).toBe(1);
   });
@@ -47,7 +46,7 @@ describe("Duck — sell", () => {
     };
     const board = makeBoard([duck]);
 
-    const { shop: result } = fireShopAbility("sell", duck, 0, board, shop, PET_REGISTRY, FOOD_REGISTRY);
+    const { shop: result } = fireShopAbility("sell", duck, 0, board, shop, PET_REGISTRY);
     expect(result.shopPets[0].tempHealthBonus).toBe(3);
   });
 
@@ -56,7 +55,7 @@ describe("Duck — sell", () => {
     const shop = makeShop(["Sloth"]);
     const board = makeBoard([duck]);
 
-    fireShopAbility("sell", duck, 0, board, shop, PET_REGISTRY, FOOD_REGISTRY);
+    fireShopAbility("sell", duck, 0, board, shop, PET_REGISTRY);
     expect(shop.shopPets[0].tempHealthBonus).toBeUndefined();
   });
 });
@@ -68,7 +67,7 @@ describe("Beaver — sell", () => {
     const sloth2 = makePet("Sloth");
     const board = makeBoard([beaver, sloth1, sloth2]);
 
-    const { board: result } = fireShopAbility("sell", beaver, 0, board, makeShop(), PET_REGISTRY, FOOD_REGISTRY);
+    const { board: result } = fireShopAbility("sell", beaver, 0, board, makeShop(), PET_REGISTRY);
     const friend1 = result[1] as PetInstance;
     const friend2 = result[2] as PetInstance;
     expect(friend1.attack).toBe(2); // +1
@@ -80,7 +79,7 @@ describe("Beaver — sell", () => {
     const sloth = makePet("Sloth");
     const board = makeBoard([beaver, sloth]);
 
-    const { board: result } = fireShopAbility("sell", beaver, 0, board, makeShop(), PET_REGISTRY, FOOD_REGISTRY);
+    const { board: result } = fireShopAbility("sell", beaver, 0, board, makeShop(), PET_REGISTRY);
     expect((result[1] as PetInstance).attack).toBe(2);
   });
 
@@ -88,7 +87,7 @@ describe("Beaver — sell", () => {
     const beaver = makePet("Beaver");
     const board = makeBoard([beaver]);
 
-    const { board: result } = fireShopAbility("sell", beaver, 0, board, makeShop(), PET_REGISTRY, FOOD_REGISTRY);
+    const { board: result } = fireShopAbility("sell", beaver, 0, board, makeShop(), PET_REGISTRY);
     expect(result[0]).toEqual(beaver); // unchanged
   });
 });
@@ -97,7 +96,7 @@ describe("Pigeon — sell", () => {
   it("level 1 adds 1 Bread Crumbs to shop", () => {
     const pigeon = makePet("Pigeon", 1);
     const board = makeBoard([pigeon]);
-    const { shop } = fireShopAbility("sell", pigeon, 0, board, makeShop(), PET_REGISTRY, FOOD_REGISTRY);
+    const { shop } = fireShopAbility("sell", pigeon, 0, board, makeShop(), PET_REGISTRY);
     expect(shop.shopFoods).toHaveLength(1);
     expect(shop.shopFoods[0].type).toBe("Bread Crumbs");
     expect(shop.shopFoods[0].frozen).toBe(false);
@@ -106,7 +105,7 @@ describe("Pigeon — sell", () => {
   it("level 2 adds 2 Bread Crumbs", () => {
     const pigeon = makePet("Pigeon", 2);
     const board = makeBoard([pigeon]);
-    const { shop } = fireShopAbility("sell", pigeon, 0, board, makeShop(), PET_REGISTRY, FOOD_REGISTRY);
+    const { shop } = fireShopAbility("sell", pigeon, 0, board, makeShop(), PET_REGISTRY);
     expect(shop.shopFoods).toHaveLength(2);
     expect(shop.shopFoods.every((f) => f.type === "Bread Crumbs")).toBe(true);
   });
@@ -114,7 +113,7 @@ describe("Pigeon — sell", () => {
   it("level 3 adds 3 Bread Crumbs", () => {
     const pigeon = makePet("Pigeon", 3);
     const board = makeBoard([pigeon]);
-    const { shop } = fireShopAbility("sell", pigeon, 0, board, makeShop(), PET_REGISTRY, FOOD_REGISTRY);
+    const { shop } = fireShopAbility("sell", pigeon, 0, board, makeShop(), PET_REGISTRY);
     expect(shop.shopFoods).toHaveLength(3);
   });
 });
@@ -125,7 +124,7 @@ describe("Otter — buy", () => {
     const otter = makePet("Otter");
     const board = makeBoard([sloth, otter]);
 
-    const { board: result } = fireShopAbility("buy", otter, 1, board, makeShop(), PET_REGISTRY, FOOD_REGISTRY);
+    const { board: result } = fireShopAbility("buy", otter, 1, board, makeShop(), PET_REGISTRY);
     expect((result[0] as PetInstance).health).toBe(2); // Sloth got +1 health
     expect((result[1] as PetInstance).health).toBe(1); // Otter unchanged
   });
@@ -134,7 +133,7 @@ describe("Otter — buy", () => {
     const otter = makePet("Otter");
     const board = makeBoard([otter]);
 
-    const { board: result } = fireShopAbility("buy", otter, 0, board, makeShop(), PET_REGISTRY, FOOD_REGISTRY);
+    const { board: result } = fireShopAbility("buy", otter, 0, board, makeShop(), PET_REGISTRY);
     expect((result[0] as PetInstance).health).toBe(1); // Otter unchanged
   });
 });
@@ -150,7 +149,7 @@ describe("Shop capacity — stocking into a full shop evicts unfrozen items", ()
       shopPets: petsNamed(["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8"]),
       shopFoods: [{ type: "Garlic", frozen: false }],
     };
-    const { shop: result } = fireShopAbility("sell", pigeon, 0, makeBoard([pigeon]), shop, PET_REGISTRY, FOOD_REGISTRY);
+    const { shop: result } = fireShopAbility("sell", pigeon, 0, makeBoard([pigeon]), shop, PET_REGISTRY);
     expect(result.shopPets.map((p) => p.type)).toEqual(["P1", "P2", "P3", "P4", "P5", "P6"]);
     expect(result.shopFoods.map((f) => f.type)).toEqual(["Garlic", "Bread Crumbs", "Bread Crumbs", "Bread Crumbs"]);
   });
@@ -161,7 +160,7 @@ describe("Shop capacity — stocking into a full shop evicts unfrozen items", ()
       shopPets: petsNamed(["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10"]),
       shopFoods: [],
     };
-    const { shop: result } = fireShopAbility("sell", pigeon, 0, makeBoard([pigeon]), shop, PET_REGISTRY, FOOD_REGISTRY);
+    const { shop: result } = fireShopAbility("sell", pigeon, 0, makeBoard([pigeon]), shop, PET_REGISTRY);
     expect(result.shopPets.map((p) => p.type)).not.toContain("P10");
     expect(result.shopPets).toHaveLength(9);
     expect(result.shopFoods).toHaveLength(1);
@@ -173,7 +172,7 @@ describe("Shop capacity — stocking into a full shop evicts unfrozen items", ()
       shopPets: Array(10).fill(null).map(() => ({ type: "Sloth", frozen: true })),
       shopFoods: [],
     };
-    const { shop: result } = fireShopAbility("sell", pigeon, 0, makeBoard([pigeon]), shop, PET_REGISTRY, FOOD_REGISTRY);
+    const { shop: result } = fireShopAbility("sell", pigeon, 0, makeBoard([pigeon]), shop, PET_REGISTRY);
     expect(result.shopPets).toHaveLength(10);
     expect(result.shopFoods).toHaveLength(0);
   });
@@ -188,7 +187,7 @@ describe("Shop capacity — stocking into a full shop evicts unfrozen items", ()
       ],
       shopFoods: [],
     };
-    const { shop: result } = fireShopAbility("sell", pigeon, 0, makeBoard([pigeon]), shop, PET_REGISTRY, FOOD_REGISTRY);
+    const { shop: result } = fireShopAbility("sell", pigeon, 0, makeBoard([pigeon]), shop, PET_REGISTRY);
     expect(result.shopPets.map((p) => p.type)).not.toContain("Duck");
     expect(result.shopPets.map((p) => p.type)).toContain("Ant");
     expect(result.shopFoods).toHaveLength(1);
@@ -200,7 +199,7 @@ describe("Shop capacity — stocking into a full shop evicts unfrozen items", ()
       shopPets: Array(8).fill(null).map(() => ({ type: "Sloth", frozen: true })),
       shopFoods: [{ type: "Apple", frozen: false }, { type: "Honey", frozen: false }],
     };
-    const { shop: result } = fireShopAbility("sell", pigeon, 0, makeBoard([pigeon]), shop, PET_REGISTRY, FOOD_REGISTRY);
+    const { shop: result } = fireShopAbility("sell", pigeon, 0, makeBoard([pigeon]), shop, PET_REGISTRY);
     // falls back to the oldest food so the new one still fits
     expect(result.shopFoods.map((f) => f.type)).toEqual(["Honey", "Bread Crumbs"]);
     expect(result.shopPets).toHaveLength(8);
@@ -211,21 +210,21 @@ describe("Pig — sell", () => {
   it("level 1 gives +1 gold", () => {
     const pig = makePet("Pig", 1);
     const board = makeBoard([pig]);
-    const { goldDelta } = fireShopAbility("sell", pig, 0, board, makeShop(), PET_REGISTRY, FOOD_REGISTRY);
+    const { goldDelta } = fireShopAbility("sell", pig, 0, board, makeShop(), PET_REGISTRY);
     expect(goldDelta).toBe(1);
   });
 
   it("level 2 gives +2 gold", () => {
     const pig = makePet("Pig", 2);
     const board = makeBoard([pig]);
-    const { goldDelta } = fireShopAbility("sell", pig, 0, board, makeShop(), PET_REGISTRY, FOOD_REGISTRY);
+    const { goldDelta } = fireShopAbility("sell", pig, 0, board, makeShop(), PET_REGISTRY);
     expect(goldDelta).toBe(2);
   });
 
   it("level 3 gives +3 gold", () => {
     const pig = makePet("Pig", 3);
     const board = makeBoard([pig]);
-    const { goldDelta } = fireShopAbility("sell", pig, 0, board, makeShop(), PET_REGISTRY, FOOD_REGISTRY);
+    const { goldDelta } = fireShopAbility("sell", pig, 0, board, makeShop(), PET_REGISTRY);
     expect(goldDelta).toBe(3);
   });
 });
@@ -238,7 +237,7 @@ describe("Fish — level-up", () => {
     const sloth2 = makePet("Sloth");
     const board = makeBoard([sloth1, fish, sloth2]);
 
-    const { board: result } = fireShopAbility("level-up", fish, 1, board, makeShop(), PET_REGISTRY, FOOD_REGISTRY);
+    const { board: result } = fireShopAbility("level-up", fish, 1, board, makeShop(), PET_REGISTRY);
     expect((result[0] as PetInstance).attack).toBe(2);
     expect((result[0] as PetInstance).health).toBe(2);
     expect((result[2] as PetInstance).attack).toBe(2);
@@ -251,7 +250,7 @@ describe("Fish — level-up", () => {
     const sloth2 = makePet("Sloth");
     const board = makeBoard([sloth1, fish, sloth2]);
 
-    const { board: result } = fireShopAbility("level-up", fish, 1, board, makeShop(), PET_REGISTRY, FOOD_REGISTRY);
+    const { board: result } = fireShopAbility("level-up", fish, 1, board, makeShop(), PET_REGISTRY);
     expect((result[0] as PetInstance).attack).toBe(3);
     expect((result[0] as PetInstance).health).toBe(3);
     expect((result[2] as PetInstance).attack).toBe(3);
@@ -261,7 +260,7 @@ describe("Fish — level-up", () => {
   it("no-op when no friends on board", () => {
     const fish = makePet("Fish", 1);
     const board = makeBoard([fish]);
-    const { board: result } = fireShopAbility("level-up", fish, 0, board, makeShop(), PET_REGISTRY, FOOD_REGISTRY);
+    const { board: result } = fireShopAbility("level-up", fish, 0, board, makeShop(), PET_REGISTRY);
     expect(result[0]).toEqual(fish);
   });
 });

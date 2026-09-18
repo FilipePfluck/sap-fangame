@@ -1,5 +1,10 @@
 import type { PetInstance, BattleStep, PetType, BattleAbilityContext } from "@/lib/types";
 import { orderByAttack } from "@/lib/utils/random";
+import { compactBoard } from "@/lib/game/merge";
+import { friendSummonedCandidates } from "@/lib/game/friend-summoned";
+
+const MAX_TEAM_SIZE = 5;
+const NOOP_SUMMON = () => {};
 
 export type BattleSimulationResult = {
   result: "WIN" | "DRAW" | "LOSS";
@@ -13,7 +18,7 @@ function clonePet(p: PetInstance): PetInstance {
 }
 
 function compactTeam(team: (PetInstance | null)[]): PetInstance[] {
-  return team.filter((p): p is PetInstance => p !== null).map(clonePet);
+  return compactBoard(team).map(clonePet);
 }
 
 // Applies Garlic/Melon mitigation and returns the actual damage dealt.
@@ -91,15 +96,7 @@ function fireFriendSummoned(
   petRegistry: Record<string, PetType>,
   counts: WeakMap<PetInstance, number>
 ): void {
-  const candidates: { pet: PetInstance; ability: BattleAbility }[] = [];
-  for (let i = 0; i < team.length; i++) {
-    if (i === summonedIndex) continue;
-    const pet = team[i];
-    const ability = petRegistry[pet.type]?.ability;
-    if (ability?.trigger === "friend-summoned") {
-      candidates.push({ pet, ability });
-    }
-  }
+  const candidates = friendSummonedCandidates(team, summonedIndex, petRegistry);
 
   // Same-trigger pets fire highest-attack first (ties random) per the
   // ability-order spec, rather than in raw board order.
@@ -114,7 +111,7 @@ function fireFriendSummoned(
       enemyTeam,
       petRegistry,
       counts,
-      () => {},
+      NOOP_SUMMON,
       summonedIndex
     );
   }
@@ -162,7 +159,7 @@ function handleFaint(
 
   // 4. Insert summoned pets (up to team cap of 5) and fire friend-summoned
   for (const { pet, afterIndex } of pendingSummons) {
-    if (team.length >= 5) continue;
+    if (team.length >= MAX_TEAM_SIZE) continue;
     const insertAt = Math.min(afterIndex, team.length);
     team.splice(insertAt, 0, pet);
     fireFriendSummoned(team, insertAt, enemyTeam, petRegistry, counts);
@@ -224,7 +221,7 @@ function fireStartOfBattlePhase(
     const index = team.indexOf(pet);
     if (index === -1) continue; // fainted earlier in this same phase
     const summon = (p: PetInstance, afterIndex: number) => {
-      if (team.length < 5) {
+      if (team.length < MAX_TEAM_SIZE) {
         const insertAt = Math.min(afterIndex, team.length);
         team.splice(insertAt, 0, p);
         fireFriendSummoned(team, insertAt, enemyTeam, petRegistry, counts);
@@ -249,7 +246,7 @@ function fireSingleTrigger(
 ): void {
   const def = petRegistry[pet.type];
   if (def?.ability?.trigger !== trigger) return;
-  fireAbilityOn(def.ability, pet, index, team, enemyTeam, petRegistry, counts, () => {});
+  fireAbilityOn(def.ability, pet, index, team, enemyTeam, petRegistry, counts, NOOP_SUMMON);
 }
 
 export function simulateBattle(
@@ -257,8 +254,8 @@ export function simulateBattle(
   opponentTeam: (PetInstance | null)[],
   petRegistry: Record<string, PetType> = {}
 ): BattleSimulationResult {
-  let attacker: PetInstance[] = compactTeam(playerTeam);
-  let defender: PetInstance[] = compactTeam(opponentTeam);
+  const attacker: PetInstance[] = compactTeam(playerTeam);
+  const defender: PetInstance[] = compactTeam(opponentTeam);
   const steps: BattleStep[] = [];
   const triggerCounts = new WeakMap<PetInstance, number>();
 

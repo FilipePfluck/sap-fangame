@@ -4,10 +4,11 @@ import type {
   ShopAbilityContext,
   BattleAbilityContext,
   PetType,
-  FoodType,
 } from "@/lib/types";
 import { pickN, orderByAttack } from "@/lib/utils/random";
 import { stockFood } from "@/lib/game/shop";
+import { compactBoard } from "@/lib/game/merge";
+import { friendSummonedCandidates } from "@/lib/game/friend-summoned";
 
 export type ShopAbilityResult = {
   board: (PetInstance | null)[];
@@ -22,39 +23,55 @@ function cloneShop(shop: ShopState): ShopState {
   };
 }
 
+function createShopContext(
+  self: PetInstance,
+  selfIndex: number,
+  board: (PetInstance | null)[],
+  shop: ShopState,
+  gold: { delta: number },
+  justStocked: Set<object>,
+  lastBattleResult?: "WIN" | "DRAW" | "LOSS"
+): ShopAbilityContext {
+  return {
+    self,
+    selfIndex,
+    board,
+    shop,
+    level: self.level,
+    goldGain: (amount) => {
+      gold.delta += amount;
+    },
+    addShopFood: (foodName) => stockFood(shop, foodName, justStocked),
+    lastBattleResult,
+  };
+}
+
+function clearTempStats(pet: PetInstance): void {
+  if (pet.tempAttack) pet.attack -= pet.tempAttack;
+  if (pet.tempHealth) pet.health -= pet.tempHealth;
+  delete pet.tempAttack;
+  delete pet.tempHealth;
+}
+
 export function fireShopAbility(
   trigger: "sell" | "buy" | "level-up",
   pet: PetInstance,
   petIndex: number,
   board: (PetInstance | null)[],
   shop: ShopState,
-  petRegistry: Record<string, PetType>,
-  _foodRegistry: Record<string, FoodType>
+  petRegistry: Record<string, PetType>
 ): ShopAbilityResult {
   const def = petRegistry[pet.type];
   if (!def?.ability || def.ability.trigger !== trigger) {
     return { board: [...board], shop, goldDelta: 0 };
   }
 
-  const newBoard = [...board] as (PetInstance | null)[];
+  const newBoard = [...board];
   const newShop = cloneShop(shop);
-  let goldDelta = 0;
-  const justStocked = new Set<object>();
+  const gold = { delta: 0 };
 
-  const ctx: ShopAbilityContext = {
-    self: pet,
-    selfIndex: petIndex,
-    board: newBoard,
-    shop: newShop,
-    level: pet.level,
-    goldGain: (amount) => {
-      goldDelta += amount;
-    },
-    addShopFood: (foodName) => stockFood(newShop, foodName, justStocked),
-  };
-
-  def.ability.fn(ctx);
-  return { board: newBoard, shop: newShop, goldDelta };
+  def.ability.fn(createShopContext(pet, petIndex, newBoard, newShop, gold, new Set()));
+  return { board: newBoard, shop: newShop, goldDelta: gold.delta };
 }
 
 // Fires a board-wide trigger ("start-of-turn" / "end-turn") for every pet on
@@ -66,9 +83,9 @@ export function fireBoardShopAbility(
   petRegistry: Record<string, PetType>,
   lastBattleResult?: "WIN" | "DRAW" | "LOSS"
 ): ShopAbilityResult {
-  const currentBoard = [...board] as (PetInstance | null)[];
+  const currentBoard = [...board];
   const currentShop = cloneShop(shop);
-  let goldDelta = 0;
+  const gold = { delta: 0 };
   const justStocked = new Set<object>();
 
   for (let i = 0; i < currentBoard.length; i++) {
@@ -84,32 +101,17 @@ export function fireBoardShopAbility(
       pet.tempHealth = (pet.tempHealth ?? 0) + 7;
     }
 
-    if (trigger === "start-of-turn") {
-      if (pet.tempAttack) pet.attack -= pet.tempAttack;
-      if (pet.tempHealth) pet.health -= pet.tempHealth;
-      delete pet.tempAttack;
-      delete pet.tempHealth;
-    }
+    if (trigger === "start-of-turn") clearTempStats(pet);
 
     const def = petRegistry[pet.type];
     if (def?.ability?.trigger !== trigger) continue;
 
-    const ctx: ShopAbilityContext = {
-      self: pet,
-      selfIndex: i,
-      board: currentBoard,
-      shop: currentShop,
-      level: pet.level,
-      goldGain: (amount) => {
-        goldDelta += amount;
-      },
-      addShopFood: (foodName) => stockFood(currentShop, foodName, justStocked),
-      lastBattleResult,
-    };
-    def.ability.fn(ctx);
+    def.ability.fn(
+      createShopContext(pet, i, currentBoard, currentShop, gold, justStocked, lastBattleResult)
+    );
   }
 
-  return { board: currentBoard, shop: currentShop, goldDelta };
+  return { board: currentBoard, shop: currentShop, goldDelta: gold.delta };
 }
 
 // Fires the pet at `boardPosition`'s "faint" ability in the shop (used by
@@ -121,12 +123,12 @@ export function fireShopFaint(
   boardPosition: number,
   petRegistry: Record<string, PetType>
 ): (PetInstance | null)[] {
-  const newBoard = [...board] as (PetInstance | null)[];
+  const newBoard = [...board];
   const pet = newBoard[boardPosition];
   if (!pet) return newBoard;
 
   const def = petRegistry[pet.type];
-  const compacted = newBoard.filter((p): p is PetInstance => p !== null);
+  const compacted = compactBoard(newBoard);
   const selfIndex = compacted.indexOf(pet);
 
   newBoard[boardPosition] = null;
@@ -160,24 +162,13 @@ export function fireShopFriendSummoned(
   summonedBoardPosition: number,
   petRegistry: Record<string, PetType>
 ): (PetInstance | null)[] {
-  const newBoard = [...board] as (PetInstance | null)[];
+  const newBoard = [...board];
   const summonedPet = newBoard[summonedBoardPosition];
   if (!summonedPet) return newBoard;
 
-  const compacted = newBoard.filter((p): p is PetInstance => p !== null);
+  const compacted = compactBoard(newBoard);
   const summonedIndex = compacted.indexOf(summonedPet);
-
-  const candidates: {
-    pet: PetInstance;
-    ability: Extract<PetType["ability"], { trigger: "friend-summoned" }>;
-  }[] = [];
-  compacted.forEach((pet, i) => {
-    if (i === summonedIndex) return;
-    const ability = petRegistry[pet.type]?.ability;
-    if (ability?.trigger === "friend-summoned") {
-      candidates.push({ pet, ability });
-    }
-  });
+  const candidates = friendSummonedCandidates(compacted, summonedIndex, petRegistry);
 
   // Same-trigger pets fire highest-attack first (ties random), matching the
   // battle engine's ability-order rule.
@@ -203,11 +194,8 @@ export function fireShopFriendSummoned(
 // Gives 3 random board pets +1/+1 (Sushi targets the whole board, not the
 // single pet a normal food would be aimed at).
 export function applySushiBuff(board: (PetInstance | null)[]): (PetInstance | null)[] {
-  const newBoard = [...board] as (PetInstance | null)[];
-  const targets = pickN(
-    newBoard.filter((p): p is PetInstance => p !== null),
-    3
-  );
+  const newBoard = [...board];
+  const targets = pickN(compactBoard(newBoard), 3);
   for (const target of targets) {
     target.attack += 1;
     target.health += 1;

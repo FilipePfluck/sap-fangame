@@ -183,10 +183,7 @@ function PetCard({
     >
       {sprite ? (
         <Tooltip
-          text={
-            PET_REGISTRY[pet.type] &&
-            getPetDescription(PET_REGISTRY[pet.type], pet.level)
-          }
+          text={getPetDescription(PET_REGISTRY[pet.type], pet.level)}
         >
           <div
             className="relative w-10 h-10"

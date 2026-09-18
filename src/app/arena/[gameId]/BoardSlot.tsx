@@ -17,6 +17,7 @@ type BoardSlotProps = {
 };
 
 export default function BoardSlot({ pet, sprite, isSelected, isTargetable, onClick }: BoardSlotProps) {
+  const level = pet ? computeLevel(pet.xp) : 1;
   return (
     <button
       onClick={onClick}
@@ -34,13 +35,10 @@ export default function BoardSlot({ pet, sprite, isSelected, isTargetable, onCli
       {pet && sprite ? (
         <>
           <span className="text-xs text-zinc-400 dark:text-zinc-500">
-            Lv{computeLevel(pet.xp)} · {pet.xp}xp
+            Lv{level} · {pet.xp}xp
           </span>
           <Tooltip
-            text={
-              PET_REGISTRY[pet.type] &&
-              getPetDescription(PET_REGISTRY[pet.type], computeLevel(pet.xp))
-            }
+            text={getPetDescription(PET_REGISTRY[pet.type], level)}
           >
             <div className="relative w-10 h-10">
               <Image src={sprite} alt={pet.type} fill className="object-contain" />

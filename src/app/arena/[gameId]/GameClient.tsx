@@ -84,11 +84,15 @@ export default function GameClient({
   } | null>(null);
   const [selectedBoardIndex, setSelectedBoardIndex] = useState<number | null>(null);
   const [frozenPets, setFrozenPets] = useState<Set<number>>(
-    () => new Set(initialShop.shopPets.flatMap((p, i) => (p.frozen ? [i] : [])))
+    () => frozenFromShop(initialShop).pets
   );
   const [frozenFoods, setFrozenFoods] = useState<Set<number>>(
-    () => new Set(initialShop.shopFoods.flatMap((f, i) => (f.frozen ? [i] : [])))
+    () => frozenFromShop(initialShop).foods
   );
+  const frozenBody = {
+    frozenPetPositions: [...frozenPets],
+    frozenFoodPositions: [...frozenFoods],
+  };
 
   const [battleData, setBattleData] = useState<BattleData | null>(null);
   const [nextState, setNextState] = useState<NextState | null>(null);
@@ -206,8 +210,7 @@ export default function GameClient({
         body: JSON.stringify({
           shopPosition,
           boardPosition,
-          frozenPetPositions: [...frozenPets],
-          frozenFoodPositions: [...frozenFoods],
+          ...frozenBody,
         }),
       });
       const data = await res.json();
@@ -299,8 +302,7 @@ export default function GameClient({
         body: JSON.stringify({
           from: selectedBoardIndex,
           to: targetPosition,
-          frozenPetPositions: [...frozenPets],
-          frozenFoodPositions: [...frozenFoods],
+          ...frozenBody,
         }),
       });
       const data = await res.json();
@@ -380,8 +382,7 @@ export default function GameClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           boardPosition: selectedBoardIndex,
-          frozenPetPositions: [...frozenPets],
-          frozenFoodPositions: [...frozenFoods],
+          ...frozenBody,
         }),
       });
       const data = await res.json();
@@ -410,8 +411,7 @@ export default function GameClient({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          frozenPetPositions: [...frozenPets],
-          frozenFoodPositions: [...frozenFoods],
+          ...frozenBody,
         }),
       });
       const data = await res.json();
@@ -421,12 +421,9 @@ export default function GameClient({
       }
       setShop(data.shop as ShopState);
       setGold(data.gold);
-      setFrozenPets(
-        new Set((data.shop as ShopState).shopPets.flatMap((p, i) => (p.frozen ? [i] : [])))
-      );
-      setFrozenFoods(
-        new Set((data.shop as ShopState).shopFoods.flatMap((f, i) => (f.frozen ? [i] : [])))
-      );
+      const synced = frozenFromShop(data.shop as ShopState);
+      setFrozenPets(synced.pets);
+      setFrozenFoods(synced.foods);
     } finally {
       setLoading(false);
     }
@@ -439,8 +436,7 @@ export default function GameClient({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          frozenPetPositions: [...frozenPets],
-          frozenFoodPositions: [...frozenFoods],
+          ...frozenBody,
         }),
       });
       const endData = await endRes.json();
@@ -471,8 +467,9 @@ export default function GameClient({
       setTrophies(nextState.trophies);
       setTurn(nextState.turn);
       const nextShop = nextState.shop as ShopState;
-      setFrozenPets(new Set(nextShop.shopPets.flatMap((p, i) => (p.frozen ? [i] : []))));
-      setFrozenFoods(new Set(nextShop.shopFoods.flatMap((f, i) => (f.frozen ? [i] : []))));
+      const nextFrozen = frozenFromShop(nextShop);
+      setFrozenPets(nextFrozen.pets);
+      setFrozenFoods(nextFrozen.foods);
       setBattleData(null);
       setNextState(null);
       setSelectedItem(null);
@@ -599,7 +596,7 @@ export default function GameClient({
                       sprite={PET_SPRITES[pet.type] ?? null}
                       subtitle={`${atk}/${hp}`}
                       description={
-                        (def ? getPetDescription(def, 1) : "") +
+                        (getPetDescription(def, 1) ?? "") +
                         (pet.chainId ? " (Level up reward: buying one removes the other.)" : "")
                       }
                       chained={!!pet.chainId}

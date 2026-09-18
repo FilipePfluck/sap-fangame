@@ -96,8 +96,7 @@ export const SHOP_PET_POOL: PetType[] = TURTLE_PACK_PETS.filter(
   (p) => !p.isToken
 );
 
-export function getPetDescription(pet: PetType, level: number): string {
-  return typeof pet.description === "function"
-    ? pet.description(level)
-    : pet.description;
+export function getPetDescription(pet: PetType | undefined, level: number): string | undefined {
+  if (!pet) return undefined;
+  return typeof pet.description === "function" ? pet.description(level) : pet.description;
 }

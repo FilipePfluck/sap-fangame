@@ -1,5 +1,9 @@
 import type { Board, PetInstance } from "@/lib/types";
 
+export function compactBoard(board: Board): PetInstance[] {
+  return board.filter((p): p is PetInstance => p !== null);
+}
+
 export function computeLevel(xp: number): 1 | 2 | 3 {
   if (xp >= 6) return 3;
   if (xp >= 3) return 2;

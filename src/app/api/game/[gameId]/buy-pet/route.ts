@@ -2,9 +2,8 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
-import { FOOD_REGISTRY } from "@/lib/foods";
-import { mergePets, computeLevel, openSlot, levelUpRewardEarned } from "@/lib/game/merge";
-import { addLevelUpReward, applyFrozenFlags } from "@/lib/game/shop";
+import { mergePets, openSlot, levelUpRewardEarned } from "@/lib/game/merge";
+import { addLevelUpReward, applyFrozenFlags, FrozenPositionsShape } from "@/lib/game/shop";
 import { fireShopAbility, fireShopFriendSummoned } from "@/lib/game/shop-ability";
 import { z } from "zod";
 import type { Board, PetInstance, ShopState } from "@/lib/types";
@@ -12,8 +11,7 @@ import type { Board, PetInstance, ShopState } from "@/lib/types";
 const BuyPetSchema = z.object({
   shopPosition: z.number().int().min(0).max(9),
   boardPosition: z.number().int().min(0).max(4),
-  frozenPetPositions: z.array(z.number().int().min(0)).default([]),
-  frozenFoodPositions: z.array(z.number().int().min(0)).default([]),
+  ...FrozenPositionsShape,
 });
 
 export async function POST(
@@ -110,13 +108,13 @@ export async function POST(
   // new pet actually entered the board, not when it merged into one already
   // there.
   if (wasSummoned) {
-    currentBoard = fireShopFriendSummoned(currentBoard, boardPosition, PET_REGISTRY) as Board;
+    currentBoard = fireShopFriendSummoned(currentBoard, boardPosition, PET_REGISTRY);
   }
 
   // Fire buy ability (fires even when the purchase merged into an existing
   // pet — the buy still happened).
-  const buyResult = fireShopAbility("buy", placedPet, boardPosition, currentBoard, currentShop, PET_REGISTRY, FOOD_REGISTRY);
-  currentBoard = buyResult.board as Board;
+  const buyResult = fireShopAbility("buy", placedPet, boardPosition, currentBoard, currentShop, PET_REGISTRY);
+  currentBoard = buyResult.board;
   currentShop = buyResult.shop;
   extraGold += buyResult.goldDelta;
 
@@ -124,8 +122,8 @@ export async function POST(
   // Pass old level via a patched pet so ctx.level = old level in the ability fn.
   if (didLevelUp) {
     const petAtOldLevel = { ...placedPet, level: preMergeLevel };
-    const levelUpResult = fireShopAbility("level-up", petAtOldLevel, boardPosition, currentBoard, currentShop, PET_REGISTRY, FOOD_REGISTRY);
-    currentBoard = levelUpResult.board as Board;
+    const levelUpResult = fireShopAbility("level-up", petAtOldLevel, boardPosition, currentBoard, currentShop, PET_REGISTRY);
+    currentBoard = levelUpResult.board;
     currentShop = levelUpResult.shop;
     extraGold += levelUpResult.goldDelta;
   }
