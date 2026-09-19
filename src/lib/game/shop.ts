@@ -1,5 +1,4 @@
 import type { PetType, FoodType, ShopPet, ShopFood, ShopState } from "@/lib/types";
-import { z } from "zod";
 import { pickN, pickRandom } from "@/lib/utils/random";
 
 // Hard ceiling on total shop size (pets + food combined). The turn-based
@@ -81,15 +80,17 @@ export function getRewardTier(turn: number): number {
   return Math.min(Math.max(...getUnlockedTiers(turn)) + 1, MAX_TIER);
 }
 
+// Drops an item's discount. Discounts last for the turn they were applied in,
+// so items carried over (frozen) into the next turn's shop start at full price.
+export function clearDiscount<T extends { discount?: number }>(item: T): T {
+  const copy = { ...item };
+  delete copy.discount;
+  return copy;
+}
+
 function totalSlots(shop: ShopState): number {
   return shop.shopPets.length + shop.shopFoods.length;
 }
-
-// Request-body fields carrying the client's currently frozen shop positions.
-export const FrozenPositionsShape = {
-  frozenPetPositions: z.array(z.number().int().min(0)).default([]),
-  frozenFoodPositions: z.array(z.number().int().min(0)).default([]),
-};
 
 // The shop items at the given positions (out-of-range positions are ignored).
 export function pickFrozenItems(

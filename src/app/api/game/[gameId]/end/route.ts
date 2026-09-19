@@ -2,11 +2,14 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { simulateBattle } from "@/lib/game/battle";
-import { generateShop, getUnlockedTiers, pickFrozenItems, FrozenPositionsShape } from "@/lib/game/shop";
+import { generateShop, getUnlockedTiers, pickFrozenItems, clearDiscount } from "@/lib/game/shop";
+import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import { fireBoardShopAbility } from "@/lib/game/shop-ability";
 import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
 import { SHOP_FOOD_POOL } from "@/lib/foods";
 import { pickRandom } from "@/lib/utils/random";
+import { createPet } from "@/lib/game/pet";
+import { TURN_GOLD, TROPHIES_TO_WIN } from "@/lib/game/rules";
 import { z } from "zod";
 import type { PetInstance } from "@/lib/types";
 
@@ -21,14 +24,7 @@ function buildGhostTeam(turn: number): PetInstance[] {
 
   return Array.from({ length: count }, () => {
     const petDef = pickRandom(pool);
-    return {
-      type: petDef.name,
-      attack: petDef.baseAttack,
-      health: petDef.baseHealth,
-      perk: petDef.innatePerk ?? null,
-      xp: 1,
-      level: 1,
-    };
+    return createPet(petDef);
   });
 }
 
@@ -81,21 +77,25 @@ export async function POST(
   const newLives = result === "LOSS" ? lives - 1 : lives;
   const newTrophies = result === "WIN" ? trophies + 1 : trophies;
 
-  // Start-of-turn fires right after the battle, on the pre-battle board —
-  // battle itself stays fully ephemeral and never mutates persisted state.
-  const startOfTurnResult = fireBoardShopAbility("start-of-turn", preBattleBoard, emptyShop, PET_REGISTRY);
-  const nextBoard = startOfTurnResult.board;
-  const turnGoldDelta = endTurnResult.goldDelta + startOfTurnResult.goldDelta;
-
   const { frozenPets, frozenFoods } = pickFrozenItems(state.shop, frozenPetPositions, frozenFoodPositions);
 
-  const nextShop = generateShop({
+  const generatedShop = generateShop({
     turn: turnNumber + 1,
     pack: SHOP_PET_POOL,
     foodTypes: SHOP_FOOD_POOL,
-    frozenPets,
-    frozenFoods,
+    frozenPets: frozenPets.map(clearDiscount),
+    frozenFoods: frozenFoods.map(clearDiscount),
   });
+
+  // Start-of-turn fires right after the battle, on the pre-battle board and
+  // the new turn's shop (so it can e.g. discount or stock it) — battle itself
+  // stays fully ephemeral and never mutates persisted state.
+  const startOfTurnResult = fireBoardShopAbility("start-of-turn", preBattleBoard, generatedShop, PET_REGISTRY);
+  const nextBoard = startOfTurnResult.board;
+  const nextShop = startOfTurnResult.shop;
+  const turnGoldDelta = endTurnResult.goldDelta + startOfTurnResult.goldDelta;
+
+  const gameStatus = newLives <= 0 ? "LOST" : newTrophies >= TROPHIES_TO_WIN ? "WON" : "ACTIVE";
 
   const { battle } = await prisma.$transaction(async (tx) => {
     const battle = await tx.battle.create({
@@ -127,15 +127,12 @@ export async function POST(
         turnId: newTurn.id,
         boardState: nextBoard,
         shopState: nextShop,
-        goldRemaining: 10 + turnGoldDelta,
+        goldRemaining: TURN_GOLD + turnGoldDelta,
       },
     });
 
-    if (newTrophies >= 10 || newLives <= 0) {
-      await tx.game.update({
-        where: { id: gameId },
-        data: { status: newLives <= 0 ? "LOST" : "WON" },
-      });
+    if (gameStatus !== "ACTIVE") {
+      await tx.game.update({ where: { id: gameId }, data: { status: gameStatus } });
     }
 
     return { battle };
@@ -143,11 +140,12 @@ export async function POST(
 
   return Response.json({
     result,
+    gameStatus,
     battleId: battle.id,
     nextState: {
       board: nextBoard,
       shop: nextShop,
-      gold: 10 + turnGoldDelta,
+      gold: TURN_GOLD + turnGoldDelta,
       lives: newLives,
       trophies: newTrophies,
       turn: turnNumber + 1,

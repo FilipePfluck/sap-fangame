@@ -4,9 +4,10 @@ import {
   fireBoardShopAbility,
   fireShopFaint,
   fireShopFriendSummoned,
-  applySushiBuff,
 } from "@/lib/game/shop-ability";
 import { PET_REGISTRY } from "@/lib/pets";
+import { FOOD_REGISTRY } from "@/lib/foods";
+import { getFoodCost } from "@/lib/game/costs";
 import type { PetInstance, ShopState, Board } from "@/lib/types";
 
 function makePet(type: string, level = 1): PetInstance {
@@ -274,6 +275,47 @@ describe("Swan — start-of-turn", () => {
   });
 });
 
+describe("Squirrel — start-of-turn", () => {
+  it("discounts every shop food by 1 gold and leaves pets alone", () => {
+    const board = makeBoard([makePet("Squirrel")]);
+    const shop = makeShop(["Ant"], ["Apple", "Pill"]);
+    const { shop: result } = fireBoardShopAbility("start-of-turn", board, shop, PET_REGISTRY);
+    expect(result.shopFoods.map((f) => f.discount)).toEqual([1, 1]);
+    expect(result.shopPets[0].discount).toBeUndefined();
+  });
+
+  it("scales the discount linearly with level", () => {
+    for (const level of [1, 2, 3]) {
+      const { shop } = fireBoardShopAbility("start-of-turn", makeBoard([makePet("Squirrel", level)]), makeShop([], ["Apple"]), PET_REGISTRY);
+      expect(shop.shopFoods[0].discount).toBe(level);
+    }
+  });
+
+  it("stacks with a second Squirrel", () => {
+    const board = makeBoard([makePet("Squirrel"), makePet("Squirrel")]);
+    const { shop: result } = fireBoardShopAbility("start-of-turn", board, makeShop([], ["Apple"]), PET_REGISTRY);
+    expect(result.shopFoods[0].discount).toBe(2);
+  });
+
+  it("makes food cheaper to buy, never below 0", () => {
+    const board = makeBoard([makePet("Squirrel")]);
+    const { shop } = fireBoardShopAbility("start-of-turn", board, makeShop([], ["Apple", "Pill"]), PET_REGISTRY);
+    expect(getFoodCost(shop.shopFoods[0], FOOD_REGISTRY["Apple"])).toBe(2);
+    expect(getFoodCost(shop.shopFoods[1], FOOD_REGISTRY["Pill"])).toBe(0);
+  });
+
+  it("does not mutate the shop it was given", () => {
+    const shop = makeShop([], ["Apple"]);
+    fireBoardShopAbility("start-of-turn", makeBoard([makePet("Squirrel")]), shop, PET_REGISTRY);
+    expect(shop.shopFoods[0].discount).toBeUndefined();
+  });
+
+  it("has no effect when there is no Squirrel", () => {
+    const { shop } = fireBoardShopAbility("start-of-turn", makeBoard([makePet("Swan")]), makeShop([], ["Apple"]), PET_REGISTRY);
+    expect(shop.shopFoods[0].discount).toBeUndefined();
+  });
+});
+
 describe("Bison — end-turn", () => {
   it("gains +2/+2 when it has a level-3 friend", () => {
     const bison = makePet("Bison");
@@ -440,21 +482,5 @@ describe("Temporary stats — Horse in the shop", () => {
     const { board } = fireBoardShopAbility("end-turn", makeBoard([buffed]), makeShop(), PET_REGISTRY);
     expect((board[0] as PetInstance).attack).toBe(3);
     expect((board[0] as PetInstance).tempAttack).toBe(2);
-  });
-});
-
-describe("applySushiBuff", () => {
-  it("buffs exactly 3 distinct pets when 5 are on the board", () => {
-    const board = makeBoard([makePet("Sloth"), makePet("Sloth"), makePet("Sloth"), makePet("Sloth"), makePet("Sloth")]);
-    const result = applySushiBuff(board);
-    const buffedCount = result.filter((p) => p && p.attack === 2).length;
-    expect(buffedCount).toBe(3);
-  });
-
-  it("buffs all pets when fewer than 3 exist", () => {
-    const board = makeBoard([makePet("Sloth"), makePet("Sloth")]);
-    const result = applySushiBuff(board);
-    expect((result[0] as PetInstance).attack).toBe(2);
-    expect((result[1] as PetInstance).attack).toBe(2);
   });
 });

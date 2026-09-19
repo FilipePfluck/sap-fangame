@@ -3,8 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
 import { mergePets, openSlot, levelUpRewardEarned } from "@/lib/game/merge";
-import { addLevelUpReward, applyFrozenFlags, FrozenPositionsShape } from "@/lib/game/shop";
+import { addLevelUpReward, applyFrozenFlags } from "@/lib/game/shop";
+import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import { fireShopAbility, fireShopFriendSummoned } from "@/lib/game/shop-ability";
+import { getPetCost } from "@/lib/game/costs";
+import { createPet } from "@/lib/game/pet";
 import { z } from "zod";
 import type { Board, PetInstance, ShopState } from "@/lib/types";
 
@@ -44,13 +47,14 @@ export async function POST(
   }
   const shopNow = applyFrozenFlags(state.shop, frozenPetPositions, frozenFoodPositions);
 
-  if (state.goldRemaining < 3) {
-    return Response.json({ error: "Not enough gold" }, { status: 400 });
-  }
-
   const shopPet = shopNow.shopPets[shopPosition];
   if (!shopPet) {
     return Response.json({ error: "Invalid shop position" }, { status: 400 });
+  }
+
+  const cost = getPetCost(shopPet);
+  if (state.goldRemaining < cost) {
+    return Response.json({ error: "Not enough gold" }, { status: 400 });
   }
 
   const petDef = PET_REGISTRY[shopPet.type];
@@ -58,14 +62,7 @@ export async function POST(
     return Response.json({ error: "Unknown pet type" }, { status: 400 });
   }
 
-  const freshPet: PetInstance = {
-    type: petDef.name,
-    attack: petDef.baseAttack,
-    health: petDef.baseHealth + (shopPet.tempHealthBonus ?? 0),
-    perk: petDef.innatePerk ?? null,
-    xp: 1,
-    level: 1,
-  };
+  const freshPet = createPet(petDef, shopPet.tempHealthBonus);
 
   const occupant = state.board[boardPosition];
   let currentBoard: Board = [...state.board];
@@ -138,7 +135,7 @@ export async function POST(
       turnId: state.turnId,
       boardState: currentBoard,
       shopState: currentShop,
-      goldRemaining: state.goldRemaining - 3 + extraGold,
+      goldRemaining: state.goldRemaining - cost + extraGold,
     },
   });
 

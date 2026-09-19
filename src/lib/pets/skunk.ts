@@ -1,4 +1,5 @@
 import type { PetType } from "@/lib/types";
+import { removeHealth } from "@/lib/utils/combat";
 
 export const Skunk: PetType = {
   name: "Skunk",
@@ -14,8 +15,7 @@ export const Skunk: PetType = {
       const target = ctx.enemyTeam.reduce((highest, p) =>
         p.health > highest.health ? p : highest
       );
-      const reduced = target.health - Math.ceil(target.health * 0.33);
-      target.health = Math.max(1, reduced);
+      removeHealth(target, 0.33);
     },
   },
   description: "Start of battle: Reduce the highest health enemy by 33% health.",

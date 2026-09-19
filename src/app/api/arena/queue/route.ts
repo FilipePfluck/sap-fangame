@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { STARTING_LIVES, TURN_GOLD } from "@/lib/game/rules";
 import { generateShop } from "@/lib/game/shop";
 import { TURTLE_PACK_PETS } from "@/lib/pets";
 import { TURTLE_PACK_FOODS } from "@/lib/foods";
@@ -24,7 +25,7 @@ export async function POST() {
       turns: {
         create: {
           turnNumber: 1,
-          lives: 5,
+          lives: STARTING_LIVES,
           trophies: 0,
         },
       },
@@ -40,7 +41,7 @@ export async function POST() {
       turnId: turn.id,
       boardState: board,
       shopState: shop,
-      goldRemaining: 10,
+      goldRemaining: TURN_GOLD,
     },
   });
 

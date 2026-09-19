@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { generateShop } from "@/lib/game/shop";
+import { generateShop, clearDiscount } from "@/lib/game/shop";
 import { SHOP_PET_POOL } from "@/lib/pets";
 import { SHOP_FOOD_POOL } from "@/lib/foods";
 import type { PetType, FoodType } from "@/lib/types";
@@ -154,5 +154,29 @@ describe("generateShop", () => {
       if (shop.shopPets.some((p) => tier6Names.has(p.type))) sawTier6 = true;
     }
     expect(sawTier6).toBe(true);
+  });
+});
+
+describe("clearDiscount", () => {
+  it("removes the discount without touching other fields or the original", () => {
+    const item = { type: "Apple", frozen: true, discount: 2 };
+    const cleared = clearDiscount(item);
+    expect(cleared).toEqual({ type: "Apple", frozen: true });
+    expect(item.discount).toBe(2);
+  });
+});
+
+describe("generateShop — discounts", () => {
+  it("keeps a frozen food's discount but gives newly generated foods full price", () => {
+    const frozen = { type: "Apple", frozen: true, discount: 1 };
+    const shop = generateShop({
+      turn: 5,
+      pack: MULTI_TIER_PETS,
+      foodTypes: [TIER1_FOOD],
+      frozenFoods: [frozen],
+    });
+    expect(shop.shopFoods[0].discount).toBe(1);
+    expect(shop.shopFoods.length).toBeGreaterThan(1);
+    expect(shop.shopFoods.slice(1).every((f) => f.discount === undefined)).toBe(true);
   });
 });

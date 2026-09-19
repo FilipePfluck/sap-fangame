@@ -1,4 +1,5 @@
 import type { PetType } from "@/lib/types";
+import { dealAbilityDamage } from "@/lib/utils/combat";
 
 export const Badger: PetType = {
   name: "Badger",
@@ -13,8 +14,8 @@ export const Badger: PetType = {
       const damage = Math.round(ctx.self.attack * 0.5);
       const ahead = ctx.team[ctx.selfIndex - 1];
       const behind = ctx.team[ctx.selfIndex + 1];
-      if (ahead) ahead.health -= damage;
-      if (behind) behind.health -= damage;
+      if (ahead) dealAbilityDamage(ahead, damage);
+      if (behind) dealAbilityDamage(behind, damage);
     },
   },
   description: "Faint: Deal 50% attack damage to adjacent pets.",

@@ -5,7 +5,7 @@ import type {
   BattleAbilityContext,
   PetType,
 } from "@/lib/types";
-import { pickN, orderByAttack } from "@/lib/utils/random";
+import { orderByAttack } from "@/lib/utils/random";
 import { stockFood } from "@/lib/game/shop";
 import { compactBoard } from "@/lib/game/merge";
 import { friendSummonedCandidates } from "@/lib/game/friend-summoned";
@@ -123,7 +123,8 @@ export function fireShopFaint(
   boardPosition: number,
   petRegistry: Record<string, PetType>
 ): (PetInstance | null)[] {
-  const newBoard = [...board];
+  // Faint abilities can buff other pets in place, so work on copies.
+  const newBoard = board.map((p) => (p ? { ...p } : null));
   const pet = newBoard[boardPosition];
   if (!pet) return newBoard;
 
@@ -188,17 +189,5 @@ export function fireShopFriendSummoned(
     ability.fn(ctx);
   }
 
-  return newBoard;
-}
-
-// Gives 3 random board pets +1/+1 (Sushi targets the whole board, not the
-// single pet a normal food would be aimed at).
-export function applySushiBuff(board: (PetInstance | null)[]): (PetInstance | null)[] {
-  const newBoard = [...board];
-  const targets = pickN(compactBoard(newBoard), 3);
-  for (const target of targets) {
-    target.attack += 1;
-    target.health += 1;
-  }
   return newBoard;
 }

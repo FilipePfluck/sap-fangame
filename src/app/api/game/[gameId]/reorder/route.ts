@@ -2,11 +2,14 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { applyReorder } from "@/lib/game/merge";
+import { applyFrozenFlags } from "@/lib/game/shop";
+import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import { z } from "zod";
 
 const ReorderSchema = z.object({
   from: z.number().int().min(0).max(4),
   to: z.number().int().min(0).max(4),
+  ...FrozenPositionsShape,
 });
 
 export async function POST(
@@ -26,7 +29,7 @@ export async function POST(
     return Response.json({ error: "Invalid request", details: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { from, to } = parsed.data;
+  const { from, to, frozenPetPositions, frozenFoodPositions } = parsed.data;
 
   if (from === to) {
     return Response.json({ error: "Source and target are the same" }, { status: 400 });
@@ -54,7 +57,7 @@ export async function POST(
       gameId,
       turnId: state.turnId,
       boardState: newBoard,
-      shopState: state.shop,
+      shopState: applyFrozenFlags(state.shop, frozenPetPositions, frozenFoodPositions),
       goldRemaining: state.goldRemaining,
     },
   });

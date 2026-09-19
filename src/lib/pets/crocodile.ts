@@ -1,4 +1,5 @@
 import type { PetType } from "@/lib/types";
+import { dealAbilityDamage } from "@/lib/utils/combat";
 
 export const Crocodile: PetType = {
   name: "Crocodile",
@@ -14,7 +15,7 @@ export const Crocodile: PetType = {
         const alive = ctx.enemyTeam.filter((p) => p.health > 0);
         const target = alive[alive.length - 1];
         if (!target) break;
-        target.health -= 8;
+        dealAbilityDamage(target, 8);
       }
     },
   },

@@ -15,6 +15,8 @@ export type ShopPet = {
   type: string;
   frozen: boolean;
   tempHealthBonus?: number;
+  // Gold knocked off this item's price (set by abilities); see lib/game/costs.
+  discount?: number;
   // Shop pets sharing a chainId are a level-up reward: buying one removes the rest.
   chainId?: string;
 };
@@ -22,6 +24,8 @@ export type ShopPet = {
 export type ShopFood = {
   type: string;
   frozen: boolean;
+  // Gold knocked off this item's price (set by abilities); see lib/game/costs.
+  discount?: number;
 };
 
 export type Board = (PetInstance | null)[];
@@ -85,6 +89,12 @@ export type PetType = {
   description: string | ((level: number) => string);
 };
 
+export type FoodApplyContext = {
+  board: Board;
+  boardPosition: number;
+  petRegistry: Record<string, PetType>;
+};
+
 export type FoodType = {
   name: string;
   sprite: string;
@@ -93,5 +103,12 @@ export type FoodType = {
   isToken: boolean;
   cost?: number;
   effect: { attack?: number; health?: number };
+  // Foods that pick their own random targets instead of the player choosing
+  // one (e.g. Sushi). Unset means the player picks a pet to feed.
+  targeting?: { random: number };
+  // Overrides the standard "apply effect/perk to the targeted pet" behavior
+  // for foods that don't fit it (e.g. Pill). Returns a new board and
+  // must not mutate the one it's given.
+  applyEffect?: (ctx: FoodApplyContext) => Board;
   description: string;
 };

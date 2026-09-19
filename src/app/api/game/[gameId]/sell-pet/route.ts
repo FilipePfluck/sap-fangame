@@ -2,8 +2,10 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { PET_REGISTRY } from "@/lib/pets";
+import { getSellValue } from "@/lib/game/costs";
 import { fireShopAbility } from "@/lib/game/shop-ability";
-import { applyFrozenFlags, FrozenPositionsShape } from "@/lib/game/shop";
+import { applyFrozenFlags } from "@/lib/game/shop";
+import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import { z } from "zod";
 import type { Board } from "@/lib/types";
 
@@ -46,7 +48,7 @@ export async function POST(
     return Response.json({ error: "No pet at board position" }, { status: 400 });
   }
 
-  const baseGoldGain = pet.level;
+  const baseGoldGain = getSellValue(pet);
   const newBoard: Board = [...state.board];
   newBoard[boardPosition] = null;
 

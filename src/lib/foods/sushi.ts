@@ -7,5 +7,6 @@ export const Sushi: FoodType = {
   isPerk: false,
   isToken: false,
   effect: { attack: 1, health: 1 },
+  targeting: { random: 3 },
   description: "Give three random pets +1 attack and +1 health.",
 };

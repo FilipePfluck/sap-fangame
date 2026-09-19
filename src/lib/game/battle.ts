@@ -1,5 +1,6 @@
 import type { PetInstance, BattleStep, PetType, BattleAbilityContext } from "@/lib/types";
 import { orderByAttack } from "@/lib/utils/random";
+import { dealAbilityDamage } from "@/lib/utils/combat";
 import { compactBoard } from "@/lib/game/merge";
 import { friendSummonedCandidates } from "@/lib/game/friend-summoned";
 
@@ -19,21 +20,6 @@ function clonePet(p: PetInstance): PetInstance {
 
 function compactTeam(team: (PetInstance | null)[]): PetInstance[] {
   return compactBoard(team).map(clonePet);
-}
-
-// Applies Garlic/Melon mitigation and returns the actual damage dealt.
-// Battle-only — never persisted back to the board.
-function applyPerkDamage(target: PetInstance, rawDamage: number): number {
-  let damage = rawDamage;
-  if (target.perk === "Garlic") {
-    damage = Math.max(2, damage - 2);
-  }
-  if (target.perk === "Melon") {
-    const blocked = Math.min(20, damage);
-    damage -= blocked;
-    target.perk = null;
-  }
-  return damage;
 }
 
 function nextTriggerCount(
@@ -290,13 +276,12 @@ export function simulateBattle(
 
     const description = `${atkFront.type} (${atkFront.attack}/${atkFront.health}) attacks ${defFront.type} (${defFront.attack}/${defFront.health})`;
 
-    const dmgToDefender = applyPerkDamage(defFront, atkFront.attack);
-    const dmgToAttacker = applyPerkDamage(atkFront, defFront.attack);
-    defFront.health -= dmgToDefender;
-    atkFront.health -= dmgToAttacker;
+    const dmgToDefender = dealAbilityDamage(defFront, atkFront.attack);
+    const dmgToAttacker = dealAbilityDamage(atkFront, defFront.attack);
 
-    // Peanut: any hit dealing damage post-mitigation is lethal (a full Melon
-    // block doesn't count as a hit).
+    // Peanut only affects normal front-line attacks, not ability damage: any
+    // hit dealing damage post-mitigation is lethal (a full Melon block
+    // doesn't count as a hit).
     if (atkFront.perk === "Peanut" && dmgToDefender > 0) {
       defFront.health = Math.min(defFront.health, 0);
     }

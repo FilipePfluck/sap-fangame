@@ -6,6 +6,10 @@ import type { Board, ShopState, PetInstance } from "@/lib/types";
 import { PET_REGISTRY, getPetDescription } from "@/lib/pets";
 import { FOOD_REGISTRY } from "@/lib/foods";
 import { mergePets, openSlot, applyReorder } from "@/lib/game/merge";
+import { applyFoodEffect, feedError, needsTarget } from "@/lib/game/food";
+import { getPetCost, getFoodCost, getSellValue, ROLL_COST } from "@/lib/game/costs";
+import { createPet } from "@/lib/game/pet";
+import { STARTING_LIVES } from "@/lib/game/rules";
 import { PET_SPRITES, FOOD_SPRITES } from "@/lib/sprites";
 import ShopItem from "./ShopItem";
 import BoardSlot from "./BoardSlot";
@@ -100,6 +104,10 @@ export default function GameClient({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const selectedFoodDef =
+    selectedItem?.kind === "food" ? FOOD_MAP[shop.shopFoods[selectedItem.index]?.type] : undefined;
+  const selectedFoodNeedsTarget = !selectedFoodDef || needsTarget(selectedFoodDef);
+
   function handleSelectShopPet(index: number) {
     setSelectedBoardIndex(null);
     setSelectedItem((prev) =>
@@ -141,8 +149,8 @@ export default function GameClient({
 
   async function handleBoardSlotClick(boardPosition: number) {
     if (selectedItem) {
-      if (selectedItem.kind === "food" && !board[boardPosition]) {
-        setError("Select a pet to feed");
+      if (selectedItem.kind === "food" && !selectedFoodNeedsTarget) {
+        setError("This food picks its own targets — use Buy");
         return;
       }
 
@@ -159,21 +167,15 @@ export default function GameClient({
   }
 
   async function handleBuyPet(shopPosition: number, boardPosition: number) {
-    if (gold < 3) { setError("Not enough gold"); return; }
-
     const shopPet = shop.shopPets[shopPosition];
     if (!shopPet) return;
     const petDef = PET_MAP[shopPet.type];
     if (!petDef) return;
 
-    const freshPet: PetInstance = {
-      type: petDef.name,
-      attack: petDef.baseAttack,
-      health: petDef.baseHealth,
-      perk: null,
-      xp: 1,
-      level: 1,
-    };
+    const cost = getPetCost(shopPet);
+    if (gold < cost) { setError("Not enough gold"); return; }
+
+    const freshPet = createPet(petDef, shopPet.tempHealthBonus);
 
     const occupant = board[boardPosition];
     let optimisticBoard: Board = [...board];
@@ -199,7 +201,7 @@ export default function GameClient({
     setBoard(optimisticBoard);
     setShop(optimisticShop);
     setFrozenPets(removeFrozenIndices(frozenPets, removedPetIdx));
-    setGold(gold - 3);
+    setGold(gold - cost);
     setSelectedItem(null);
     setLoading(true);
 
@@ -232,25 +234,23 @@ export default function GameClient({
     }
   }
 
-  async function handleBuyFood(shopPosition: number, boardPosition: number) {
-    if (gold < 3) { setError("Not enough gold"); return; }
-
+  async function handleBuyFood(shopPosition: number, boardPosition?: number) {
     const shopFood = shop.shopFoods[shopPosition];
     if (!shopFood) return;
     const foodDef = FOOD_MAP[shopFood.type];
     if (!foodDef) return;
 
-    const pet = board[boardPosition];
-    if (!pet) return;
+    const cost = getFoodCost(shopFood, foodDef);
+    if (gold < cost) { setError("Not enough gold"); return; }
 
-    const updatedPet: PetInstance = {
-      ...pet,
-      attack: pet.attack + (foodDef.effect.attack ?? 0),
-      health: pet.health + (foodDef.effect.health ?? 0),
-      perk: foodDef.isPerk ? foodDef.name : pet.perk,
-    };
-    const optimisticBoard: Board = [...board];
-    optimisticBoard[boardPosition] = updatedPet;
+    const feedProblem = feedError(foodDef, board, boardPosition);
+    if (feedProblem) { setError(feedProblem); return; }
+
+    // Random-target foods leave the board alone until the server picks the
+    // pets, so the preview never shows the wrong ones.
+    const optimisticBoard = needsTarget(foodDef)
+      ? applyFoodEffect(foodDef, board, boardPosition, PET_MAP)
+      : board;
 
     const newShopFoods = [...shop.shopFoods];
     newShopFoods.splice(shopPosition, 1);
@@ -260,7 +260,7 @@ export default function GameClient({
     setBoard(optimisticBoard);
     setShop(optimisticShop);
     setFrozenFoods(removeFrozenIndices(frozenFoods, [shopPosition]));
-    setGold(gold - 3);
+    setGold(gold - cost);
     setSelectedItem(null);
     setLoading(true);
 
@@ -268,7 +268,7 @@ export default function GameClient({
       const res = await fetch(`/api/game/${gameId}/buy-food`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ shopPosition, boardPosition }),
+        body: JSON.stringify({ shopPosition, boardPosition, ...frozenBody }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -279,6 +279,9 @@ export default function GameClient({
       setBoard(data.board as Board);
       setShop(data.shop as ShopState);
       setGold(data.gold);
+      const synced = frozenFromShop(data.shop as ShopState);
+      setFrozenPets(synced.pets);
+      setFrozenFoods(synced.foods);
     } catch {
       setBoard(prevBoard); setShop(prevShop); setGold(prevGold); setFrozenFoods(prevFrozen);
     } finally {
@@ -344,7 +347,7 @@ export default function GameClient({
       const res = await fetch(`/api/game/${gameId}/merge`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ from: selectedBoardIndex, to: targetPosition }),
+        body: JSON.stringify({ from: selectedBoardIndex, to: targetPosition, ...frozenBody }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -353,6 +356,11 @@ export default function GameClient({
         return;
       }
       setBoard(data.board as Board);
+      setShop(data.shop as ShopState);
+      setGold(data.gold);
+      const synced = frozenFromShop(data.shop as ShopState);
+      setFrozenPets(synced.pets);
+      setFrozenFoods(synced.foods);
     } catch {
       setBoard(prevBoard);
     } finally {
@@ -366,7 +374,7 @@ export default function GameClient({
     const pet = board[selectedBoardIndex];
     if (!pet) return;
 
-    const goldGain = pet.level;
+    const goldGain = getSellValue(pet);
     const optimisticBoard: Board = [...board];
     optimisticBoard[selectedBoardIndex] = null;
 
@@ -451,7 +459,7 @@ export default function GameClient({
       const battle = await watchRes.json();
       setBattleData(battle);
       setNextState(endData.nextState ?? null);
-      setGameWon(endData.result === "WIN" && trophies + 1 >= 10);
+      setGameWon(endData.gameStatus === "WON");
       setPhase("battle");
     } finally {
       setLoading(false);
@@ -508,7 +516,7 @@ export default function GameClient({
             Lives: {Array.from({ length: lives }, (_, i) => (
               <span key={i} className="text-red-500">♥</span>
             ))}
-            {Array.from({ length: 5 - lives }, (_, i) => (
+            {Array.from({ length: STARTING_LIVES - lives }, (_, i) => (
               <span key={i} className="text-zinc-300 dark:text-zinc-600">♥</span>
             ))}
           </span>
@@ -539,10 +547,15 @@ export default function GameClient({
                         isSelected={selectedBoardIndex === i}
                         isTargetable={
                           hasShopSelection &&
-                          (selectedItem!.kind === "pet" ? true : pet !== null)
+                          (selectedItem!.kind === "pet"
+                            ? true
+                            : pet !== null && selectedFoodNeedsTarget)
                         }
                         onClick={() => handleBoardSlotClick(i)}
                       />
+                      {pet && (
+                        <span className="text-xs text-zinc-400">sells {getSellValue(pet)}g</span>
+                      )}
                       {isOtherSlot && (
                         <div className="flex gap-1">
                           <button
@@ -574,7 +587,7 @@ export default function GameClient({
                     disabled={loading}
                     className="px-4 py-1.5 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700 disabled:opacity-40 transition-colors"
                   >
-                    Sell (+{board[selectedBoardIndex]!.level}g)
+                    Sell (+{getSellValue(board[selectedBoardIndex]!)}g)
                   </button>
                 </div>
               )}
@@ -595,6 +608,8 @@ export default function GameClient({
                       name={pet.type}
                       sprite={PET_SPRITES[pet.type] ?? null}
                       subtitle={`${atk}/${hp}`}
+                      price={getPetCost(pet)}
+                      discounted={!!pet.discount}
                       description={
                         (getPetDescription(def, 1) ?? "") +
                         (pet.chainId ? " (Level up reward: buying one removes the other.)" : "")
@@ -631,11 +646,14 @@ export default function GameClient({
                       name={food.type}
                       sprite={FOOD_SPRITES[food.type] ?? null}
                       subtitle={subtitle}
+                      price={def ? getFoodCost(food, def) : 0}
+                      discounted={!!food.discount}
                       description={def?.description ?? ""}
                       isSelected={selectedItem?.kind === "food" && selectedItem.index === i}
                       isFrozen={frozenFoods.has(i)}
                       onSelect={() => handleSelectShopFood(i)}
                       onFreeze={() => handleFreezeToggle("food", i)}
+                      onBuy={def && !needsTarget(def) ? () => handleBuyFood(i) : undefined}
                       onContextMenu={(e) => handleContextMenu(e, "food", i)}
                     />;
                   })}
@@ -647,10 +665,10 @@ export default function GameClient({
             <div className="flex justify-between">
               <button
                 onClick={handleRoll}
-                disabled={loading || gold < 1}
+                disabled={loading || gold < ROLL_COST}
                 className="px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-700 disabled:opacity-40 transition-colors"
               >
-                Roll (1g)
+                Roll ({ROLL_COST}g)
               </button>
               <button
                 onClick={handleEndTurn}

@@ -1,4 +1,5 @@
 import type { PetType } from "@/lib/types";
+import { dealAbilityDamage } from "@/lib/utils/combat";
 
 export const Dolphin: PetType = {
   name: "Dolphin",
@@ -16,7 +17,7 @@ export const Dolphin: PetType = {
         const target = alive.reduce((lowest, p) =>
           p.health < lowest.health ? p : lowest
         );
-        target.health -= 4;
+        dealAbilityDamage(target, 4);
       }
     },
   },

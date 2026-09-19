@@ -26,6 +26,7 @@ export { Rhino } from "./rhino";
 export { Leopard } from "./leopard";
 export { Boar } from "./boar";
 export { Tiger } from "./tiger";
+export { Squirrel } from "./squirrel";
 
 import { Sloth } from "./sloth";
 import { Duck } from "./duck";
@@ -55,6 +56,7 @@ import { Rhino } from "./rhino";
 import { Leopard } from "./leopard";
 import { Boar } from "./boar";
 import { Tiger } from "./tiger";
+import { Squirrel } from "./squirrel";
 import type { PetType } from "@/lib/types";
 
 export const TURTLE_PACK_PETS: PetType[] = [
@@ -85,6 +87,7 @@ export const TURTLE_PACK_PETS: PetType[] = [
   Leopard,
   Boar,
   Tiger,
+  Squirrel,
 ];
 
 export const PET_REGISTRY: Record<string, PetType> = Object.fromEntries([

@@ -7,12 +7,16 @@ type ShopItemProps = {
   name: string;
   sprite: string | null;
   subtitle: string;
+  price: number;
+  discounted?: boolean;
   description: string;
   isSelected: boolean;
   isFrozen: boolean;
   chained?: boolean;
   onSelect: () => void;
   onFreeze: () => void;
+  // Set for items bought with a button instead of by picking a board pet.
+  onBuy?: () => void;
   onContextMenu: (e: React.MouseEvent) => void;
 };
 
@@ -20,12 +24,15 @@ export default function ShopItem({
   name,
   sprite,
   subtitle,
+  price,
+  discounted = false,
   description,
   isSelected,
   isFrozen,
   chained = false,
   onSelect,
   onFreeze,
+  onBuy,
   onContextMenu,
 }: ShopItemProps) {
   return (
@@ -53,13 +60,32 @@ export default function ShopItem({
           {isFrozen && <span className="absolute top-1 right-1 text-xs text-blue-500">❄</span>}
         </button>
       </Tooltip>
+      <span
+        className={
+          discounted
+            ? "text-xs font-medium text-green-600 dark:text-green-400"
+            : "text-xs text-yellow-600 dark:text-yellow-400"
+        }
+      >
+        {price}g
+      </span>
       {isSelected && (
-        <button
-          onClick={onFreeze}
-          className="absolute -bottom-6 text-xs px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-600 hover:bg-blue-200 dark:hover:bg-blue-800/40"
-        >
-          {isFrozen ? "Unfreeze" : "Freeze"}
-        </button>
+        <div className="absolute -bottom-6 flex gap-1">
+          {onBuy && (
+            <button
+              onClick={onBuy}
+              className="text-xs px-2 py-0.5 rounded bg-green-600 text-white hover:bg-green-700"
+            >
+              Buy
+            </button>
+          )}
+          <button
+            onClick={onFreeze}
+            className="text-xs px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-600 hover:bg-blue-200 dark:hover:bg-blue-800/40"
+          >
+            {isFrozen ? "Unfreeze" : "Freeze"}
+          </button>
+        </div>
       )}
     </div>
   );

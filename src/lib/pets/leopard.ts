@@ -1,5 +1,6 @@
 import type { PetType } from "@/lib/types";
 import { pickRandom } from "@/lib/utils/random";
+import { dealAbilityDamage } from "@/lib/utils/combat";
 
 export const Leopard: PetType = {
   name: "Leopard",
@@ -13,7 +14,7 @@ export const Leopard: PetType = {
     fn: (ctx) => {
       if (ctx.enemyTeam.length === 0) return;
       const target = pickRandom(ctx.enemyTeam);
-      target.health -= Math.round(ctx.self.attack * 0.5);
+      dealAbilityDamage(target, Math.round(ctx.self.attack * 0.5));
     },
   },
   description: "Start of battle: Deal 50% attack damage to one random enemy.",

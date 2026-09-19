@@ -3,6 +3,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { STARTING_LIVES, TURN_GOLD } from "@/lib/game/rules";
 import { generateShop } from "@/lib/game/shop";
 import { SHOP_PET_POOL } from "@/lib/pets";
 import { SHOP_FOOD_POOL } from "@/lib/foods";
@@ -21,7 +22,7 @@ export async function startGame() {
   const game = await prisma.game.create({
     data: {
       playerId: session.user.id,
-      turns: { create: { turnNumber: 1, lives: 5, trophies: 0 } },
+      turns: { create: { turnNumber: 1, lives: STARTING_LIVES, trophies: 0 } },
     },
     include: { turns: true },
   });
@@ -31,7 +32,7 @@ export async function startGame() {
       turnId: game.turns[0].id,
       boardState: [null, null, null, null, null],
       shopState: shop,
-      goldRemaining: 10,
+      goldRemaining: TURN_GOLD,
     },
   });
   redirect(`/arena/${game.id}`);
