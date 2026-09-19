@@ -15,4 +15,8 @@ export const Pigeon: PetType = {
       }
     },
   },
+  description: (level: number) =>
+    level > 1
+      ? `Sell: Stock ${level} free Bread Crumbs.`
+      : "Sell: Stock one free Bread Crumbs.",
 };

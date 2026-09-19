@@ -5,8 +5,8 @@ export const Fish: PetType = {
   name: "Fish",
   sprite: "/sap/fish.webp",
   tier: 1,
-  baseAttack: 2,
-  baseHealth: 3,
+  baseAttack: 3,
+  baseHealth: 2,
   isToken: false,
   ability: {
     trigger: "level-up",
@@ -30,4 +30,8 @@ export const Fish: PetType = {
       }
     },
   },
+  description: (level: number) =>
+    level >= 3
+      ? "No ability."
+      : `Level up: Give two friends +${level} attack and +${level} health.`,
 };

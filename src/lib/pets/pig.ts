@@ -13,4 +13,5 @@ export const Pig: PetType = {
       ctx.goldGain(ctx.level);
     },
   },
+  description: (level: number) => `Sell: Gain +${level} gold.`,
 };

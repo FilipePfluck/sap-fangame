@@ -1,14 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { generateShop } from "@/lib/game/shop";
+import { generateShop, clearDiscount } from "@/lib/game/shop";
 import { SHOP_PET_POOL } from "@/lib/pets";
 import { SHOP_FOOD_POOL } from "@/lib/foods";
 import type { PetType, FoodType } from "@/lib/types";
 
 // Minimal multi-tier pack for tier-unlock tests
-const TIER1_PET: PetType = { name: "Sloth", sprite: "", tier: 1, baseAttack: 1, baseHealth: 1, isToken: false, ability: null };
-const TIER2_PET: PetType = { name: "Tiger", sprite: "", tier: 2, baseAttack: 4, baseHealth: 3, isToken: false, ability: null };
-const TIER1_FOOD: FoodType = { name: "Apple", sprite: "", tier: 1, isPerk: false, isToken: false, effect: { attack: 1, health: 1 } };
-const TIER2_FOOD: FoodType = { name: "Salad", sprite: "", tier: 2, isPerk: false, isToken: false, effect: { health: 2 } };
+const TIER1_PET: PetType = { name: "Sloth", sprite: "", tier: 1, baseAttack: 1, baseHealth: 1, isToken: false, ability: null, description: "" };
+const TIER2_PET: PetType = { name: "Tiger", sprite: "", tier: 2, baseAttack: 4, baseHealth: 3, isToken: false, ability: null, description: "" };
+const TIER1_FOOD: FoodType = { name: "Apple", sprite: "", tier: 1, isPerk: false, isToken: false, effect: { attack: 1, health: 1 }, description: "" };
+const TIER2_FOOD: FoodType = { name: "Salad", sprite: "", tier: 2, isPerk: false, isToken: false, effect: { health: 2 }, description: "" };
 const MULTI_TIER_PETS = [TIER1_PET, TIER2_PET];
 const MULTI_TIER_FOODS = [TIER1_FOOD, TIER2_FOOD];
 
@@ -130,5 +130,53 @@ describe("generateShop", () => {
   it("only shows tier-1 foods at turn 1 when pool has multiple tiers", () => {
     const shop = generateShop({ turn: 1, pack: MULTI_TIER_PETS, foodTypes: MULTI_TIER_FOODS });
     expect(shop.shopFoods.every((f) => f.type === "Apple")).toBe(true);
+  });
+
+  it("surfaces real tier-2 pets at turn 3 using the actual pack", () => {
+    const tier2Names = new Set(SHOP_PET_POOL.filter((p) => p.tier === 2).map((p) => p.name));
+    const unlockedNames = new Set(SHOP_PET_POOL.filter((p) => p.tier <= 2).map((p) => p.name));
+    let sawTier2 = false;
+    for (let i = 0; i < 50; i++) {
+      const shop = generateShop({ turn: 3, pack: SHOP_PET_POOL, foodTypes: SHOP_FOOD_POOL });
+      for (const p of shop.shopPets) {
+        expect(unlockedNames.has(p.type)).toBe(true);
+        if (tier2Names.has(p.type)) sawTier2 = true;
+      }
+    }
+    expect(sawTier2).toBe(true);
+  });
+
+  it("surfaces real tier-6 pets at turn 11 using the actual pack", () => {
+    const tier6Names = new Set(SHOP_PET_POOL.filter((p) => p.tier === 6).map((p) => p.name));
+    let sawTier6 = false;
+    for (let i = 0; i < 50; i++) {
+      const shop = generateShop({ turn: 11, pack: SHOP_PET_POOL, foodTypes: SHOP_FOOD_POOL });
+      if (shop.shopPets.some((p) => tier6Names.has(p.type))) sawTier6 = true;
+    }
+    expect(sawTier6).toBe(true);
+  });
+});
+
+describe("clearDiscount", () => {
+  it("removes the discount without touching other fields or the original", () => {
+    const item = { type: "Apple", frozen: true, discount: 2 };
+    const cleared = clearDiscount(item);
+    expect(cleared).toEqual({ type: "Apple", frozen: true });
+    expect(item.discount).toBe(2);
+  });
+});
+
+describe("generateShop — discounts", () => {
+  it("keeps a frozen food's discount but gives newly generated foods full price", () => {
+    const frozen = { type: "Apple", frozen: true, discount: 1 };
+    const shop = generateShop({
+      turn: 5,
+      pack: MULTI_TIER_PETS,
+      foodTypes: [TIER1_FOOD],
+      frozenFoods: [frozen],
+    });
+    expect(shop.shopFoods[0].discount).toBe(1);
+    expect(shop.shopFoods.length).toBeGreaterThan(1);
+    expect(shop.shopFoods.slice(1).every((f) => f.discount === undefined)).toBe(true);
   });
 });

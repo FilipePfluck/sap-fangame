@@ -4,6 +4,9 @@ import Image from "next/image";
 import type { PetInstance } from "@/lib/types";
 import { computeLevel } from "@/lib/game/merge";
 import { FOOD_SPRITES } from "@/lib/sprites";
+import { PET_REGISTRY, getPetDescription } from "@/lib/pets";
+import { FOOD_REGISTRY } from "@/lib/foods";
+import Tooltip from "./Tooltip";
 
 type BoardSlotProps = {
   pet: PetInstance | null;
@@ -14,11 +17,12 @@ type BoardSlotProps = {
 };
 
 export default function BoardSlot({ pet, sprite, isSelected, isTargetable, onClick }: BoardSlotProps) {
+  const level = pet ? computeLevel(pet.xp) : 1;
   return (
     <button
       onClick={onClick}
       className={[
-        "relative w-20 h-20 rounded-xl border-2 flex flex-col items-center justify-center p-1 transition-all overflow-hidden",
+        "relative w-20 h-20 rounded-xl border-2 flex flex-col items-center justify-center p-1 transition-all",
         isSelected
           ? "border-green-400 ring-2 ring-green-400 bg-green-50 dark:bg-green-900/20 cursor-pointer"
           : pet
@@ -31,18 +35,25 @@ export default function BoardSlot({ pet, sprite, isSelected, isTargetable, onCli
       {pet && sprite ? (
         <>
           <span className="text-xs text-zinc-400 dark:text-zinc-500">
-            Lv{computeLevel(pet.xp)} · {pet.xp}xp
+            Lv{level} · {pet.xp}xp
           </span>
-          <div className="relative w-10 h-10">
-            <Image src={sprite} alt={pet.type} fill className="object-contain" />
-          </div>
+          <Tooltip
+            text={getPetDescription(PET_REGISTRY[pet.type], level)}
+          >
+            <div className="relative w-10 h-10">
+              <Image src={sprite} alt={pet.type} fill className="object-contain" />
+            </div>
+          </Tooltip>
           <span className="text-xs text-zinc-500 dark:text-zinc-400">
             {pet.attack}/{pet.health}
           </span>
           {pet.perk && FOOD_SPRITES[pet.perk] && (
-            <div className="absolute top-1 right-1 w-4 h-4">
+            <Tooltip
+              text={FOOD_REGISTRY[pet.perk]?.description}
+              className="absolute top-1 right-1 w-4 h-4"
+            >
               <Image src={FOOD_SPRITES[pet.perk]} alt={pet.perk} fill className="object-contain" />
-            </div>
+            </Tooltip>
           )}
         </>
       ) : (

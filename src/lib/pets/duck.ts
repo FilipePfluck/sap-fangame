@@ -15,4 +15,5 @@ export const Duck: PetType = {
       }
     },
   },
+  description: "Sell: Give shop pets +1 health.",
 };

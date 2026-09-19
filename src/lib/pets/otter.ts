@@ -6,7 +6,7 @@ export const Otter: PetType = {
   sprite: "/sap/otter.webp",
   tier: 1,
   baseAttack: 1,
-  baseHealth: 4,
+  baseHealth: 3,
   isToken: false,
   ability: {
     trigger: "buy",
@@ -23,4 +23,5 @@ export const Otter: PetType = {
       ctx.board[idx] = { ...pet, health: pet.health + 1 };
     },
   },
+  description: "Buy: Give one random friend +1 health.",
 };
