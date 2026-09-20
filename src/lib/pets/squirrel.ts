@@ -2,7 +2,7 @@ import type { PetType } from "@/lib/types";
 
 export const Squirrel: PetType = {
   name: "Squirrel",
-  sprite: "/sap/Squirrel.webp",
+  sprite: "/sap/squirrel.webp",
   tier: 4,
   baseAttack: 2,
   baseHealth: 5,

@@ -86,7 +86,7 @@ export default function BattleView({ battleData, gameWon, onBackToShop }: Battle
       <h2 className="text-lg font-semibold text-zinc-500 dark:text-zinc-400">Battle</h2>
 
       <div className="flex items-center justify-center gap-8">
-        {/* Player team — facing right (default) */}
+        {/* Player team — facing right (sprite art faces left, so it is mirrored) */}
         <div className="flex flex-row-reverse gap-2">
           {currentStep.attackerTeam.map((pet, i) => (
             <PetCard
@@ -103,7 +103,7 @@ export default function BattleView({ battleData, gameWon, onBackToShop }: Battle
 
         <span className="text-2xl font-bold text-zinc-400">VS</span>
 
-        {/* Enemy team — facing left (mirrored) */}
+        {/* Enemy team — facing left (native sprite direction) */}
         <div className="flex flex-row gap-2">
           {currentStep.defenderTeam.map((pet, i) => (
             <PetCard
@@ -187,7 +187,7 @@ function PetCard({
         >
           <div
             className="relative w-10 h-10"
-            style={facing === "left" ? { transform: "scaleX(-1)" } : undefined}
+            style={facing === "right" ? { transform: "scaleX(-1)" } : undefined}
           >
             <Image src={sprite} alt={pet.type} fill className="object-contain" />
           </div>
