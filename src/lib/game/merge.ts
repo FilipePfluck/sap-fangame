@@ -19,6 +19,21 @@ export function canGainXp(pet: PetInstance): boolean {
   return pet.xp < MAX_XP;
 }
 
+// Gives `pet` `amount` xp. Every xp gained is worth +1/+1, and the stats are
+// granted for the full amount even when the pet is (or becomes) maxed out —
+// only the xp itself is capped at MAX_XP. Callers that shouldn't feed maxed
+// pets (e.g. Chocolate) validate the target beforehand; abilities don't.
+export function grantXp(pet: PetInstance, amount: number): PetInstance {
+  const xp = Math.min(MAX_XP, pet.xp + amount);
+  return {
+    ...pet,
+    attack: pet.attack + amount,
+    health: pet.health + amount,
+    xp,
+    level: computeLevel(xp),
+  };
+}
+
 // xp after merging `a` and `b`: both pets' xp plus one for the merge itself,
 // capped at MAX_XP.
 function mergedXp(a: PetInstance, b: PetInstance): number {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { mergePets, computeLevel, canGainXp, mergeError, levelUpRewardEarned } from "@/lib/game/merge";
+import { mergePets, computeLevel, canGainXp, grantXp, mergeError, levelUpRewardEarned } from "@/lib/game/merge";
 import type { PetInstance } from "@/lib/types";
 
 const sloth = (xp: number): PetInstance => ({
@@ -119,5 +119,35 @@ describe("levelUpRewardEarned", () => {
   it("is not earned when the merge doesn't raise the level", () => {
     expect(levelUpRewardEarned(sloth(0), sloth(0))).toBe(false);
     expect(levelUpRewardEarned(sloth(2), sloth(0))).toBe(false); // L2+L1 stays L2
+  });
+});
+
+describe("grantXp", () => {
+  const ant = (xp: number, attack = 2, health = 2): PetInstance => ({
+    type: "Ant", attack, health, perk: null, xp, level: computeLevel(xp),
+  });
+
+  it("gives +1/+1 and +1 xp per xp gained", () => {
+    expect(grantXp(ant(0), 1)).toMatchObject({ xp: 1, attack: 3, health: 3, level: 1 });
+    expect(grantXp(ant(0), 2)).toMatchObject({ xp: 2, attack: 4, health: 4, level: 2 });
+  });
+
+  it("levels the pet up when xp crosses a threshold", () => {
+    expect(grantXp(ant(1), 1).level).toBe(2);
+    expect(grantXp(ant(4), 1).level).toBe(3);
+  });
+
+  it("a maxed pet still gets the stats but no xp", () => {
+    expect(grantXp(ant(5), 1)).toMatchObject({ xp: 5, level: 3, attack: 3, health: 3 });
+  });
+
+  it("caps xp but keeps the full stat gain when xp would overshoot the cap", () => {
+    expect(grantXp(ant(4), 3)).toMatchObject({ xp: 5, level: 3, attack: 5, health: 5 });
+  });
+
+  it("does not mutate the pet", () => {
+    const original = ant(0);
+    grantXp(original, 1);
+    expect(original).toMatchObject({ xp: 0, attack: 2, health: 2 });
   });
 });

@@ -1,6 +1,6 @@
 import type { Board, FoodType, PetInstance, PetType, ShopState } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
-import { MAX_XP, canGainXp, computeLevel } from "@/lib/game/merge";
+import { canGainXp, grantXp } from "@/lib/game/merge";
 import { addLevelUpReward } from "@/lib/game/shop";
 import { fireShopAbility } from "@/lib/game/shop-ability";
 
@@ -37,11 +37,7 @@ function applyStandardEffect(food: FoodType, pet: PetInstance): PetInstance {
     health: pet.health + (food.effect.health ?? 0),
     perk: food.isPerk ? food.name : pet.perk,
   };
-  if (food.effect.experience && canGainXp(pet)) {
-    fed.xp = Math.min(MAX_XP, pet.xp + food.effect.experience);
-    fed.level = computeLevel(fed.xp);
-  }
-  return fed;
+  return food.effect.experience ? grantXp(fed, food.effect.experience) : fed;
 }
 
 // Board positions the food acts on: the chosen one, or a random selection of

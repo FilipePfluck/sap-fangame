@@ -103,10 +103,10 @@ describe("Chocolate", () => {
     expect(needsTarget(Chocolate)).toBe(true);
   });
 
-  it("gives the targeted pet +1 experience and nothing else", () => {
+  it("gives the targeted pet +1 experience, worth +1/+1", () => {
     const board: Board = [pet("Ant"), pet("Fish"), null, null, null];
     const result = applyFoodEffect(Chocolate, board, 1, PET_REGISTRY);
-    expect(result[1]).toMatchObject({ xp: 1, level: 1, attack: 2, health: 2 });
+    expect(result[1]).toMatchObject({ xp: 1, level: 1, attack: 3, health: 3 });
     expect(result[0]).toMatchObject({ xp: 0 });
     expect(board[1]?.xp).toBe(0);
   });
@@ -125,8 +125,8 @@ describe("Chocolate", () => {
     expect(isValidFoodTarget(Chocolate, board[0]!)).toBe(false);
   });
 
-  it("never lets a maxed pet gain xp even if applied directly", () => {
-    // The route validates first; applyFoodEffect itself must not overflow.
+  it("never lets a maxed pet's xp overflow even if applied directly", () => {
+    // The route rejects this target first; applyFoodEffect itself must not overflow.
     const board: Board = [withXp("Ant", 5), null, null, null, null];
     expect(applyFoodEffect(Chocolate, board, 0, PET_REGISTRY)[0]?.xp).toBe(5);
   });
