@@ -4,11 +4,11 @@ import { PET_REGISTRY } from "@/lib/pets";
 import type { PetInstance } from "@/lib/types";
 
 function pet(type: string, attack: number, health: number, perk: string | null = null): PetInstance {
-  return { type, attack, health, perk, xp: 1, level: 1 };
+  return { type, attack, health, perk, xp: 0, level: 1 };
 }
 
 function petLevel(type: string, attack: number, health: number, level: number): PetInstance {
-  return { type, attack, health, perk: null, xp: level === 3 ? 6 : level === 2 ? 3 : 1, level };
+  return { type, attack, health, perk: null, xp: level === 3 ? 5 : level === 2 ? 2 : 0, level };
 }
 
 describe("Mosquito — start-of-battle", () => {
@@ -149,7 +149,7 @@ describe("Honey perk — faint", () => {
   it("summons a 1/1 Bee when a Honey-perked pet faints", () => {
     // Sloth with Honey 1/1 vs Sloth 2/2. Sloth takes 2 → faints. Honey triggers: Bee (1/1) appears.
     // Bee (1/1) vs Sloth (2/1). Sloth takes 1 → dies. Bee takes 2 → dies. DRAW.
-    const honeySloth: PetInstance = { type: "Sloth", attack: 1, health: 1, perk: "Honey", xp: 1, level: 1 };
+    const honeySloth: PetInstance = { type: "Sloth", attack: 1, health: 1, perk: "Honey", xp: 0, level: 1 };
     const { result, steps } = simulateBattle(
       [honeySloth],
       [pet("Sloth", 2, 2)],
@@ -163,7 +163,7 @@ describe("Honey perk — faint", () => {
   });
 
   it("does not mutate input teams", () => {
-    const honeySloth: PetInstance = { type: "Sloth", attack: 1, health: 1, perk: "Honey", xp: 1, level: 1 };
+    const honeySloth: PetInstance = { type: "Sloth", attack: 1, health: 1, perk: "Honey", xp: 0, level: 1 };
     const opponent = pet("Sloth", 2, 2);
     simulateBattle([honeySloth], [opponent], PET_REGISTRY);
     expect(honeySloth.health).toBe(1);
@@ -368,13 +368,13 @@ describe("Tiger — ability repeat", () => {
 
 describe("Garlic perk — damage reduction", () => {
   it("reduces incoming damage by 2", () => {
-    const garlicSloth: PetInstance = { type: "Sloth", attack: 1, health: 10, perk: "Garlic", xp: 1, level: 1 };
+    const garlicSloth: PetInstance = { type: "Sloth", attack: 1, health: 10, perk: "Garlic", xp: 0, level: 1 };
     const { steps } = simulateBattle([garlicSloth], [pet("Sloth", 5, 5)], PET_REGISTRY);
     expect(steps[1].attackerTeam[0].health).toBe(7); // 10 - (5-2)
   });
 
   it("never reduces damage below 2, even against a weak attacker", () => {
-    const garlicSloth: PetInstance = { type: "Sloth", attack: 1, health: 10, perk: "Garlic", xp: 1, level: 1 };
+    const garlicSloth: PetInstance = { type: "Sloth", attack: 1, health: 10, perk: "Garlic", xp: 0, level: 1 };
     const { steps } = simulateBattle([garlicSloth], [pet("Sloth", 1, 5)], PET_REGISTRY);
     expect(steps[1].attackerTeam[0].health).toBe(8); // max(2, 1-2) = 2 taken
   });
@@ -382,20 +382,20 @@ describe("Garlic perk — damage reduction", () => {
 
 describe("Melon perk — damage block", () => {
   it("blocks up to 20 damage on the first hit, then clears", () => {
-    const melonSloth: PetInstance = { type: "Sloth", attack: 1, health: 10, perk: "Melon", xp: 1, level: 1 };
+    const melonSloth: PetInstance = { type: "Sloth", attack: 1, health: 10, perk: "Melon", xp: 0, level: 1 };
     const { steps } = simulateBattle([melonSloth], [pet("Sloth", 5, 100)], PET_REGISTRY);
     expect(steps[1].attackerTeam[0].health).toBe(10);
     expect(steps[1].attackerTeam[0].perk).toBeNull();
   });
 
   it("blocks exactly 20 and lets the remainder through on a bigger hit", () => {
-    const melonSloth: PetInstance = { type: "Sloth", attack: 1, health: 10, perk: "Melon", xp: 1, level: 1 };
+    const melonSloth: PetInstance = { type: "Sloth", attack: 1, health: 10, perk: "Melon", xp: 0, level: 1 };
     const { steps } = simulateBattle([melonSloth], [pet("Sloth", 21, 100)], PET_REGISTRY);
     expect(steps[1].attackerTeam[0].health).toBe(9); // 10 - (21-20)
   });
 
   it("no longer blocks a second hit once used up", () => {
-    const melonSloth: PetInstance = { type: "Sloth", attack: 1, health: 30, perk: "Melon", xp: 1, level: 1 };
+    const melonSloth: PetInstance = { type: "Sloth", attack: 1, health: 30, perk: "Melon", xp: 0, level: 1 };
     const { steps } = simulateBattle([melonSloth], [pet("Sloth", 5, 100)], PET_REGISTRY);
     expect(steps[1].attackerTeam[0].health).toBe(30); // round 1: blocked
     expect(steps[2].attackerTeam[0].health).toBe(25); // round 2: perk gone, takes 5
@@ -405,7 +405,7 @@ describe("Melon perk — damage block", () => {
 describe("Peanut + Melon interaction", () => {
   it("a fully-blocked hit does not count as a Peanut kill", () => {
     const scorpion = pet("Scorpion", 1, 3, "Peanut");
-    const melonSloth: PetInstance = { type: "Sloth", attack: 1, health: 10, perk: "Melon", xp: 1, level: 1 };
+    const melonSloth: PetInstance = { type: "Sloth", attack: 1, health: 10, perk: "Melon", xp: 0, level: 1 };
     const { steps } = simulateBattle([scorpion], [melonSloth], PET_REGISTRY);
     // Scorpion's 1 dmg is fully blocked (min(20,1)=1) — Sloth takes 0, so it
     // wasn't "hurt" and Peanut's instakill does not apply.

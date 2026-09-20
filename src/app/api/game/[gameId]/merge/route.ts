@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
-import { mergePets, levelUpRewardEarned } from "@/lib/game/merge";
+import { mergePets, mergeError, levelUpRewardEarned } from "@/lib/game/merge";
 import { addLevelUpReward, applyFrozenFlags } from "@/lib/game/shop";
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
@@ -58,8 +58,9 @@ export async function POST(
   if (!petTo) {
     return Response.json({ error: "No pet at target position" }, { status: 400 });
   }
-  if (petFrom.type !== petTo.type) {
-    return Response.json({ error: "Pets must be the same type to merge" }, { status: 400 });
+  const problem = mergeError(petFrom, petTo);
+  if (problem) {
+    return Response.json({ error: problem }, { status: 400 });
   }
 
   const preMergeLevel = petTo.level;

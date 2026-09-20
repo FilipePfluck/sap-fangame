@@ -102,7 +102,7 @@ export type FoodType = {
   isPerk: boolean;
   isToken: boolean;
   cost?: number;
-  effect: { attack?: number; health?: number };
+  effect: { attack?: number; health?: number; experience?: number };
   // Foods that pick their own random targets instead of the player choosing
   // one (e.g. Sushi). Unset means the player picks a pet to feed.
   targeting?: { random: number };

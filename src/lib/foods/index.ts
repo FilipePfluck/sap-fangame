@@ -7,6 +7,7 @@ export { Bread } from "./bread";
 export { Sushi } from "./sushi";
 export { Melon } from "./melon";
 export { Peanut } from "./peanut";
+export { Chocolate } from "./chocolate";
 
 import { Apple } from "./apple";
 import { Honey } from "./honey";
@@ -17,6 +18,7 @@ import { Bread } from "./bread";
 import { Sushi } from "./sushi";
 import { Melon } from "./melon";
 import { Peanut } from "./peanut";
+import { Chocolate } from "./chocolate";
 import type { FoodType } from "@/lib/types";
 
 export const TURTLE_PACK_FOODS: FoodType[] = [
@@ -29,6 +31,7 @@ export const TURTLE_PACK_FOODS: FoodType[] = [
   Sushi,
   Melon,
   Peanut,
+  Chocolate,
 ];
 
 export const FOOD_REGISTRY: Record<string, FoodType> = Object.fromEntries(

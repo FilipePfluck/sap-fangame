@@ -2,8 +2,8 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { FOOD_REGISTRY } from "@/lib/foods";
-import { PET_REGISTRY } from "@/lib/pets";
-import { applyFoodEffect, feedError } from "@/lib/game/food";
+import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
+import { applyFoodEffect, applyFoodLevelUps, feedError } from "@/lib/game/food";
 import { applyFrozenFlags } from "@/lib/game/shop";
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import { getFoodCost } from "@/lib/game/costs";
@@ -67,12 +67,20 @@ export async function POST(
     return Response.json({ error: "Not enough gold" }, { status: 400 });
   }
 
-  const newBoard = applyFoodEffect(foodDef, state.board, boardPosition, PET_REGISTRY);
+  const fedBoard = applyFoodEffect(foodDef, state.board, boardPosition, PET_REGISTRY);
 
   const newShopFoods = [...shopNow.shopFoods];
   newShopFoods.splice(shopPosition, 1);
 
-  const newShop: ShopState = { shopPets: shopNow.shopPets, shopFoods: newShopFoods };
+  const { board: newBoard, shop: newShop, goldDelta } = applyFoodLevelUps(
+    foodDef,
+    state.board,
+    fedBoard,
+    { shopPets: shopNow.shopPets, shopFoods: newShopFoods } satisfies ShopState,
+    state.turn.turnNumber,
+    PET_REGISTRY,
+    SHOP_PET_POOL
+  );
 
   const boardState = await prisma.boardState.create({
     data: {
@@ -80,7 +88,7 @@ export async function POST(
       turnId: state.turnId,
       boardState: newBoard,
       shopState: newShop,
-      goldRemaining: state.goldRemaining - cost,
+      goldRemaining: state.goldRemaining - cost + goldDelta,
     },
   });
 

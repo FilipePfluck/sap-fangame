@@ -99,18 +99,18 @@ describe("addLevelUpReward", () => {
 });
 
 describe("levelUpRewardEarned", () => {
-  it("2xp + 1xp cricket (level 1 -> 2) earns a reward", () => {
-    expect(levelUpRewardEarned(pet(2, 1), pet(1, 1))).toBe(true);
+  it("level 1 + level 1 reaching level 2 earns a reward", () => {
+    expect(levelUpRewardEarned(pet(1, 1), pet(0, 1))).toBe(true);
   });
   it("merging two level-2 pets does not, regardless of xp", () => {
-    expect(levelUpRewardEarned(pet(3, 2), pet(3, 2))).toBe(false);
-    expect(levelUpRewardEarned(pet(5, 2), pet(4, 2))).toBe(false);
+    expect(levelUpRewardEarned(pet(2, 2), pet(2, 2))).toBe(false);
+    expect(levelUpRewardEarned(pet(4, 2), pet(3, 2))).toBe(false);
   });
   it("level 2 + level 1 reaching level 3 earns a reward", () => {
-    expect(levelUpRewardEarned(pet(5, 2), pet(1, 1))).toBe(true);
+    expect(levelUpRewardEarned(pet(4, 2), pet(0, 1))).toBe(true);
   });
   it("no reward when the merge does not level up", () => {
-    expect(levelUpRewardEarned(pet(1, 1), pet(1, 1))).toBe(false);
-    expect(levelUpRewardEarned(pet(3, 2), pet(1, 1))).toBe(false);
+    expect(levelUpRewardEarned(pet(0, 1), pet(0, 1))).toBe(false);
+    expect(levelUpRewardEarned(pet(2, 2), pet(0, 1))).toBe(false);
   });
 });
