@@ -8,5 +8,5 @@ export const Tiger: PetType = {
   baseHealth: 4,
   isToken: false,
   ability: null,
-  description: "The friend ahead repeats their ability in battle as if they were level 1.",
+  description: "The friend ahead repeats their ability as if they were level 1.",
 };

@@ -451,3 +451,30 @@ describe("engine fix — start-of-battle deaths route through faint", () => {
     expect(steps[1].description).toContain("Sloth (1/2)");
   });
 });
+
+describe("Tiger — follows whichever pet is currently ahead", () => {
+  it("repeats the faint ability of a pet that only later becomes the one ahead", () => {
+    // Sloth (front) dies first, then Ant moves up with the Tiger behind it.
+    // When Ant faints, its ability fires twice: Tiger gains +1/+1 two times.
+    const { steps } = simulateBattle(
+      [pet("Sloth", 1, 1), pet("Ant", 2, 2), pet("Tiger", 6, 4)],
+      [pet("Sloth", 3, 50)],
+      PET_REGISTRY,
+    );
+    const tigerFront = steps.find((s) => s.attackerTeam[0]?.type === "Tiger")!;
+    expect(tigerFront.attackerTeam[0]).toMatchObject({ attack: 8, health: 6 });
+  });
+
+  it("does not repeat once a different pet has come between them", () => {
+    const { steps } = simulateBattle(
+      [pet("Ant", 2, 2), pet("Sloth", 1, 5), pet("Tiger", 6, 4)],
+      [pet("Sloth", 3, 50)],
+      PET_REGISTRY,
+    );
+    // Ant's only friends are Sloth and Tiger; with Sloth between them, the
+    // buff is applied once in total.
+    const afterAntFaints = steps.find((s) => s.attackerTeam[0]?.type === "Sloth")!;
+    const total = afterAntFaints.attackerTeam.reduce((n, p) => n + p.attack, 0);
+    expect(total).toBe(1 + 6 + 1);
+  });
+});

@@ -3,6 +3,7 @@ import { orderByAttack } from "@/lib/utils/random";
 import { dealAbilityDamage } from "@/lib/utils/combat";
 import { compactBoard } from "@/lib/game/merge";
 import { friendSummonedCandidates } from "@/lib/game/friend-summoned";
+import { hasTigerBehind, TIGER_REPEAT_LEVEL } from "@/lib/game/tiger";
 
 const MAX_TEAM_SIZE = 5;
 const NOOP_SUMMON = () => {};
@@ -45,6 +46,8 @@ function fireAbilityOn(
   summonedIndex?: number,
   levelOverride?: number
 ): void {
+  // Decided before the ability runs so it can't change whether Tiger repeats.
+  const repeats = levelOverride === undefined && hasTigerBehind(team, index);
   const triggerCount = nextTriggerCount(counts, pet);
   const ctx: BattleAbilityContext = {
     self: pet,
@@ -59,7 +62,7 @@ function fireAbilityOn(
   };
   ability.fn(ctx);
 
-  if (levelOverride === undefined && index >= 0 && team[index + 1]?.type === "Tiger") {
+  if (repeats) {
     fireAbilityOn(
       ability,
       pet,
@@ -70,7 +73,7 @@ function fireAbilityOn(
       counts,
       summon,
       summonedIndex,
-      1
+      TIGER_REPEAT_LEVEL
     );
   }
 }

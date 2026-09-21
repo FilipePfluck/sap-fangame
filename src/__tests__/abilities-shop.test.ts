@@ -484,3 +484,71 @@ describe("Temporary stats — Horse in the shop", () => {
     expect((board[0] as PetInstance).tempAttack).toBe(2);
   });
 });
+
+describe("Tiger — repeats the friend ahead's ability in the shop", () => {
+  it("repeats a sell ability at level 1 (level 2 Pig: 2 gold + 1 gold)", () => {
+    const pig = makePet("Pig", 2);
+    const board = makeBoard([null, makePet("Tiger")]);
+    const { goldDelta } = fireShopAbility("sell", pig, 0, board, makeShop(), PET_REGISTRY);
+    expect(goldDelta).toBe(3);
+  });
+
+  it("repeats across an empty slot, since the shop board is battle order", () => {
+    const pig = makePet("Pig");
+    const board = makeBoard([null, null, null, makePet("Tiger")]);
+    const { goldDelta } = fireShopAbility("sell", pig, 0, board, makeShop(), PET_REGISTRY);
+    expect(goldDelta).toBe(2);
+  });
+
+  it("does nothing when another pet sits between the pet and the Tiger", () => {
+    const pig = makePet("Pig");
+    const board = makeBoard([null, makePet("Sloth"), makePet("Tiger")]);
+    const { goldDelta } = fireShopAbility("sell", pig, 0, board, makeShop(), PET_REGISTRY);
+    expect(goldDelta).toBe(1);
+  });
+
+  it("does nothing for a pet standing behind the Tiger", () => {
+    const swan = makePet("Swan");
+    const board = makeBoard([makePet("Tiger"), swan]);
+    const { goldDelta } = fireBoardShopAbility("start-of-turn", board, makeShop(), PET_REGISTRY);
+    expect(goldDelta).toBe(1);
+  });
+
+  it("repeats start-of-turn abilities for the pet directly ahead", () => {
+    const board = makeBoard([makePet("Swan"), makePet("Tiger")]);
+    const { goldDelta } = fireBoardShopAbility("start-of-turn", board, makeShop(), PET_REGISTRY);
+    expect(goldDelta).toBe(2);
+  });
+
+  it("follows whichever pet is currently ahead of the Tiger", () => {
+    const tiger = makePet("Tiger");
+    const before = makeBoard([makePet("Swan"), makePet("Pig"), tiger]);
+    // Only the Pig is ahead of the Tiger, so the Swan is not repeated.
+    expect(fireBoardShopAbility("start-of-turn", before, makeShop(), PET_REGISTRY).goldDelta).toBe(1);
+    // Sell the Pig: the Swan is now ahead of the Tiger and repeats.
+    const after = makeBoard([makePet("Swan"), null, tiger]);
+    expect(fireBoardShopAbility("start-of-turn", after, makeShop(), PET_REGISTRY).goldDelta).toBe(2);
+  });
+
+  it("repeats a faint ability at level 1 via Pill (level 2 Ant: +2 then +1)", () => {
+    const ant = makePet("Ant", 2);
+    const board = makeBoard([ant, makePet("Tiger")]);
+    const result = fireShopFaint(board, 0, PET_REGISTRY);
+    expect(result[1]).toMatchObject({ attack: 1 + 2 + 1, health: 1 + 2 + 1 });
+  });
+
+  it("keeps the first summon when a repeated faint ability summons again", () => {
+    const board = makeBoard([makePet("Cricket", 2), makePet("Tiger")]);
+    const result = fireShopFaint(board, 0, PET_REGISTRY);
+    expect(result[0]).toMatchObject({ type: "Zombie Cricket", attack: 2, health: 2 });
+    expect(result.filter((p) => p?.type === "Zombie Cricket")).toHaveLength(2);
+  });
+
+  it("repeats friend-summoned abilities at level 1 (level 2 Horse)", () => {
+    const horse = makePet("Horse", 2);
+    const summoned = makePet("Sloth");
+    const board = makeBoard([summoned, horse, makePet("Tiger")]);
+    const result = fireShopFriendSummoned(board, 0, PET_REGISTRY);
+    expect(result[0]?.attack).toBe(1 + 2 + 1);
+  });
+});
