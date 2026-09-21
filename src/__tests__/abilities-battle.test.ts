@@ -478,3 +478,16 @@ describe("Tiger — follows whichever pet is currently ahead", () => {
     expect(total).toBe(1 + 6 + 1);
   });
 });
+
+describe("Tiger — repeats pet abilities only, not perks", () => {
+  it("does not repeat the Honey perk's Bee summon", () => {
+    const honeySloth: PetInstance = { type: "Sloth", attack: 1, health: 1, perk: "Honey", xp: 0, level: 1 };
+    const { steps } = simulateBattle(
+      [honeySloth, pet("Tiger", 6, 4)],
+      [pet("Sloth", 3, 50)],
+      PET_REGISTRY,
+    );
+    const afterFaint = steps[1].attackerTeam;
+    expect(afterFaint.filter((p) => p.type === "Bee")).toHaveLength(1);
+  });
+});

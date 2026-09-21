@@ -9,7 +9,6 @@ import { orderByAttack } from "@/lib/utils/random";
 import { stockFood } from "@/lib/game/shop";
 import { compactBoard } from "@/lib/game/merge";
 import { friendSummonedCandidates } from "@/lib/game/friend-summoned";
-import { hasTigerBehind, TIGER_REPEAT_LEVEL } from "@/lib/game/tiger";
 
 export type ShopAbilityResult = {
   board: (PetInstance | null)[];
@@ -31,15 +30,14 @@ function createShopContext(
   shop: ShopState,
   gold: { delta: number },
   justStocked: Set<object>,
-  lastBattleResult?: "WIN" | "DRAW" | "LOSS",
-  level: number = self.level
+  lastBattleResult?: "WIN" | "DRAW" | "LOSS"
 ): ShopAbilityContext {
   return {
     self,
     selfIndex,
     board,
     shop,
-    level,
+    level: self.level,
     goldGain: (amount) => {
       gold.delta += amount;
     },
@@ -72,15 +70,7 @@ export function fireShopAbility(
   const newShop = cloneShop(shop);
   const gold = { delta: 0 };
 
-  // Tiger repeats the ability once more at level 1 (see hasTigerBehind).
-  const repeats = hasTigerBehind(newBoard, petIndex);
-  const justStocked = new Set<object>();
-  def.ability.fn(createShopContext(pet, petIndex, newBoard, newShop, gold, justStocked));
-  if (repeats) {
-    def.ability.fn(
-      createShopContext(pet, petIndex, newBoard, newShop, gold, justStocked, undefined, TIGER_REPEAT_LEVEL)
-    );
-  }
+  def.ability.fn(createShopContext(pet, petIndex, newBoard, newShop, gold, new Set()));
   return { board: newBoard, shop: newShop, goldDelta: gold.delta };
 }
 
@@ -116,28 +106,12 @@ export function fireBoardShopAbility(
     const def = petRegistry[pet.type];
     if (def?.ability?.trigger !== trigger) continue;
 
-    const repeats = hasTigerBehind(currentBoard, i);
     def.ability.fn(
       createShopContext(pet, i, currentBoard, currentShop, gold, justStocked, lastBattleResult)
     );
-    if (repeats) {
-      def.ability.fn(
-        createShopContext(
-          pet, i, currentBoard, currentShop, gold, justStocked, lastBattleResult, TIGER_REPEAT_LEVEL
-        )
-      );
-    }
   }
 
   return { board: currentBoard, shop: currentShop, goldDelta: gold.delta };
-}
-
-function nearestFreeSlot(board: (PetInstance | null)[], from: number): number {
-  for (let d = 1; d < board.length; d++) {
-    if (from - d >= 0 && board[from - d] === null) return from - d;
-    if (from + d < board.length && board[from + d] === null) return from + d;
-  }
-  return -1;
 }
 
 // Fires the pet at `boardPosition`'s "faint" ability in the shop (used by
@@ -161,25 +135,19 @@ export function fireShopFaint(
   newBoard[boardPosition] = null;
 
   if (def?.ability?.trigger === "faint") {
-    // A Tiger behind repeats the ability; its summon lands in the nearest
-    // free slot if the vacated one is already taken.
-    const repeats = hasTigerBehind(compacted, selfIndex);
-    const summon = (newPet: PetInstance) => {
-      const slot = newBoard[boardPosition] === null ? boardPosition : nearestFreeSlot(newBoard, boardPosition);
-      if (slot !== -1) newBoard[slot] = newPet;
-    };
     const ctx: BattleAbilityContext = {
       self: pet,
       selfIndex,
       team: compacted,
       enemyTeam: [],
       level: pet.level,
-      summon,
+      summon: (newPet) => {
+        newBoard[boardPosition] = newPet;
+      },
       triggerCount: 1,
       petRegistry,
     };
     def.ability.fn(ctx);
-    if (repeats) def.ability.fn({ ...ctx, level: TIGER_REPEAT_LEVEL, triggerCount: 2 });
   }
 
   return newBoard;
@@ -206,11 +174,9 @@ export function fireShopFriendSummoned(
   // Same-trigger pets fire highest-attack first (ties random), matching the
   // battle engine's ability-order rule.
   for (const { pet, ability } of orderByAttack(candidates, (c) => c.pet.attack)) {
-    const selfIndex = compacted.indexOf(pet);
-    const repeats = hasTigerBehind(compacted, selfIndex);
     const ctx: BattleAbilityContext = {
       self: pet,
-      selfIndex,
+      selfIndex: compacted.indexOf(pet),
       team: compacted,
       enemyTeam: [],
       level: pet.level,
@@ -221,7 +187,6 @@ export function fireShopFriendSummoned(
       inShop: true,
     };
     ability.fn(ctx);
-    if (repeats) ability.fn({ ...ctx, level: TIGER_REPEAT_LEVEL, triggerCount: 2 });
   }
 
   return newBoard;
