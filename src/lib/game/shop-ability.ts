@@ -150,6 +150,41 @@ export function fireShopFaint(
     def.ability.fn(ctx);
   }
 
+  // Anything the faint ability summoned into the vacated slot arrives now.
+  return newBoard[boardPosition]
+    ? fireShopSummoned(newBoard, boardPosition, petRegistry)
+    : newBoard;
+}
+
+// Fires the pet's own "summoned" ability for the pet at `position` in the
+// shop (a pet bought into a slot, or summoned by Pill). Like the other shop
+// bridges it reuses the battle context over the compacted board. The ability
+// acts on the board's pet in place, so callers holding that pet see the
+// change; merging into an existing pet never calls this.
+export function fireShopSummoned(
+  board: (PetInstance | null)[],
+  position: number,
+  petRegistry: Record<string, PetType>
+): (PetInstance | null)[] {
+  const newBoard = [...board];
+  const pet = newBoard[position];
+  const ability = pet ? petRegistry[pet.type]?.ability : null;
+  if (!pet || ability?.trigger !== "summoned") return newBoard;
+
+  const compacted = compactBoard(newBoard);
+  const selfIndex = compacted.indexOf(pet);
+  ability.fn({
+    self: pet,
+    selfIndex,
+    team: compacted,
+    enemyTeam: [],
+    level: pet.level,
+    summon: () => {},
+    summonedIndex: selfIndex,
+    triggerCount: 1,
+    petRegistry,
+    inShop: true,
+  });
   return newBoard;
 }
 

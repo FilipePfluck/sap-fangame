@@ -5,7 +5,7 @@ import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
 import { mergePets, mergeError, openSlot, levelUpRewardEarned } from "@/lib/game/merge";
 import { addLevelUpReward, applyFrozenFlags } from "@/lib/game/shop";
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
-import { fireShopAbility, fireShopFriendSummoned } from "@/lib/game/shop-ability";
+import { fireShopAbility, fireShopFriendSummoned, fireShopSummoned } from "@/lib/game/shop-ability";
 import { getPetCost } from "@/lib/game/costs";
 import { createPet } from "@/lib/game/pet";
 import { z } from "zod";
@@ -102,11 +102,12 @@ export async function POST(
 
   let extraGold = 0;
 
-  // Buying places the pet on the board immediately, so friends'
-  // "friend-summoned" abilities (e.g. Horse) fire first — but only when a
-  // new pet actually entered the board, not when it merged into one already
-  // there.
+  // Buying places the pet on the board immediately, so its own "summoned"
+  // ability (e.g. Scorpion) and then friends' "friend-summoned" abilities
+  // (e.g. Horse) fire first — but only when a new pet actually entered the
+  // board, not when it merged into one already there.
   if (wasSummoned) {
+    currentBoard = fireShopSummoned(currentBoard, boardPosition, PET_REGISTRY);
     currentBoard = fireShopFriendSummoned(currentBoard, boardPosition, PET_REGISTRY);
   }
 

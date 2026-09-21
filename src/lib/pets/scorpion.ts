@@ -7,7 +7,11 @@ export const Scorpion: PetType = {
   baseAttack: 1,
   baseHealth: 3,
   isToken: false,
-  ability: null,
-  innatePerk: "Peanut",
+  ability: {
+    trigger: "summoned",
+    fn: (ctx) => {
+      ctx.self.perk = "Peanut";
+    },
+  },
   description: "Summoned: Gain Peanut perk.",
 };

@@ -8,7 +8,7 @@ export function createPet(def: PetType, tempHealthBonus = 0): PetInstance {
     type: def.name,
     attack: def.baseAttack,
     health: def.baseHealth + tempHealthBonus,
-    perk: def.innatePerk ?? null,
+    perk: null,
     xp: 0,
     level: 1,
   };

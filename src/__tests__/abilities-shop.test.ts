@@ -4,10 +4,12 @@ import {
   fireBoardShopAbility,
   fireShopFaint,
   fireShopFriendSummoned,
+  fireShopSummoned,
 } from "@/lib/game/shop-ability";
 import { PET_REGISTRY } from "@/lib/pets";
 import { FOOD_REGISTRY } from "@/lib/foods";
 import { getFoodCost } from "@/lib/game/costs";
+import { createPet } from "@/lib/game/pet";
 import type { PetInstance, ShopState, Board } from "@/lib/types";
 
 function makePet(type: string, level = 1): PetInstance {
@@ -482,5 +484,42 @@ describe("Temporary stats — Horse in the shop", () => {
     const { board } = fireBoardShopAbility("end-turn", makeBoard([buffed]), makeShop(), PET_REGISTRY);
     expect((board[0] as PetInstance).attack).toBe(3);
     expect((board[0] as PetInstance).tempAttack).toBe(2);
+  });
+});
+
+describe("Summoned trigger — Scorpion in the shop", () => {
+  it("gains Peanut when placed on the board", () => {
+    const scorpion = makePet("Scorpion");
+    const board = makeBoard([scorpion]);
+    const result = fireShopSummoned(board, 0, PET_REGISTRY);
+    expect(result[0]?.perk).toBe("Peanut");
+    // The ability acts on the pet in place, which the buy route relies on.
+    expect(scorpion.perk).toBe("Peanut");
+  });
+
+  it("does nothing for pets without a summoned ability", () => {
+    const board = makeBoard([makePet("Sloth")]);
+    expect(fireShopSummoned(board, 0, PET_REGISTRY)[0]?.perk).toBeNull();
+  });
+
+  it("does nothing for an empty slot", () => {
+    expect(fireShopSummoned(makeBoard([]), 2, PET_REGISTRY)).toEqual(makeBoard([]));
+  });
+
+  it("a Pill-summoned Scorpion arrives with Peanut", () => {
+    const registry = {
+      ...PET_REGISTRY,
+      Summoner: {
+        name: "Summoner", sprite: "", tier: 1, baseAttack: 1, baseHealth: 1, isToken: false, description: "",
+        ability: { trigger: "faint" as const, fn: (ctx: { summon: (p: PetInstance, i: number) => void }) => ctx.summon(makePet("Scorpion"), 0) },
+      },
+    };
+    const board = makeBoard([makePet("Summoner")]);
+    const result = fireShopFaint(board, 0, registry);
+    expect(result[0]).toMatchObject({ type: "Scorpion", perk: "Peanut" });
+  });
+
+  it("a freshly created Scorpion no longer has Peanut before it is summoned", () => {
+    expect(createPet(PET_REGISTRY["Scorpion"]).perk).toBeNull();
   });
 });

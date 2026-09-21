@@ -72,6 +72,9 @@ export type Ability =
   | { trigger: "start-of-battle"; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: "level-up"; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: "friend-summoned"; fn: (ctx: BattleAbilityContext) => void }
+  // Fires for the pet itself when it is summoned or bought onto the team — not
+  // when it merges into an existing pet.
+  | { trigger: "summoned"; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: "start-of-turn"; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: "end-turn"; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: "before-attack"; fn: (ctx: BattleAbilityContext) => void }
@@ -85,7 +88,6 @@ export type PetType = {
   baseHealth: number;
   isToken: boolean;
   ability: Ability | null;
-  innatePerk?: string;
   description: string | ((level: number) => string);
 };
 

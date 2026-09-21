@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { simulateBattle } from "@/lib/game/battle";
 import { PET_REGISTRY } from "@/lib/pets";
-import type { PetInstance } from "@/lib/types";
+import type { PetInstance, PetType } from "@/lib/types";
 
 function pet(type: string, attack: number, health: number, perk: string | null = null): PetInstance {
   return { type, attack, health, perk, xp: 0, level: 1 };
@@ -489,5 +489,61 @@ describe("Tiger — repeats pet abilities only, not perks", () => {
     );
     const afterFaint = steps[1].attackerTeam;
     expect(afterFaint.filter((p) => p.type === "Bee")).toHaveLength(1);
+  });
+});
+
+describe("Summoned trigger — the pet's own arrival", () => {
+  // Test-only pets: the real pool has nothing that summons a Scorpion yet.
+  const summonFrom = (name: string, summoned: PetInstance, afterIndex: (selfIndex: number) => number): PetType => ({
+    name, sprite: "", tier: 1, baseAttack: 1, baseHealth: 1, isToken: false, description: "",
+    ability: { trigger: "faint", fn: (ctx) => ctx.summon(summoned, afterIndex(ctx.selfIndex)) },
+  });
+  const booster: PetType = {
+    name: "Booster", sprite: "", tier: 1, baseAttack: 1, baseHealth: 1, isToken: false, description: "",
+    ability: { trigger: "summoned", fn: (ctx) => { ctx.self.attack += 1; } },
+  };
+  const fresh = (type: string, attack: number, health: number): PetInstance => pet(type, attack, health);
+
+  it("a Scorpion summoned in battle gets Peanut", () => {
+    const registry = {
+      ...PET_REGISTRY,
+      Summoner: summonFrom("Summoner", fresh("Scorpion", 1, 3), (i) => i),
+    };
+    const { steps } = simulateBattle(
+      [pet("Summoner", 1, 1)],
+      [pet("Sloth", 3, 50)],
+      registry,
+    );
+    expect(steps[1].attackerTeam[0]).toMatchObject({ type: "Scorpion", perk: "Peanut" });
+  });
+
+  it("fires once per summon for a pet with no Tiger behind it", () => {
+    const registry = {
+      ...PET_REGISTRY,
+      Booster: booster,
+      Summoner: summonFrom("Summoner", fresh("Booster", 1, 1), () => 1),
+    };
+    const { steps } = simulateBattle(
+      [pet("Summoner", 1, 1), pet("Sloth", 1, 50), pet("Ant", 1, 50)],
+      [pet("Sloth", 3, 50)],
+      registry,
+    );
+    expect(steps[1].attackerTeam[1]).toMatchObject({ type: "Booster", attack: 2 });
+  });
+
+  it("is repeated by a Tiger directly behind the summoned pet", () => {
+    const registry = {
+      ...PET_REGISTRY,
+      Booster: booster,
+      Summoner: summonFrom("Summoner", fresh("Booster", 1, 1), () => 1),
+    };
+    const { steps } = simulateBattle(
+      [pet("Summoner", 1, 1), pet("Sloth", 1, 50), pet("Tiger", 6, 50)],
+      [pet("Sloth", 3, 50)],
+      registry,
+    );
+    // Booster lands between the Sloth and the Tiger, so its "+1 attack on
+    // summon" fires twice.
+    expect(steps[1].attackerTeam[1]).toMatchObject({ type: "Booster", attack: 3 });
   });
 });

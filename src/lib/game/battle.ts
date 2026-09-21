@@ -78,6 +78,21 @@ function fireAbilityOn(
   }
 }
 
+// Fires the freshly summoned pet's own "summoned" ability. It goes through
+// fireAbilityOn, so a Tiger behind it repeats it like any other ability.
+function fireOwnSummoned(
+  team: PetInstance[],
+  index: number,
+  enemyTeam: PetInstance[],
+  petRegistry: Record<string, PetType>,
+  counts: WeakMap<PetInstance, number>
+): void {
+  const pet = team[index];
+  const ability = petRegistry[pet.type]?.ability;
+  if (ability?.trigger !== "summoned") return;
+  fireAbilityOn(ability, pet, index, team, enemyTeam, petRegistry, counts, NOOP_SUMMON, index);
+}
+
 function fireFriendSummoned(
   team: PetInstance[],
   summonedIndex: number,
@@ -151,6 +166,7 @@ function handleFaint(
     if (team.length >= MAX_TEAM_SIZE) continue;
     const insertAt = Math.min(afterIndex, team.length);
     team.splice(insertAt, 0, pet);
+    fireOwnSummoned(team, insertAt, enemyTeam, petRegistry, counts);
     fireFriendSummoned(team, insertAt, enemyTeam, petRegistry, counts);
   }
 }
@@ -213,6 +229,7 @@ function fireStartOfBattlePhase(
       if (team.length < MAX_TEAM_SIZE) {
         const insertAt = Math.min(afterIndex, team.length);
         team.splice(insertAt, 0, p);
+        fireOwnSummoned(team, insertAt, enemyTeam, petRegistry, counts);
         fireFriendSummoned(team, insertAt, enemyTeam, petRegistry, counts);
       }
     };

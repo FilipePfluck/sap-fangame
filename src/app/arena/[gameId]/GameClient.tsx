@@ -9,6 +9,7 @@ import { mergePets, mergeError, openSlot, applyReorder } from "@/lib/game/merge"
 import { applyFoodEffect, feedError, isValidFoodTarget, needsTarget } from "@/lib/game/food";
 import { getPetCost, getFoodCost, getSellValue, ROLL_COST } from "@/lib/game/costs";
 import { createPet } from "@/lib/game/pet";
+import { fireShopSummoned } from "@/lib/game/shop-ability";
 import { STARTING_LIVES } from "@/lib/game/rules";
 import { PET_SPRITES, FOOD_SPRITES } from "@/lib/sprites";
 import ShopItem from "./ShopItem";
@@ -190,6 +191,10 @@ export default function GameClient({
       if (!shifted) { setError("Board is full"); return; }
       optimisticBoard = shifted;
       optimisticBoard[boardPosition] = freshPet;
+    }
+    // A new pet (not a merge) fires its own "summoned" ability, as on the server.
+    if (occupant === null || occupant.type !== shopPet.type) {
+      optimisticBoard = fireShopSummoned(optimisticBoard, boardPosition, PET_MAP);
     }
 
     // Buying one half of a chained level-up reward removes the other half.

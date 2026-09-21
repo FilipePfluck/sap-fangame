@@ -4,7 +4,7 @@ import { getLastBoardState } from "@/lib/game/board";
 import { simulateBattle } from "@/lib/game/battle";
 import { generateShop, getUnlockedTiers, pickFrozenItems, clearDiscount } from "@/lib/game/shop";
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
-import { fireBoardShopAbility } from "@/lib/game/shop-ability";
+import { fireBoardShopAbility, fireShopSummoned } from "@/lib/game/shop-ability";
 import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
 import { SHOP_FOOD_POOL } from "@/lib/foods";
 import { pickRandom } from "@/lib/utils/random";
@@ -22,10 +22,12 @@ function buildGhostTeam(turn: number): PetInstance[] {
 
   if (pool.length === 0) return [];
 
-  return Array.from({ length: count }, () => {
-    const petDef = pickRandom(pool);
-    return createPet(petDef);
-  });
+  const team: (PetInstance | null)[] = Array.from({ length: count }, () =>
+    createPet(pickRandom(pool))
+  );
+  // Ghost pets are summoned onto their team too (e.g. Scorpion's Peanut).
+  team.forEach((_, i) => fireShopSummoned(team, i, PET_REGISTRY));
+  return team as PetInstance[];
 }
 
 export async function POST(
