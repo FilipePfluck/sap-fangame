@@ -1,5 +1,11 @@
 import type { PetInstance } from "@/lib/types";
 
+// Pets that have fainted stay in a team until their faint resolves, but they
+// are never valid targets for an ability.
+export function isAlive(pet: PetInstance): boolean {
+  return pet.health > 0;
+}
+
 // The single place damage is ever applied to a pet — a normal front-line
 // attack and every damage-dealing ability (Mosquito, Badger, Leopard, Rhino,
 // Crocodile, Dolphin, ...) all route through this, so Garlic/Melon mitigation

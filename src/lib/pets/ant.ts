@@ -1,5 +1,6 @@
 import type { PetType } from "@/lib/types";
 import { pickRandom } from "@/lib/utils/random";
+import { isAlive } from "@/lib/utils/combat";
 
 export const Ant: PetType = {
   name: "Ant",
@@ -11,7 +12,7 @@ export const Ant: PetType = {
   ability: {
     trigger: "faint",
     fn: (ctx) => {
-      const friends = ctx.team.filter((_, i) => i !== ctx.selfIndex);
+      const friends = ctx.team.filter((p, i) => i !== ctx.selfIndex && isAlive(p));
       if (friends.length === 0) return;
       const target = pickRandom(friends);
       target.attack += ctx.level;

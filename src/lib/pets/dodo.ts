@@ -1,4 +1,5 @@
 import type { PetType } from "@/lib/types";
+import { isAlive } from "@/lib/utils/combat";
 
 export const Dodo: PetType = {
   name: "Dodo",
@@ -10,7 +11,11 @@ export const Dodo: PetType = {
   ability: {
     trigger: "start-of-battle",
     fn: (ctx) => {
-      const friend = ctx.team[ctx.selfIndex - 1];
+      // Nearest living friend ahead — fainted pets can't be targeted.
+      let friend;
+      for (let i = ctx.selfIndex - 1; i >= 0 && !friend; i--) {
+        if (isAlive(ctx.team[i])) friend = ctx.team[i];
+      }
       if (!friend) return;
       friend.attack += Math.round(ctx.self.attack * 0.5);
     },

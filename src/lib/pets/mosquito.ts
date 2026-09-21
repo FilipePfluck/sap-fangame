@@ -1,6 +1,6 @@
 import type { PetType } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
-import { dealAbilityDamage } from "@/lib/utils/combat";
+import { dealAbilityDamage, isAlive } from "@/lib/utils/combat";
 
 export const Mosquito: PetType = {
   name: "Mosquito",
@@ -12,7 +12,7 @@ export const Mosquito: PetType = {
   ability: {
     trigger: "start-of-battle",
     fn: (ctx) => {
-      for (const target of pickN(ctx.enemyTeam, ctx.level)) {
+      for (const target of pickN(ctx.enemyTeam.filter(isAlive), ctx.level)) {
         dealAbilityDamage(target, 1);
       }
     },

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { simulateBattle } from "@/lib/game/battle";
 import { PET_REGISTRY } from "@/lib/pets";
-import type { PetInstance, PetType } from "@/lib/types";
+import type { BattleAbilityContext, PetInstance, PetType } from "@/lib/types";
 
 function pet(type: string, attack: number, health: number, perk: string | null = null): PetInstance {
   return { type, attack, health, perk, xp: 0, level: 1 };
@@ -194,6 +194,20 @@ describe("Badger — faint", () => {
     // Badger's faint: no friend ahead, friend behind takes 3 dmg → 1/2.
     expect(result).toBe("WIN");
     expect(steps[1].attackerTeam[0].health).toBe(2);
+  });
+});
+
+describe("Badger — faint hits the enemy in front when it is the front pet", () => {
+  it("damages the first living enemy, not the friend behind alone", () => {
+    const { steps } = simulateBattle(
+      [pet("Badger", 6, 1), pet("Sloth", 1, 5)],
+      [pet("Sloth", 5, 1), pet("Sloth", 1, 10)],
+      PET_REGISTRY,
+    );
+    // Badger trades with the first enemy and both die. Its faint then hits
+    // the next enemy (10 - 3 = 7) as well as the friend behind (5 - 3 = 2).
+    expect(steps[1].attackerTeam[0].health).toBe(2);
+    expect(steps[1].defenderTeam[0].health).toBe(7);
   });
 });
 
@@ -545,5 +559,64 @@ describe("Summoned trigger — the pet's own arrival", () => {
     // Booster lands between the Sloth and the Tiger, so its "+1 attack on
     // summon" fires twice.
     expect(steps[1].attackerTeam[1]).toMatchObject({ type: "Booster", attack: 3 });
+  });
+});
+
+describe("Fainted pets are never targeted", () => {
+  const dead = (type: string, attack = 1): PetInstance => pet(type, attack, 0);
+  const run = (type: string, team: PetInstance[], selfIndex: number, enemyTeam: PetInstance[] = []) => {
+    const fn = PET_REGISTRY[type].ability!.fn as (ctx: BattleAbilityContext) => void;
+    fn({
+      self: team[selfIndex], selfIndex, team, enemyTeam, level: 1,
+      summon: () => {}, triggerCount: 1, petRegistry: PET_REGISTRY,
+    });
+  };
+
+  it("Ant's faint buff skips a fainted friend", () => {
+    const corpse = dead("Sloth");
+    const living = pet("Sloth", 1, 1);
+    for (let i = 0; i < 20; i++) run("Ant", [corpse, pet("Ant", 2, 2), living], 1);
+    expect(corpse).toMatchObject({ attack: 1, health: 0 });
+    expect(living.attack).toBe(21);
+  });
+
+  it("Ant does nothing when every friend has fainted", () => {
+    const corpse = dead("Sloth");
+    run("Ant", [corpse, pet("Ant", 2, 2)], 1);
+    expect(corpse).toMatchObject({ attack: 1, health: 0 });
+  });
+
+  it("Crab ignores fainted friends when finding the healthiest", () => {
+    const crab = pet("Crab", 4, 1);
+    run("Crab", [dead("Sloth"), crab], 1);
+    expect(crab.health).toBe(1);
+  });
+
+  it("Dodo gives its attack to the nearest living friend ahead", () => {
+    const corpse = dead("Sloth");
+    const living = pet("Sloth", 1, 5);
+    run("Dodo", [living, corpse, pet("Dodo", 4, 2)], 2);
+    expect(corpse.attack).toBe(1);
+    expect(living.attack).toBe(3);
+  });
+
+  it("Badger skips fainted neighbors, and hits the first living enemy from the front", () => {
+    const behind = dead("Sloth");
+    const deadEnemy = dead("Sloth");
+    const liveEnemy = pet("Sloth", 1, 10);
+    run("Badger", [pet("Badger", 6, 0), behind], 0, [deadEnemy, liveEnemy]);
+    expect(behind.health).toBe(0);
+    expect(deadEnemy.health).toBe(0);
+    expect(liveEnemy.health).toBe(7);
+  });
+
+  it("Mosquito, Leopard, Skunk and Rhino only pick living enemies", () => {
+    for (const type of ["Mosquito", "Leopard", "Skunk", "Rhino"]) {
+      const corpse = dead("Sloth");
+      const living = pet("Sloth", 1, 10);
+      for (let i = 0; i < 10; i++) run(type, [pet(type, 6, 6)], 0, [corpse, living]);
+      expect(corpse.health, type).toBe(0);
+      expect(living.health, type).toBeLessThan(10);
+    }
   });
 });

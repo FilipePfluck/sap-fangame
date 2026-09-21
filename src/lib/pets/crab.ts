@@ -1,4 +1,5 @@
 import type { PetType } from "@/lib/types";
+import { isAlive } from "@/lib/utils/combat";
 
 export const Crab: PetType = {
   name: "Crab",
@@ -11,7 +12,7 @@ export const Crab: PetType = {
     trigger: "start-of-battle",
     fn: (ctx) => {
       const friendHealths = ctx.team
-        .filter((_, i) => i !== ctx.selfIndex)
+        .filter((p, i) => i !== ctx.selfIndex && isAlive(p))
         .map((p) => p.health);
       if (friendHealths.length === 0) return;
       const healthiest = Math.max(...friendHealths);

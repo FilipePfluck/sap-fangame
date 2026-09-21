@@ -1,5 +1,5 @@
 import type { PetType } from "@/lib/types";
-import { dealAbilityDamage } from "@/lib/utils/combat";
+import { dealAbilityDamage, isAlive } from "@/lib/utils/combat";
 
 export const Rhino: PetType = {
   name: "Rhino",
@@ -11,7 +11,7 @@ export const Rhino: PetType = {
   ability: {
     trigger: "knock-out",
     fn: (ctx) => {
-      const target = ctx.enemyTeam[0];
+      const target = ctx.enemyTeam.find(isAlive);
       if (!target) return;
       const isTier1 = ctx.petRegistry[target.type]?.tier === 1;
       dealAbilityDamage(target, isTier1 ? 8 : 4);
