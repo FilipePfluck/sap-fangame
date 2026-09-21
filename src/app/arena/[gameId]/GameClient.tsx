@@ -36,6 +36,7 @@ const FOOD_MAP = FOOD_REGISTRY;
 
 type BattleData = {
   opponentTeam: PetInstance[];
+  opponentName: string | null;
   result: "WIN" | "DRAW" | "LOSS";
   steps: Array<{
     attackerTeam: PetInstance[];

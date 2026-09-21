@@ -72,8 +72,35 @@ export async function POST(
   );
   const preBattleBoard = endTurnResult.board;
 
-  const ghostTeam = buildGhostTeam(turnNumber);
-  const { result, steps } = simulateBattle(preBattleBoard, ghostTeam, PET_REGISTRY);
+  await prisma.submittedTeam.create({
+    data: {
+      gameId,
+      playerId: session.user.id,
+      playerName: session.user.name ?? session.user.email ?? "Unknown",
+      turnNumber,
+      lives,
+      trophies,
+      team: preBattleBoard,
+    },
+  });
+
+  const [matchedSubmission = null] = await prisma.$queryRaw<
+    { playerName: string; team: PetInstance[] }[]
+  >`
+    SELECT "playerName", "team" FROM "SubmittedTeam"
+    WHERE "playerId" != ${session.user.id} AND "turnNumber" = ${turnNumber}
+    ORDER BY
+      CASE WHEN "lives" = ${lives} AND "trophies" = ${trophies} THEN 0 ELSE 1 END,
+      "createdAt" ASC
+    LIMIT 1
+  `;
+
+  const opponentTeam = matchedSubmission
+    ? (matchedSubmission.team as PetInstance[])
+    : buildGhostTeam(turnNumber);
+  const opponentName = matchedSubmission?.playerName ?? null;
+
+  const { result, steps } = simulateBattle(preBattleBoard, opponentTeam, PET_REGISTRY);
   const newLives = result === "LOSS" ? lives - 1 : lives;
   const newTrophies = result === "WIN" ? trophies + 1 : trophies;
 
@@ -101,7 +128,8 @@ export async function POST(
     const battle = await tx.battle.create({
       data: {
         gameId,
-        opponentTeam: ghostTeam,
+        opponentTeam,
+        opponentName,
         result,
         steps,
       },

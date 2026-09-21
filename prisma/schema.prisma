@@ -84,9 +84,25 @@ model Battle {
   gameId       String
   game         Game         @relation(fields: [gameId], references: [id])
   opponentTeam Json
+  opponentName String?
   result       BattleResult
   steps        Json
   createdAt    DateTime     @default(now())
 
   @@index([gameId])
+}
+
+model SubmittedTeam {
+  id         String   @id @default(cuid())
+  gameId     String
+  playerId   String
+  playerName String
+  turnNumber Int
+  lives      Int
+  trophies   Int
+  team       Json
+  createdAt  DateTime @default(now())
+
+  @@index([turnNumber, lives, trophies])
+  @@index([playerId])
 }

@@ -27,6 +27,7 @@ export async function GET(
     id: battle.id,
     gameId: battle.gameId,
     opponentTeam: battle.opponentTeam,
+    opponentName: battle.opponentName,
     result: battle.result,
     steps: battle.steps,
     createdAt: battle.createdAt,

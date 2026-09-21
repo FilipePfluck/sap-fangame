@@ -12,6 +12,7 @@ import Tooltip from "./Tooltip";
 
 type BattleData = {
   opponentTeam: PetInstance[];
+  opponentName: string | null;
   result: "WIN" | "DRAW" | "LOSS";
   steps: BattleStep[];
 };
@@ -104,18 +105,23 @@ export default function BattleView({ battleData, gameWon, onBackToShop }: Battle
         <span className="text-2xl font-bold text-zinc-400">VS</span>
 
         {/* Enemy team — facing left (native sprite direction) */}
-        <div className="flex flex-row gap-2">
-          {currentStep.defenderTeam.map((pet, i) => (
-            <PetCard
-              key={i}
-              pet={pet}
-              facing="left"
-              animClass={getDefenderAnim(i)}
-            />
-          ))}
-          {faintedDefenders.map(({ pet, animClass }, i) => (
-            <PetCard key={`faint-d-${i}`} pet={pet} facing="left" animClass={animClass} />
-          ))}
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+            {battleData.opponentName ?? "Ghost"}
+          </span>
+          <div className="flex flex-row gap-2">
+            {currentStep.defenderTeam.map((pet, i) => (
+              <PetCard
+                key={i}
+                pet={pet}
+                facing="left"
+                animClass={getDefenderAnim(i)}
+              />
+            ))}
+            {faintedDefenders.map(({ pet, animClass }, i) => (
+              <PetCard key={`faint-d-${i}`} pet={pet} facing="left" animClass={animClass} />
+            ))}
+          </div>
         </div>
       </div>
 
