@@ -1,4 +1,4 @@
-import type { PetType } from "@/lib/types";
+import { PetType, Trigger } from "@/lib/types";
 
 export const Squirrel: PetType = {
   name: "Squirrel",
@@ -8,12 +8,13 @@ export const Squirrel: PetType = {
   baseHealth: 5,
   isToken: false,
   ability: {
-    trigger: "start-of-turn",
+    trigger: Trigger.start_of_turn,
     fn: (ctx) => {
       for (const food of ctx.shop.shopFoods) {
         food.discount = (food.discount ?? 0) + ctx.level;
       }
     },
   },
-  description: (level: number) => `Start of turn: Discount all shop food by ${level} gold.`,
+  description: (level: number) =>
+    `Start of turn: Discount all shop food by ${level} gold.`,
 };

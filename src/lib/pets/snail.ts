@@ -1,4 +1,4 @@
-import type { PetType } from "@/lib/types";
+import { PetType, Trigger } from "@/lib/types";
 
 export const Snail: PetType = {
   name: "Snail",
@@ -8,7 +8,7 @@ export const Snail: PetType = {
   baseHealth: 3,
   isToken: false,
   ability: {
-    trigger: "end-turn",
+    trigger: Trigger.end_turn,
     fn: (ctx) => {
       if (ctx.lastBattleResult !== "LOSS") return;
       let buffed = 0;

@@ -1,4 +1,4 @@
-import type { PetType } from "@/lib/types";
+import { PetType, Trigger } from "@/lib/types";
 
 export const Pig: PetType = {
   name: "Pig",
@@ -8,7 +8,7 @@ export const Pig: PetType = {
   baseHealth: 1,
   isToken: false,
   ability: {
-    trigger: "sell",
+    trigger: Trigger.sell,
     fn: (ctx) => {
       ctx.goldGain(ctx.level);
     },

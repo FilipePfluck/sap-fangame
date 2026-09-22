@@ -1,4 +1,4 @@
-import type { PetType } from "@/lib/types";
+import { PetType, Trigger } from "@/lib/types";
 
 export const Pigeon: PetType = {
   name: "Pigeon",
@@ -8,7 +8,7 @@ export const Pigeon: PetType = {
   baseHealth: 2,
   isToken: false,
   ability: {
-    trigger: "sell",
+    trigger: Trigger.sell,
     fn: (ctx) => {
       for (let i = 0; i < ctx.level; i++) {
         ctx.addShopFood("Bread Crumbs");

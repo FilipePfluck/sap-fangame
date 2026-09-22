@@ -8,6 +8,6 @@ export const Scorpion: PetType = {
   baseHealth: 3,
   isToken: false,
   ability: null,
-  innatePerk: "Peanut",
+  innatePerk: "Peanut", // TODO: Should be updated to "Summon" trigger - gaining a Perk is distinct from being innate (ex: Rabbit triggers on gain, not innate)
   description: "Summoned: Gain Peanut perk.",
 };

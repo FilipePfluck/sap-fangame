@@ -1,4 +1,10 @@
-import type { PetInstance, BattleStep, PetType, BattleAbilityContext } from "@/lib/types";
+import {
+  BattleAbilityContext,
+  BattleStep,
+  PetInstance,
+  PetType,
+  Trigger,
+} from "@/lib/types";
 import { orderByAttack } from "@/lib/utils/random";
 import { dealAbilityDamage } from "@/lib/utils/combat";
 import { compactBoard } from "@/lib/game/merge";
@@ -59,7 +65,11 @@ function fireAbilityOn(
   };
   ability.fn(ctx);
 
-  if (levelOverride === undefined && index >= 0 && team[index + 1]?.type === "Tiger") {
+  if (
+    levelOverride === undefined &&
+    index >= 0 &&
+    team[index + 1]?.type === "Tiger"
+  ) {
     fireAbilityOn(
       ability,
       pet,
@@ -86,7 +96,10 @@ function fireFriendSummoned(
 
   // Same-trigger pets fire highest-attack first (ties random) per the
   // ability-order spec, rather than in raw board order.
-  for (const { pet, ability } of orderByAttack(candidates, (c) => c.pet.attack)) {
+  for (const { pet, ability } of orderByAttack(
+    candidates,
+    (c) => c.pet.attack
+  )) {
     const index = team.indexOf(pet);
     if (index === -1) continue;
     fireAbilityOn(
@@ -119,7 +132,7 @@ function handleFaint(
 
   // 1. Fire faint ability
   const def = petRegistry[fainted.type];
-  if (def?.ability?.trigger === "faint") {
+  if (def?.ability?.trigger === Trigger.faint) {
     fireAbilityOn(
       def.ability,
       fainted,
@@ -163,16 +176,25 @@ function handleDeathsPhase(
   petRegistry: Record<string, PetType>,
   counts: WeakMap<PetInstance, number>
 ): void {
-  type DeadJob = { pet: PetInstance; team: PetInstance[]; enemyTeam: PetInstance[] };
+  type DeadJob = {
+    pet: PetInstance;
+    team: PetInstance[];
+    enemyTeam: PetInstance[];
+  };
   const dead: DeadJob[] = [];
   for (const pet of attacker) {
-    if (pet.health <= 0) dead.push({ pet, team: attacker, enemyTeam: defender });
+    if (pet.health <= 0)
+      dead.push({ pet, team: attacker, enemyTeam: defender });
   }
   for (const pet of defender) {
-    if (pet.health <= 0) dead.push({ pet, team: defender, enemyTeam: attacker });
+    if (pet.health <= 0)
+      dead.push({ pet, team: defender, enemyTeam: attacker });
   }
 
-  for (const { pet, team, enemyTeam } of orderByAttack(dead, (d) => d.pet.attack)) {
+  for (const { pet, team, enemyTeam } of orderByAttack(
+    dead,
+    (d) => d.pet.attack
+  )) {
     const index = team.indexOf(pet);
     if (index === -1) continue;
     handleFaint(team, index, enemyTeam, petRegistry, counts);
@@ -188,22 +210,30 @@ function fireStartOfBattlePhase(
   petRegistry: Record<string, PetType>,
   counts: WeakMap<PetInstance, number>
 ): void {
-  type Job = { pet: PetInstance; team: PetInstance[]; enemyTeam: PetInstance[]; ability: BattleAbility };
+  type Job = {
+    pet: PetInstance;
+    team: PetInstance[];
+    enemyTeam: PetInstance[];
+    ability: BattleAbility;
+  };
   const jobs: Job[] = [];
   for (const pet of attacker) {
     const ability = petRegistry[pet.type]?.ability;
-    if (ability?.trigger === "start-of-battle") {
+    if (ability?.trigger === Trigger.start_of_battle) {
       jobs.push({ pet, team: attacker, enemyTeam: defender, ability });
     }
   }
   for (const pet of defender) {
     const ability = petRegistry[pet.type]?.ability;
-    if (ability?.trigger === "start-of-battle") {
+    if (ability?.trigger === Trigger.start_of_battle) {
       jobs.push({ pet, team: defender, enemyTeam: attacker, ability });
     }
   }
 
-  for (const { pet, team, enemyTeam, ability } of orderByAttack(jobs, (j) => j.pet.attack)) {
+  for (const { pet, team, enemyTeam, ability } of orderByAttack(
+    jobs,
+    (j) => j.pet.attack
+  )) {
     const index = team.indexOf(pet);
     if (index === -1) continue; // fainted earlier in this same phase
     const summon = (p: PetInstance, afterIndex: number) => {
@@ -213,7 +243,16 @@ function fireStartOfBattlePhase(
         fireFriendSummoned(team, insertAt, enemyTeam, petRegistry, counts);
       }
     };
-    fireAbilityOn(ability, pet, index, team, enemyTeam, petRegistry, counts, summon);
+    fireAbilityOn(
+      ability,
+      pet,
+      index,
+      team,
+      enemyTeam,
+      petRegistry,
+      counts,
+      summon
+    );
   }
 }
 
@@ -222,7 +261,7 @@ function fireStartOfBattlePhase(
 // resolved from `team[index]` internally, since a knock-out's scorer may
 // already have been removed from `team` by a simultaneous mutual-kill.
 function fireSingleTrigger(
-  trigger: "before-attack" | "knock-out",
+  trigger: Trigger.before_attack | Trigger.knock_out,
   pet: PetInstance,
   index: number,
   team: PetInstance[],
@@ -232,7 +271,16 @@ function fireSingleTrigger(
 ): void {
   const def = petRegistry[pet.type];
   if (def?.ability?.trigger !== trigger) return;
-  fireAbilityOn(def.ability, pet, index, team, enemyTeam, petRegistry, counts, NOOP_SUMMON);
+  fireAbilityOn(
+    def.ability,
+    pet,
+    index,
+    team,
+    enemyTeam,
+    petRegistry,
+    counts,
+    NOOP_SUMMON
+  );
 }
 
 export function simulateBattle(
@@ -271,7 +319,15 @@ export function simulateBattle(
       (j) => j.pet.attack
     );
     for (const { pet, team, enemyTeam } of beforeAttackOrder) {
-      fireSingleTrigger("before-attack", pet, 0, team, enemyTeam, petRegistry, triggerCounts);
+      fireSingleTrigger(
+        Trigger.before_attack,
+        pet,
+        0,
+        team,
+        enemyTeam,
+        petRegistry,
+        triggerCounts
+      );
     }
 
     const description = `${atkFront.type} (${atkFront.attack}/${atkFront.health}) attacks ${defFront.type} (${defFront.attack}/${defFront.health})`;
@@ -299,13 +355,25 @@ export function simulateBattle(
 
     const knockoutOrder = orderByAttack(
       [
-        ...(defenderDied ? [{ pet: atkFront, team: attacker, enemyTeam: defender }] : []),
-        ...(attackerDied ? [{ pet: defFront, team: defender, enemyTeam: attacker }] : []),
+        ...(defenderDied
+          ? [{ pet: atkFront, team: attacker, enemyTeam: defender }]
+          : []),
+        ...(attackerDied
+          ? [{ pet: defFront, team: defender, enemyTeam: attacker }]
+          : []),
       ],
       (j) => j.pet.attack
     );
     for (const { pet, team, enemyTeam } of knockoutOrder) {
-      fireSingleTrigger("knock-out", pet, team.indexOf(pet), team, enemyTeam, petRegistry, triggerCounts);
+      fireSingleTrigger(
+        Trigger.knock_out,
+        pet,
+        team.indexOf(pet),
+        team,
+        enemyTeam,
+        petRegistry,
+        triggerCounts
+      );
     }
 
     steps.push({

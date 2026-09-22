@@ -1,9 +1,9 @@
-import type {
+import  {
   PetInstance,
   ShopState,
   ShopAbilityContext,
   BattleAbilityContext,
-  PetType,
+  PetType, Trigger,
 } from "@/lib/types";
 import { orderByAttack } from "@/lib/utils/random";
 import { stockFood } from "@/lib/game/shop";
@@ -54,7 +54,7 @@ function clearTempStats(pet: PetInstance): void {
 }
 
 export function fireShopAbility(
-  trigger: "sell" | "buy" | "level-up",
+  trigger: Trigger.sell | Trigger.buy | Trigger.level_up,
   pet: PetInstance,
   petIndex: number,
   board: (PetInstance | null)[],
@@ -77,7 +77,7 @@ export function fireShopAbility(
 // Fires a board-wide trigger ("start-of-turn" / "end-turn") for every pet on
 // the board, rather than a single acted-on pet.
 export function fireBoardShopAbility(
-  trigger: "start-of-turn" | "end-turn",
+  trigger: Trigger.start_of_turn | Trigger.end_turn,
   board: (PetInstance | null)[],
   shop: ShopState,
   petRegistry: Record<string, PetType>,
@@ -92,16 +92,17 @@ export function fireBoardShopAbility(
     const pet = currentBoard[i];
     if (!pet) continue;
 
+    // TODO: Move to a dedicated FoodPerk and store logic in a function, similar to pets
     // Bread is a food-granted effect, not a PetType's own ability, so it's
     // checked here directly rather than via the registry. Its health is
     // temporary: removed at the next start-of-turn even if the perk has since
     // been replaced.
-    if (pet.perk === "Bread" && trigger === "end-turn") {
+    if (pet.perk === "Bread" && trigger === Trigger.end_turn) {
       pet.health += 7;
       pet.tempHealth = (pet.tempHealth ?? 0) + 7;
     }
 
-    if (trigger === "start-of-turn") clearTempStats(pet);
+    if (trigger === Trigger.start_of_turn) clearTempStats(pet);
 
     const def = petRegistry[pet.type];
     if (def?.ability?.trigger !== trigger) continue;
@@ -134,7 +135,7 @@ export function fireShopFaint(
 
   newBoard[boardPosition] = null;
 
-  if (def?.ability?.trigger === "faint") {
+  if (def?.ability?.trigger === Trigger.faint) {
     const ctx: BattleAbilityContext = {
       self: pet,
       selfIndex,

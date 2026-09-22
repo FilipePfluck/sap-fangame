@@ -65,17 +65,30 @@ export type ShopAbilityContext = {
   lastBattleResult?: "WIN" | "DRAW" | "LOSS";
 };
 
+export enum Trigger {
+  sell,
+  buy,
+  faint,
+  start_of_battle,
+  level_up,
+  friend_summoned,
+  start_of_turn,
+  end_turn,
+  before_attack,
+  knock_out,
+}
+
 export type Ability =
-  | { trigger: "sell"; fn: (ctx: ShopAbilityContext) => void }
-  | { trigger: "buy"; fn: (ctx: ShopAbilityContext) => void }
-  | { trigger: "faint"; fn: (ctx: BattleAbilityContext) => void }
-  | { trigger: "start-of-battle"; fn: (ctx: BattleAbilityContext) => void }
-  | { trigger: "level-up"; fn: (ctx: ShopAbilityContext) => void }
-  | { trigger: "friend-summoned"; fn: (ctx: BattleAbilityContext) => void }
-  | { trigger: "start-of-turn"; fn: (ctx: ShopAbilityContext) => void }
-  | { trigger: "end-turn"; fn: (ctx: ShopAbilityContext) => void }
-  | { trigger: "before-attack"; fn: (ctx: BattleAbilityContext) => void }
-  | { trigger: "knock-out"; fn: (ctx: BattleAbilityContext) => void };
+  | { trigger: Trigger.sell; fn: (ctx: ShopAbilityContext) => void }
+  | { trigger: Trigger.buy; fn: (ctx: ShopAbilityContext) => void }
+  | { trigger: Trigger.faint; fn: (ctx: BattleAbilityContext) => void }
+  | { trigger: Trigger.start_of_battle; fn: (ctx: BattleAbilityContext) => void }
+  | { trigger: Trigger.level_up; fn: (ctx: ShopAbilityContext) => void }
+  | { trigger: Trigger.friend_summoned; fn: (ctx: BattleAbilityContext) => void }
+  | { trigger: Trigger.start_of_turn; fn: (ctx: ShopAbilityContext) => void }
+  | { trigger: Trigger.end_turn; fn: (ctx: ShopAbilityContext) => void }
+  | { trigger: Trigger.before_attack; fn: (ctx: BattleAbilityContext) => void }
+  | { trigger: Trigger.knock_out; fn: (ctx: BattleAbilityContext) => void };
 
 export type PetType = {
   name: string;

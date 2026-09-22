@@ -7,7 +7,7 @@ import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
 import { fireShopAbility } from "@/lib/game/shop-ability";
 import { z } from "zod";
-import type { Board, ShopState } from "@/lib/types";
+import { Board, ShopState, Trigger } from "@/lib/types";
 
 const MergeSchema = z.object({
   from: z.number().int().min(0).max(4),
@@ -74,7 +74,7 @@ export async function POST(
 
   if (didLevelUp) {
     const petAtOldLevel = { ...merged, level: preMergeLevel };
-    const result = fireShopAbility("level-up", petAtOldLevel, to, currentBoard, currentShop, PET_REGISTRY);
+    const result = fireShopAbility(Trigger.level_up, petAtOldLevel, to, currentBoard, currentShop, PET_REGISTRY);
     currentBoard = result.board;
     currentShop = result.shop;
     extraGold = result.goldDelta;
