@@ -24,7 +24,7 @@ function applyStandardEffect(food: FoodType, pet: PetInstance): PetInstance {
     ...pet,
     attack: pet.attack + (food.effect.attack ?? 0),
     health: pet.health + (food.effect.health ?? 0),
-    perk: food.isPerk ? food.name : pet.perk,
+    perk: food.perk ? food.perk : pet.perk,
   };
 }
 

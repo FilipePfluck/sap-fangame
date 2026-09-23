@@ -4,7 +4,6 @@ export const Pizza: FoodType = {
   name: "Pizza",
   sprite: "/sap/pizza.webp",
   tier: 6,
-  isPerk: true,
   isToken: false,
   effect: { attack: 2, health: 2 },
   targeting: { random: 2 },

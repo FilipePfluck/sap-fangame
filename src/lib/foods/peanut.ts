@@ -1,10 +1,12 @@
 import type { FoodType } from "@/lib/types";
+import { PeanutPerk } from "@/lib/perks/peanut";
+import { structuredClone } from "next/dist/compiled/@edge-runtime/primitives";
 
 export const Peanut: FoodType = {
   name: "Peanut",
   sprite: "/sap/peanut.webp",
   tier: 5,
-  isPerk: true,
+  perk: PeanutPerk,
   isToken: true,
   effect: {},
   description:
