@@ -10,9 +10,9 @@ export const Boar: PetType = {
   ability: {
     trigger: "before-attack",
     fn: (ctx) => {
-      ctx.self.attack += 4;
-      ctx.self.health += 2;
+      ctx.self.attack += 4 * ctx.level;
+      ctx.self.health += 2 * ctx.level;
     },
   },
-  description: "Before attack: Gain +4 attack and +2 health.",
+  description: (level: number) => `Before attack: Gain +${4 * level} attack and +${2 * level} health.`,
 };

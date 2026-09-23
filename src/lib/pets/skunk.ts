@@ -15,8 +15,9 @@ export const Skunk: PetType = {
       const target = ctx.enemyTeam.reduce((highest, p) =>
         p.health > highest.health ? p : highest
       );
-      removeHealth(target, 0.33);
+      removeHealth(target, 0.33 * ctx.level);
     },
   },
-  description: "Start of battle: Reduce the highest health enemy by 33% health.",
+  description: (level: number) =>
+    `Start of battle: Reduce the highest health enemy by ${level * 33}% health.`,
 };

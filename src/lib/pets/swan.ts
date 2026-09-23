@@ -10,8 +10,8 @@ export const Swan: PetType = {
   ability: {
     trigger: "start-of-turn",
     fn: (ctx) => {
-      ctx.goldGain(1);
+      ctx.goldGain(ctx.level);
     },
   },
-  description: "Start of turn: Gain +1 gold.",
+  description: (level: number) => `Start of turn: Gain +${level} gold.`,
 };

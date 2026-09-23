@@ -11,9 +11,9 @@ export const Duck: PetType = {
     trigger: "sell",
     fn: (ctx) => {
       for (const shopPet of ctx.shop.shopPets) {
-        shopPet.tempHealthBonus = (shopPet.tempHealthBonus ?? 0) + 1;
+        shopPet.tempHealthBonus = (shopPet.tempHealthBonus ?? 0) + ctx.level;
       }
     },
   },
-  description: "Sell: Give shop pets +1 health.",
+  description: (level: number) => `Sell: Give shop pets +${level} health.`,
 };

@@ -1,6 +1,7 @@
 import type { PetType } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 import { dealAbilityDamage } from "@/lib/utils/combat";
+import { numberToText } from "@/lib/utils/flavor-text";
 
 export const Mosquito: PetType = {
   name: "Mosquito",
@@ -17,8 +18,5 @@ export const Mosquito: PetType = {
       }
     },
   },
-  description: (level: number) =>
-    level > 1
-      ? `Start of battle: Deal 1 damage to ${level} random enemies.`
-      : "Start of battle: Deal 1 damage to one random enemy.",
+  description: (level: number) => `Start of battle: Deal 1 damage to ${numberToText[level]} random enemies.`
 };

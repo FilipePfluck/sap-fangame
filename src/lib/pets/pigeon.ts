@@ -1,4 +1,5 @@
 import type { PetType } from "@/lib/types";
+import { numberToText } from "@/lib/utils/flavor-text";
 
 export const Pigeon: PetType = {
   name: "Pigeon",
@@ -15,8 +16,5 @@ export const Pigeon: PetType = {
       }
     },
   },
-  description: (level: number) =>
-    level > 1
-      ? `Sell: Stock ${level} free Bread Crumbs.`
-      : "Sell: Stock one free Bread Crumbs.",
+  description: (level: number) => `Sell: Stock ${numberToText[level]} free Bread Crumbs.`
 };

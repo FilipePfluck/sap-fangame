@@ -12,8 +12,9 @@ export const Dodo: PetType = {
     fn: (ctx) => {
       const friend = ctx.team[ctx.selfIndex - 1];
       if (!friend) return;
-      friend.attack += Math.round(ctx.self.attack * 0.5);
+      friend.attack += Math.round(ctx.self.attack * 0.5 * ctx.level);
     },
   },
-  description: "Start of battle: Give 50% of attack to nearest friend ahead.",
+  description: (level: number) =>
+    `Start of battle: Give ${level * 50}% of attack to nearest friend ahead.`,
 };

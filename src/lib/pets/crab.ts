@@ -15,8 +15,8 @@ export const Crab: PetType = {
         .map((p) => p.health);
       if (friendHealths.length === 0) return;
       const healthiest = Math.max(...friendHealths);
-      ctx.self.health += Math.round(healthiest * 0.25);
+      ctx.self.health += Math.round(healthiest * 0.25 * ctx.level);
     },
   },
-  description: "Start of battle: Gain health equal to 25% of the most healthy friend.",
+  description: (level: number) => `Start of battle: Gain health equal to ${level * 25}% of the most healthy friend.`,
 };
