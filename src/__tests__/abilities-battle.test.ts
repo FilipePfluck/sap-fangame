@@ -480,6 +480,52 @@ describe("Mushroom", () => {
   });
 })
 
+describe("Meat Bone", () => {
+  it("increases base attack by +3", () => {
+    const meatBoneSloth = pet("Sloth", 1, 4, MeatBonePerk);
+    const opponent = pet("Sloth", 2, 8);
+
+    const { result } = simulateBattle([meatBoneSloth], [opponent], PET_REGISTRY);
+    expect(result).toBe("DRAW");
+  });
+})
+
+describe("Steak", () => {
+  it("increases base attack by +20", () => {
+    const steakSloth = pet("Sloth", 1, 21, SteakPerk);
+    const opponent = pet("Sloth", 1, 21);
+
+    const { result } = simulateBattle([steakSloth], [opponent], PET_REGISTRY);
+    expect(result).toBe("WIN");
+  });
+
+  it("is consumed after use", () => {
+    const steakSloth = pet("Sloth", 1, 21, SteakPerk);
+    const opponent = pet("Sloth", 1, 22);
+
+    const { steps } = simulateBattle([steakSloth], [opponent], PET_REGISTRY);
+    expect(steps[0].attackerTeam[0].perk.name).toBe("Steak");
+    expect(steps[1].attackerTeam[0].perk).toBe(null);
+  });
+})
+
+describe("Mushroom", () => {
+  it("summons the same pet as a 1/1", () => {
+    const mushroomSloth = pet("Sloth", 2, 2, MushroomPerk);
+    const opponent = pet("Sloth", 2, 3);
+    const { result, steps } = simulateBattle([mushroomSloth], [opponent], PET_REGISTRY);
+
+    // Bee (1/1) vs Sloth (2/1). They trade → DRAW.
+    expect(result).toBe("DRAW");
+
+    // After round 1, Sloth should appear in attacker team
+    const stepAfterRound1 = steps[1];
+    expect(stepAfterRound1.attackerTeam[0].type).toBe("Sloth");
+    expect(stepAfterRound1.attackerTeam[0].attack).toBe(1);
+    expect(stepAfterRound1.attackerTeam[0].health).toBe(1);
+  });
+})
+
 describe("Ability order — same-trigger pets fire highest attack first", () => {
   it("start-of-battle resolves by attack, not board position", () => {
     // Board order is A, B, C (A frontmost), but attack order is C > B > A.
