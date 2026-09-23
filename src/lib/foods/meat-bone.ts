@@ -1,11 +1,12 @@
 import type { FoodType } from "@/lib/types";
+import { MeatBonePerk } from "@/lib/perks/meat-bone";
 
 export const MeatBone: FoodType = {
   name: "Meat Bone",
   sprite: "/sap/meat-bone.webp",
   tier: 2,
-  isPerk: true,
+  perk: MeatBonePerk,
   isToken: false,
-  effect: { attack: 3 }, // TODO: Implement perk effect
+  effect: {},
   description: "Give one pet the Meat Bone perk. Attack with +3 damage.",
 };

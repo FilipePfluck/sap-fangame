@@ -1,10 +1,12 @@
 import type { FoodType } from "@/lib/types";
+import { GarlicPerk } from "@/lib/perks/garlic";
+import { structuredClone } from "next/dist/compiled/@edge-runtime/primitives";
 
 export const Garlic: FoodType = {
   name: "Garlic",
   sprite: "/sap/garlic.webp",
   tier: 3,
-  isPerk: true,
+  perk: GarlicPerk,
   isToken: false,
   effect: {},
   description:

@@ -633,7 +633,7 @@ export default function GameClient({
                   {shop.shopFoods.map((food, i) => {
                     const def = FOOD_MAP[food.type];
                     let subtitle = "";
-                    if (def?.isPerk) {
+                    if (def?.perk) {
                       subtitle = "Perk";
                     } else if (def) {
                       const a = def.effect.attack;

@@ -1,4 +1,9 @@
-import type { PetInstance } from "@/lib/types";
+import {
+  DOES_NOT_DECAY,
+  isDefensivePerk,
+  isOffensivePerk,
+  PetInstance,
+} from "@/lib/types";
 
 // The single place damage is ever applied to a pet — a normal front-line
 // attack and every damage-dealing ability (Mosquito, Badger, Leopard, Rhino,
@@ -9,19 +14,58 @@ import type { PetInstance } from "@/lib/types";
 // Peanut is NOT handled here — it only makes a normal front-line attack
 // lethal, not ability damage, so battle.ts applies that check itself around
 // its own two dealAbilityDamage calls.
-export function dealAbilityDamage(target: PetInstance, amount: number): number {
-  let damage = amount;
-  if (target.perk === "Garlic") {
-    damage = Math.max(2, damage - 2);
+export function dealDirectDamage(
+  source: PetInstance,
+  target: PetInstance
+): number {
+  let damage = source.attack;
+
+  if (isOffensivePerk(source.perk)) {
+    damage += source.perk.extraDamage;
   }
-  if (target.perk === "Melon") {
-    const blocked = Math.min(20, damage);
-    damage -= blocked;
-    target.perk = null;
+
+  if (isDefensivePerk(target.perk) && target.perk.blocksDirectDamage) {
+    damage = Math.max(
+      damage - target.perk.blocksFor,
+      Math.min(damage, target.perk.minimumDamageTaken)
+    );
+    
+    if (target.perk.usesRemaining !== DOES_NOT_DECAY) {
+      target.perk.usesRemaining -= 1;
+    }
+    
+    if (target.perk.usesRemaining === 0) {
+      target.perk = null;
+    }
   }
+
   target.health -= damage;
   return damage;
 }
+
+export function dealAbilityDamage(
+  target: PetInstance,
+  damage: number
+): number {
+  if (isDefensivePerk(target.perk) && target.perk.blocksAbilityDamage) {
+    damage = Math.max(
+      damage - target.perk.blocksFor,
+      target.perk.minimumDamageTaken
+    );
+
+    if (target.perk.usesRemaining !== DOES_NOT_DECAY) {
+      target.perk.usesRemaining -= 1;
+    }
+
+    if (target.perk.usesRemaining === 0) {
+      target.perk = null;
+    }
+  }
+
+  target.health -= damage;
+  return damage;
+}
+
 
 // Skunk-style effects remove a flat percentage of a pet's *current* health
 // directly, rather than dealing damage — so unlike dealAbilityDamage, this

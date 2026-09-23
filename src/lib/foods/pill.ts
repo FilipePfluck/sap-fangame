@@ -5,7 +5,6 @@ export const Pill: FoodType = {
   name: "Pill",
   sprite: "/sap/pill.webp",
   tier: 2,
-  isPerk: false,
   isToken: false,
   cost: 1,
   effect: {},

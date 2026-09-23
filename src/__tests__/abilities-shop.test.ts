@@ -9,6 +9,8 @@ import { PET_REGISTRY } from "@/lib/pets";
 import { FOOD_REGISTRY } from "@/lib/foods";
 import { getFoodCost } from "@/lib/game/costs";
 import { PetInstance, ShopState, Board, Trigger } from "@/lib/types";
+import { BreadPerk } from "@/lib/perks/bread";
+import { GarlicPerk } from "@/lib/perks/garlic";
 
 function makePet(type: string, level = 1): PetInstance {
   return { type, attack: 1, health: 1, perk: null, xp: level === 3 ? 6 : level === 2 ? 3 : 1, level };
@@ -376,7 +378,7 @@ describe("Snail — end-turn", () => {
 
 describe("Bread perk — end-turn / start-of-turn", () => {
   it("grants +7 health at end-turn, recorded as temporary", () => {
-    const breadPet: PetInstance = { type: "Sloth", attack: 1, health: 5, perk: "Bread", xp: 1, level: 1 };
+    const breadPet: PetInstance = { type: "Sloth", attack: 1, health: 5, perk: BreadPerk, xp: 1, level: 1 };
     const board = makeBoard([breadPet]);
     const { board: result } = fireBoardShopAbility(Trigger.end_turn, board, makeShop(), PET_REGISTRY);
     expect((result[0] as PetInstance).health).toBe(12);
@@ -384,15 +386,36 @@ describe("Bread perk — end-turn / start-of-turn", () => {
   });
 
   it("removes the +7 at start-of-turn", () => {
-    const breadPet: PetInstance = { type: "Sloth", attack: 1, health: 12, perk: "Bread", tempHealth: 7, xp: 1, level: 1 };
+    const breadPet: PetInstance = { type: "Sloth", attack: 1, health: 12, perk: BreadPerk, tempHealth: 7, xp: 1, level: 1 };
     const board = makeBoard([breadPet]);
     const { board: result } = fireBoardShopAbility(Trigger.start_of_turn, board, makeShop(), PET_REGISTRY);
     expect((result[0] as PetInstance).health).toBe(5);
     expect((result[0] as PetInstance).tempHealth).toBeUndefined();
   });
 
+  it("temporary health does not exceed stat caps", () => {
+    const breadPet: PetInstance = {
+      type: "Sloth",
+      attack: 1,
+      health: 50,
+      perk: BreadPerk,
+      xp: 1,
+      level: 1,
+    };
+    const board = makeBoard([breadPet]);
+    const { board: result } = fireBoardShopAbility(
+      Trigger.end_turn,
+      board,
+      makeShop(),
+      PET_REGISTRY
+    );
+    expect((result[0] as PetInstance).health).toBe(50);
+    expect((result[0] as PetInstance).tempHealth).toBe(0);
+  });
+
+
   it("still removes the +7 at start-of-turn after the perk was replaced", () => {
-    const garlicPet: PetInstance = { type: "Sloth", attack: 1, health: 12, perk: "Garlic", tempHealth: 7, xp: 1, level: 1 };
+    const garlicPet: PetInstance = { type: "Sloth", attack: 1, health: 12, perk: GarlicPerk, tempHealth: 7, xp: 1, level: 1 };
     const board = makeBoard([garlicPet]);
     const { board: result } = fireBoardShopAbility(Trigger.start_of_turn, board, makeShop(), PET_REGISTRY);
     expect((result[0] as PetInstance).health).toBe(5);
