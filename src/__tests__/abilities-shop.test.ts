@@ -28,16 +28,28 @@ function makeBoard(pets: (PetInstance | null)[]): Board {
 }
 
 describe("Duck — sell", () => {
-  it("increments tempHealthBonus on all current shop pets", () => {
-    const duck = makePet("Duck");
-    const shop = makeShop(["Sloth", "Ant"]);
-    const board = makeBoard([null, null, null, null, null]);
-    board[0] = duck;
+  it.each([
+    { level: 1 },
+    { level: 2 },
+    { level: 3 },
+  ])("increments shop health for all current shop pets by $level at level $level", ({ level }) => {
+    const duck = makePet("Duck", level);
+    const shop = makeShop(["Sloth", "Ant", "Beaver", "Badger", "Bison"]);
+    const board = makeBoard([duck]);
 
-    const { shop: result } = fireShopAbility("sell", duck, 0, board, shop, PET_REGISTRY);
-    expect(result.shopPets[0].tempHealthBonus).toBe(1);
-    expect(result.shopPets[1].tempHealthBonus).toBe(1);
-  });
+    const { shop: result } = fireShopAbility(
+      "sell",
+      duck,
+      0,
+      board,
+      shop,
+      PET_REGISTRY
+    );
+
+    for (const shopPet of result.shopPets) {
+      expect(shopPet.tempHealthBonus).toBe(level);
+    }
+  })
 
   it("stacks tempHealthBonus additively", () => {
     const duck = makePet("Duck");
@@ -62,18 +74,44 @@ describe("Duck — sell", () => {
 });
 
 describe("Beaver — sell", () => {
-  it("gives +1 attack to 2 random friends", () => {
-    const beaver = makePet("Beaver");
-    const sloth1 = makePet("Sloth");
-    const sloth2 = makePet("Sloth");
-    const board = makeBoard([beaver, sloth1, sloth2]);
+  // TODO - Doesn't require ability to be random to pass
+  it.each([
+    { level: 1, expectedAtkDifference: 2 },
+    { level: 2, expectedAtkDifference: 4 },
+    { level: 3, expectedAtkDifference: 6 },
+  ])(
+    "gives $level attack to 2 random friends at level $level",
+    ({ level, expectedAtkDifference }) => {
+      const beaver = makePet("Beaver", level);
+      const board = makeBoard([
+        beaver,
+        makePet("Sloth"),
+        makePet("Sloth"),
+        makePet("Sloth"),
+        makePet("Sloth"),
+      ]);
 
-    const { board: result } = fireShopAbility("sell", beaver, 0, board, makeShop(), PET_REGISTRY);
-    const friend1 = result[1] as PetInstance;
-    const friend2 = result[2] as PetInstance;
-    expect(friend1.attack).toBe(2); // +1
-    expect(friend2.attack).toBe(2); // +1
-  });
+      const initialAttack = board
+        .map((pet) => pet!.attack)
+        .reduce((sum = 0, atk) => sum + atk);
+
+
+      const { board: result } = fireShopAbility(
+        "sell",
+        beaver,
+        0,
+        board,
+        makeShop(),
+        PET_REGISTRY
+      );
+
+      const finalAttack = result
+        .map(pet => pet!.attack)
+        .reduce((sum = 0, atk) => sum + atk);
+
+      expect(finalAttack - initialAttack).toBe(expectedAtkDifference);
+    }
+  );
 
   it("buffs only available friend when only one exists", () => {
     const beaver = makePet("Beaver");
@@ -94,41 +132,67 @@ describe("Beaver — sell", () => {
 });
 
 describe("Pigeon — sell", () => {
-  it("level 1 adds 1 Bread Crumbs to shop", () => {
-    const pigeon = makePet("Pigeon", 1);
-    const board = makeBoard([pigeon]);
-    const { shop } = fireShopAbility("sell", pigeon, 0, board, makeShop(), PET_REGISTRY);
-    expect(shop.shopFoods).toHaveLength(1);
-    expect(shop.shopFoods[0].type).toBe("Bread Crumbs");
-    expect(shop.shopFoods[0].frozen).toBe(false);
-  });
+  it.each([{ level: 1 }, { level: 2 }, { level: 3 }])(
+    "adds $level Bread Crumbs to shop at level $level",
+    ({ level }) => {
+      const pigeon = makePet("Pigeon", level);
+      const board = makeBoard([pigeon]);
+      const { shop } = fireShopAbility(
+        "sell",
+        pigeon,
+        0,
+        board,
+        makeShop(),
+        PET_REGISTRY
+      );
 
-  it("level 2 adds 2 Bread Crumbs", () => {
-    const pigeon = makePet("Pigeon", 2);
-    const board = makeBoard([pigeon]);
-    const { shop } = fireShopAbility("sell", pigeon, 0, board, makeShop(), PET_REGISTRY);
-    expect(shop.shopFoods).toHaveLength(2);
-    expect(shop.shopFoods.every((f) => f.type === "Bread Crumbs")).toBe(true);
-  });
-
-  it("level 3 adds 3 Bread Crumbs", () => {
-    const pigeon = makePet("Pigeon", 3);
-    const board = makeBoard([pigeon]);
-    const { shop } = fireShopAbility("sell", pigeon, 0, board, makeShop(), PET_REGISTRY);
-    expect(shop.shopFoods).toHaveLength(3);
-  });
+      expect(shop.shopFoods).toHaveLength(level);
+      for (const food of shop.shopFoods) {
+        expect(food.type).toBe("Bread Crumbs");
+        expect(food.frozen).toBe(false);
+      }
+    }
+  );
 });
 
 describe("Otter — buy", () => {
-  it("gives +1 health to a random friend", () => {
-    const sloth = makePet("Sloth");
-    const otter = makePet("Otter");
-    const board = makeBoard([sloth, otter]);
+  // TODO - Doesn't require ability to be random to pass
+  it.each([
+    { level: 1, expectedHpDifference: 1 },
+    { level: 2, expectedHpDifference: 2 },
+    { level: 3, expectedHpDifference: 3 },
+  ])(
+    "gives +1 health to $level random friend at level $level",
+    ({ level, expectedHpDifference }) => {
+      const otter = makePet("Otter", level);
+      const board: Board = [
+        otter,
+        makePet("Sloth"),
+        makePet("Sloth"),
+        makePet("Sloth"),
+        makePet("Sloth"),
+      ];
 
-    const { board: result } = fireShopAbility("buy", otter, 1, board, makeShop(), PET_REGISTRY);
-    expect((result[0] as PetInstance).health).toBe(2); // Sloth got +1 health
-    expect((result[1] as PetInstance).health).toBe(1); // Otter unchanged
-  });
+      const initialTotalHealth = board
+        .map((pet) => pet!.health)
+        .reduce((sum = 0, hp) => sum + hp);
+
+      const { board: result } = fireShopAbility(
+        "buy",
+        otter,
+        0,
+        board,
+        makeShop(),
+        PET_REGISTRY
+      );
+
+      const finalTotalHealth = result
+        .map((pet) => pet!.health)
+        .reduce((sum = 0, hp) => sum + hp);
+
+      expect(expectedHpDifference).toBe(finalTotalHealth - initialTotalHealth);
+    }
+  );
 
   it("no-op when no friends on board", () => {
     const otter = makePet("Otter");
@@ -208,25 +272,16 @@ describe("Shop capacity — stocking into a full shop evicts unfrozen items", ()
 });
 
 describe("Pig — sell", () => {
-  it("level 1 gives +1 gold", () => {
-    const pig = makePet("Pig", 1);
+  it.each([
+    { level: 1 },
+    { level: 2 },
+    { level: 3 },
+  ])("level $level gives +$level gold", ({ level }) => {
+    const pig = makePet("Pig", level);
     const board = makeBoard([pig]);
-    const { goldDelta } = fireShopAbility("sell", pig, 0, board, makeShop(), PET_REGISTRY);
-    expect(goldDelta).toBe(1);
-  });
 
-  it("level 2 gives +2 gold", () => {
-    const pig = makePet("Pig", 2);
-    const board = makeBoard([pig]);
     const { goldDelta } = fireShopAbility("sell", pig, 0, board, makeShop(), PET_REGISTRY);
-    expect(goldDelta).toBe(2);
-  });
-
-  it("level 3 gives +3 gold", () => {
-    const pig = makePet("Pig", 3);
-    const board = makeBoard([pig]);
-    const { goldDelta } = fireShopAbility("sell", pig, 0, board, makeShop(), PET_REGISTRY);
-    expect(goldDelta).toBe(3);
+    expect(goldDelta).toBe(level);
   });
 });
 
@@ -267,29 +322,40 @@ describe("Fish — level-up", () => {
 });
 
 describe("Swan — start-of-turn", () => {
-  it("gives +1 gold", () => {
-    const swan = makePet("Swan");
+  it.each([
+    { level: 1 },
+    { level: 2 },
+    { level: 3 },
+  ])("gives +$level gold at level $level", ({ level }) => {
+    const swan = makePet("Swan", level);
     const board = makeBoard([swan]);
+
     const { goldDelta } = fireBoardShopAbility("start-of-turn", board, makeShop(), PET_REGISTRY);
-    expect(goldDelta).toBe(1);
+    expect(goldDelta).toBe(level);
   });
 });
 
 describe("Squirrel — start-of-turn", () => {
-  it("discounts every shop food by 1 gold and leaves pets alone", () => {
-    const board = makeBoard([makePet("Squirrel")]);
-    const shop = makeShop(["Ant"], ["Apple", "Pill"]);
+  it.each([
+    { level: 1 },
+    { level: 2 },
+    { level: 3 },
+  ])("discounts all shop food by $level gold at level $level", ({ level }) => {
+    const board = makeBoard([makePet("Squirrel", level)]);
+    const shop = makeShop([], ["Apple", "Pear"]);
     const { shop: result } = fireBoardShopAbility("start-of-turn", board, shop, PET_REGISTRY);
-    expect(result.shopFoods.map((f) => f.discount)).toEqual([1, 1]);
-    expect(result.shopPets[0].discount).toBeUndefined();
+
+    const shopDiscounts = result.shopFoods.map(food => food.discount);
+    expect(shopDiscounts).toEqual([level, level]);
   });
 
-  it("scales the discount linearly with level", () => {
-    for (const level of [1, 2, 3]) {
-      const { shop } = fireBoardShopAbility("start-of-turn", makeBoard([makePet("Squirrel", level)]), makeShop([], ["Apple"]), PET_REGISTRY);
-      expect(shop.shopFoods[0].discount).toBe(level);
-    }
-  });
+  it("does not discount shop pets", () => {
+    const board = makeBoard([makePet("Squirrel")]);
+    const shop = makeShop(["Ant"]);
+    const { shop: result } = fireBoardShopAbility("start-of-turn", board, shop, PET_REGISTRY);
+
+    expect(result.shopPets[0].discount).toBeUndefined();
+  })
 
   it("stacks with a second Squirrel", () => {
     const board = makeBoard([makePet("Squirrel"), makePet("Squirrel")]);
@@ -297,34 +363,49 @@ describe("Squirrel — start-of-turn", () => {
     expect(result.shopFoods[0].discount).toBe(2);
   });
 
-  it("makes food cheaper to buy, never below 0", () => {
-    const board = makeBoard([makePet("Squirrel")]);
+  it("does not make food cheaper than 0", () => {
+    const board = makeBoard([makePet("Squirrel", 2)]);
     const { shop } = fireBoardShopAbility("start-of-turn", board, makeShop([], ["Apple", "Pill"]), PET_REGISTRY);
-    expect(getFoodCost(shop.shopFoods[0], FOOD_REGISTRY["Apple"])).toBe(2);
+
+    expect(getFoodCost(shop.shopFoods[0], FOOD_REGISTRY["Apple"])).toBe(1);
     expect(getFoodCost(shop.shopFoods[1], FOOD_REGISTRY["Pill"])).toBe(0);
   });
 
   it("does not mutate the shop it was given", () => {
     const shop = makeShop([], ["Apple"]);
     fireBoardShopAbility("start-of-turn", makeBoard([makePet("Squirrel")]), shop, PET_REGISTRY);
+
     expect(shop.shopFoods[0].discount).toBeUndefined();
   });
 
   it("has no effect when there is no Squirrel", () => {
-    const { shop } = fireBoardShopAbility("start-of-turn", makeBoard([makePet("Swan")]), makeShop([], ["Apple"]), PET_REGISTRY);
+    const board = makeBoard([makePet("Swan")])
+    const { shop } = fireBoardShopAbility("start-of-turn", board, makeShop([], ["Apple"]), PET_REGISTRY);
+
     expect(shop.shopFoods[0].discount).toBeUndefined();
   });
 });
 
 describe("Bison — end-turn", () => {
-  it("gains +2/+2 when it has a level-3 friend", () => {
-    const bison = makePet("Bison");
+  it.each([
+    { level: 1, ability: "+2/+2", expected: 3 },
+    { level: 2, ability: "+4/+4", expected: 5 },
+    { level: 3, ability: "+6/+6", expected: 7 },
+  ])("gains $ability at level $level when it has a level-3 friend", ({ level, expected }) => {
+    const bison = makePet("Bison", level);
     const levelThreeFriend = makePet("Sloth", 3);
     const board = makeBoard([bison, levelThreeFriend]);
-    const { board: result } = fireBoardShopAbility("end-turn", board, makeShop(), PET_REGISTRY, "WIN");
-    expect((result[0] as PetInstance).attack).toBe(3);
-    expect((result[0] as PetInstance).health).toBe(3);
-  });
+    const { board: result } = fireBoardShopAbility(
+      "end-turn",
+      board,
+      makeShop(),
+      PET_REGISTRY,
+      "WIN"
+    );
+
+    expect((result[0] as PetInstance).attack).toBe(expected);
+    expect((result[0] as PetInstance).health).toBe(expected);
+  })
 
   it("no-op without a level-3 friend", () => {
     const bison = makePet("Bison");
@@ -334,6 +415,21 @@ describe("Bison — end-turn", () => {
     expect((result[0] as PetInstance).attack).toBe(1);
     expect((result[0] as PetInstance).health).toBe(1);
   });
+
+  it("no-op if it is the level-3 friend", () => {
+    const bison = makePet("Bison", 3);
+    const board = makeBoard([bison]);
+    const { board: result } = fireBoardShopAbility(
+      "end-turn",
+      board,
+      makeShop(),
+      PET_REGISTRY,
+      "WIN"
+    );
+
+    expect(result[0]!.attack).toBe(1);
+    expect(result[0]!.health).toBe(1);
+  })
 
   it("only the first Bison on the board applies the buff", () => {
     const bison1 = makePet("Bison");
@@ -347,14 +443,20 @@ describe("Bison — end-turn", () => {
 });
 
 describe("Snail — end-turn", () => {
-  it("gives 3 nearest friends ahead +1 attack after a loss", () => {
-    const friends = [makePet("Sloth"), makePet("Sloth"), makePet("Sloth")];
-    const snail = makePet("Snail");
+  it.each([
+    { level: 1, expected: 2 },
+    { level: 2, expected: 3 },
+    { level: 3, expected: 4 }
+  ])("gives 3 nearest friends ahead +$level attack at level $level after a loss", ({ level, expected }) => {
+    const friends = [makePet("Sloth"), makePet("Sloth"), makePet("Sloth"), makePet("Sloth")];
+    const snail = makePet("Snail", level);
     const board = makeBoard([...friends, snail]);
     const { board: result } = fireBoardShopAbility("end-turn", board, makeShop(), PET_REGISTRY, "LOSS");
-    expect((result[0] as PetInstance).attack).toBe(2);
-    expect((result[1] as PetInstance).attack).toBe(2);
-    expect((result[2] as PetInstance).attack).toBe(2);
+
+    expect((result[0] as PetInstance).attack).toBe(1);
+    expect((result[1] as PetInstance).attack).toBe(expected);
+    expect((result[2] as PetInstance).attack).toBe(expected);
+    expect((result[3] as PetInstance).attack).toBe(expected);
   });
 
   it("no-op when the last battle was not a loss", () => {
@@ -399,6 +501,7 @@ describe("Bread perk — end-turn / start-of-turn", () => {
   });
 });
 
+// TODO - Add test and support for Faint Perks
 describe("fireShopFaint — Pill", () => {
   it("fires the target's faint ability, landing any summon in the same slot", () => {
     const cricket = makePet("Cricket");
@@ -428,39 +531,39 @@ describe("fireShopFaint — Pill", () => {
 });
 
 describe("fireShopFriendSummoned — Horse", () => {
-  it("gives the newly bought pet +1 attack per level when bought into the shop", () => {
-    const horse = makePet("Horse", 1);
+  it.each([
+    { level: 1, expected: 2 },
+    { level: 2, expected: 3 },
+    { level: 3, expected: 4 },
+  ])("gives newly summoned pets from the shop +$level attack at level $level", ({ level, expected }) => {
+    const horse = makePet("Horse", level);
     const sloth = makePet("Sloth");
     const board = makeBoard([horse, sloth]);
     const result = fireShopFriendSummoned(board, 1, PET_REGISTRY);
-    expect((result[1] as PetInstance).attack).toBe(2); // Sloth got +1 (Horse level 1)
-    expect((result[0] as PetInstance).attack).toBe(1); // Horse itself unchanged
+
+    expect((result[1] as PetInstance).attack).toBe(expected);
   });
 
-  it("scales the bonus with Horse's level", () => {
-    const horse = makePet("Horse", 3);
-    const sloth = makePet("Sloth");
-    const board = makeBoard([horse, sloth]);
-    const result = fireShopFriendSummoned(board, 1, PET_REGISTRY);
-    expect((result[1] as PetInstance).attack).toBe(4); // +3
-  });
-
-  it("does not fire for the pet that was itself just summoned", () => {
+  it("does not fire on itself when bought", () => {
     const horse = makePet("Horse", 1);
     const board = makeBoard([horse]);
     const result = fireShopFriendSummoned(board, 0, PET_REGISTRY);
-    expect((result[0] as PetInstance).attack).toBe(1); // unchanged, no other friends
+
+    expect((result[0] as PetInstance).attack).toBe(1);
   });
 
+  // TODO - Should NOT be under "Horse" if this does not use "Horse."  Test seems valuable for confirming this function works w/o a summon friend
   it("no-op when no pet has a friend-summoned ability", () => {
     const sloth1 = makePet("Sloth");
     const sloth2 = makePet("Sloth");
     const board = makeBoard([sloth1, sloth2]);
     const result = fireShopFriendSummoned(board, 1, PET_REGISTRY);
+
     expect((result[0] as PetInstance).attack).toBe(1);
   });
 });
 
+// TODO - This should likely just be in the same description as Horse.  Descriptions can be nested if desired.
 describe("Temporary stats — Horse in the shop", () => {
   it("records Horse's shop buff as temporary attack", () => {
     const horse = makePet("Horse", 2);
