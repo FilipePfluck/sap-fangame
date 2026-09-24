@@ -11,7 +11,7 @@ import { pickRandom } from "@/lib/utils/random";
 import { createPet } from "@/lib/game/pet";
 import { TURN_GOLD, TROPHIES_TO_WIN } from "@/lib/game/rules";
 import { z } from "zod";
-import type { PetInstance } from "@/lib/types";
+import { PetInstance, Trigger } from "@/lib/types";
 
 const EndTurnSchema = z.object(FrozenPositionsShape);
 
@@ -64,7 +64,7 @@ export async function POST(
   // End-turn fires before this turn's battle (reacting to the *previous*
   // battle's result), so its buffs help the upcoming fight.
   const endTurnResult = fireBoardShopAbility(
-    "end-turn",
+    Trigger.end_turn,
     state.board,
     emptyShop,
     PET_REGISTRY,
@@ -117,7 +117,7 @@ export async function POST(
   // Start-of-turn fires right after the battle, on the pre-battle board and
   // the new turn's shop (so it can e.g. discount or stock it) — battle itself
   // stays fully ephemeral and never mutates persisted state.
-  const startOfTurnResult = fireBoardShopAbility("start-of-turn", preBattleBoard, generatedShop, PET_REGISTRY);
+  const startOfTurnResult = fireBoardShopAbility(Trigger.start_of_turn, preBattleBoard, generatedShop, PET_REGISTRY);
   const nextBoard = startOfTurnResult.board;
   const nextShop = startOfTurnResult.shop;
   const turnGoldDelta = endTurnResult.goldDelta + startOfTurnResult.goldDelta;

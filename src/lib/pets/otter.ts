@@ -1,4 +1,4 @@
-import type { PetType, PetInstance } from "@/lib/types";
+import { PetInstance, PetType, Trigger } from "@/lib/types";
 import { pickRandom } from "@/lib/utils/random";
 
 export const Otter: PetType = {
@@ -9,7 +9,7 @@ export const Otter: PetType = {
   baseHealth: 3,
   isToken: false,
   ability: {
-    trigger: "buy",
+    trigger: Trigger.buy,
     fn: (ctx) => {
       const friends: { pet: PetInstance; idx: number }[] = [];
       for (let i = 0; i < ctx.board.length; i++) {

@@ -2,9 +2,11 @@ export type PetInstance = {
   type: string;
   attack: number;
   health: number;
-  perk: string | null;
+  perk: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null;
   xp: number;
   level: number;
+  // TODO - Retrofit tests to remove "optional" tag
+  sellValue?: number;
   // Portions of attack/health already included above that are removed at the
   // start of the next turn (e.g. Horse's shop buff).
   tempAttack?: number;
@@ -65,17 +67,31 @@ export type ShopAbilityContext = {
   lastBattleResult?: "WIN" | "DRAW" | "LOSS";
 };
 
+export enum Trigger {
+  sell,
+  buy,
+  faint,
+  start_of_battle,
+  level_up,
+  friend_summoned,
+  start_of_turn,
+  end_turn,
+  before_attack,
+  after_attack,
+  knock_out,
+}
+
 export type Ability =
-  | { trigger: "sell"; fn: (ctx: ShopAbilityContext) => void }
-  | { trigger: "buy"; fn: (ctx: ShopAbilityContext) => void }
-  | { trigger: "faint"; fn: (ctx: BattleAbilityContext) => void }
-  | { trigger: "start-of-battle"; fn: (ctx: BattleAbilityContext) => void }
-  | { trigger: "level-up"; fn: (ctx: ShopAbilityContext) => void }
-  | { trigger: "friend-summoned"; fn: (ctx: BattleAbilityContext) => void }
-  | { trigger: "start-of-turn"; fn: (ctx: ShopAbilityContext) => void }
-  | { trigger: "end-turn"; fn: (ctx: ShopAbilityContext) => void }
-  | { trigger: "before-attack"; fn: (ctx: BattleAbilityContext) => void }
-  | { trigger: "knock-out"; fn: (ctx: BattleAbilityContext) => void };
+  | { trigger: Trigger.sell; fn: (ctx: ShopAbilityContext) => void }
+  | { trigger: Trigger.buy; fn: (ctx: ShopAbilityContext) => void }
+  | { trigger: Trigger.faint; fn: (ctx: BattleAbilityContext) => void }
+  | { trigger: Trigger.start_of_battle; fn: (ctx: BattleAbilityContext) => void }
+  | { trigger: Trigger.level_up; fn: (ctx: ShopAbilityContext) => void }
+  | { trigger: Trigger.friend_summoned; fn: (ctx: BattleAbilityContext) => void }
+  | { trigger: Trigger.start_of_turn; fn: (ctx: ShopAbilityContext) => void }
+  | { trigger: Trigger.end_turn; fn: (ctx: ShopAbilityContext) => void }
+  | { trigger: Trigger.before_attack; fn: (ctx: BattleAbilityContext) => void }
+  | { trigger: Trigger.knock_out; fn: (ctx: BattleAbilityContext) => void };
 
 export type PetType = {
   name: string;
@@ -85,7 +101,7 @@ export type PetType = {
   baseHealth: number;
   isToken: boolean;
   ability: Ability | null;
-  innatePerk?: string;
+  innatePerk?: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null;
   description: string | ((level: number) => string);
 };
 
@@ -99,7 +115,7 @@ export type FoodType = {
   name: string;
   sprite: string;
   tier: number;
-  isPerk: boolean;
+  perk?: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null;
   isToken: boolean;
   cost?: number;
   effect: { attack?: number; health?: number };
@@ -112,3 +128,54 @@ export type FoodType = {
   applyEffect?: (ctx: FoodApplyContext) => Board;
   description: string;
 };
+
+export const DOES_NOT_DECAY = -1
+
+export type BasePerkType = {
+  name: string;
+  description: string;
+  usesRemaining: number;
+}
+
+export interface OffensivePerk extends BasePerkType {
+  instantKill: boolean,
+  extraDamage: number,
+}
+
+export interface DefensivePerk extends BasePerkType {
+  blocksFor: number,
+  minimumDamageTaken: number,
+  blocksAbilityDamage: boolean,
+  blocksDirectDamage: boolean,
+}
+
+export interface TriggerPerk extends BasePerkType {
+  trigger: Trigger;
+}
+
+export function isOffensivePerk(object: BasePerkType | null): object is OffensivePerk {
+  if (object === null) return false;
+  try {
+    return 'extraDamage' in object;
+  } catch {
+    return false;
+  }
+}
+
+export function isDefensivePerk(object: BasePerkType | null): object is DefensivePerk {
+  if (object === null) return false;
+  try {
+    return 'blocksFor' in object;
+  } catch {
+    return false;
+  }
+}
+
+export function isTriggerPerk(object: BasePerkType | null): object is TriggerPerk {
+  if (object === null) return false;
+  try {
+    return "trigger" in object;
+  } catch {
+    return false;
+  }
+}

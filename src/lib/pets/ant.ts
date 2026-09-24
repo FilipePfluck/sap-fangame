@@ -1,4 +1,4 @@
-import type { PetType } from "@/lib/types";
+import { PetType, Trigger } from "@/lib/types";
 import { pickRandom } from "@/lib/utils/random";
 
 export const Ant: PetType = {
@@ -9,7 +9,7 @@ export const Ant: PetType = {
   baseHealth: 2,
   isToken: false,
   ability: {
-    trigger: "faint",
+    trigger: Trigger.faint,
     fn: (ctx) => {
       const friends = ctx.team.filter((_, i) => i !== ctx.selfIndex);
       if (friends.length === 0) return;

@@ -1,4 +1,4 @@
-import type { PetType, PetInstance } from "@/lib/types";
+import { PetInstance, PetType, Trigger } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 
 export const Beaver: PetType = {
@@ -9,7 +9,7 @@ export const Beaver: PetType = {
   baseHealth: 2,
   isToken: false,
   ability: {
-    trigger: "sell",
+    trigger: Trigger.sell,
     fn: (ctx) => {
       const friends: { pet: PetInstance; idx: number }[] = [];
       for (let i = 0; i < ctx.board.length; i++) {

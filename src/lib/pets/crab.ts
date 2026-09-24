@@ -1,4 +1,4 @@
-import type { PetType } from "@/lib/types";
+import { PetType, Trigger } from "@/lib/types";
 
 export const Crab: PetType = {
   name: "Crab",
@@ -8,7 +8,7 @@ export const Crab: PetType = {
   baseHealth: 1,
   isToken: false,
   ability: {
-    trigger: "start-of-battle",
+    trigger: Trigger.start_of_battle,
     fn: (ctx) => {
       const friendHealths = ctx.team
         .filter((_, i) => i !== ctx.selfIndex)
@@ -18,5 +18,6 @@ export const Crab: PetType = {
       ctx.self.health += Math.round(healthiest * 0.25);
     },
   },
-  description: "Start of battle: Gain health equal to 25% of the most healthy friend.",
+  description:
+    "Start of battle: Gain health equal to 25% of the most healthy friend.",
 };

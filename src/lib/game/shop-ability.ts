@@ -1,14 +1,17 @@
-import type {
-  PetInstance,
-  ShopState,
-  ShopAbilityContext,
+import {
   BattleAbilityContext,
+  isTriggerPerk,
+  PetInstance,
   PetType,
+  ShopAbilityContext,
+  ShopState,
+  Trigger,
 } from "@/lib/types";
 import { orderByAttack } from "@/lib/utils/random";
 import { stockFood } from "@/lib/game/shop";
 import { compactBoard } from "@/lib/game/merge";
 import { friendSummonedCandidates } from "@/lib/game/friend-summoned";
+import { triggerEffect } from "@/lib/perks/trigger-functions";
 
 export type ShopAbilityResult = {
   board: (PetInstance | null)[];
@@ -54,7 +57,7 @@ function clearTempStats(pet: PetInstance): void {
 }
 
 export function fireShopAbility(
-  trigger: "sell" | "buy" | "level-up",
+  trigger: Trigger.sell | Trigger.buy | Trigger.level_up,
   pet: PetInstance,
   petIndex: number,
   board: (PetInstance | null)[],
@@ -70,14 +73,16 @@ export function fireShopAbility(
   const newShop = cloneShop(shop);
   const gold = { delta: 0 };
 
-  def.ability.fn(createShopContext(pet, petIndex, newBoard, newShop, gold, new Set()));
+  def.ability.fn(
+    createShopContext(pet, petIndex, newBoard, newShop, gold, new Set())
+  );
   return { board: newBoard, shop: newShop, goldDelta: gold.delta };
 }
 
 // Fires a board-wide trigger ("start-of-turn" / "end-turn") for every pet on
 // the board, rather than a single acted-on pet.
 export function fireBoardShopAbility(
-  trigger: "start-of-turn" | "end-turn",
+  trigger: Trigger.start_of_turn | Trigger.end_turn,
   board: (PetInstance | null)[],
   shop: ShopState,
   petRegistry: Record<string, PetType>,
@@ -92,22 +97,25 @@ export function fireBoardShopAbility(
     const pet = currentBoard[i];
     if (!pet) continue;
 
-    // Bread is a food-granted effect, not a PetType's own ability, so it's
-    // checked here directly rather than via the registry. Its health is
-    // temporary: removed at the next start-of-turn even if the perk has since
-    // been replaced.
-    if (pet.perk === "Bread" && trigger === "end-turn") {
-      pet.health += 7;
-      pet.tempHealth = (pet.tempHealth ?? 0) + 7;
+    if (isTriggerPerk(pet.perk) && pet.perk.trigger === Trigger.end_turn) {
+      triggerEffect(pet.perk, { self: pet});
     }
 
-    if (trigger === "start-of-turn") clearTempStats(pet);
+    if (trigger === Trigger.start_of_turn) clearTempStats(pet);
 
     const def = petRegistry[pet.type];
     if (def?.ability?.trigger !== trigger) continue;
 
     def.ability.fn(
-      createShopContext(pet, i, currentBoard, currentShop, gold, justStocked, lastBattleResult)
+      createShopContext(
+        pet,
+        i,
+        currentBoard,
+        currentShop,
+        gold,
+        justStocked,
+        lastBattleResult
+      )
     );
   }
 
@@ -134,7 +142,7 @@ export function fireShopFaint(
 
   newBoard[boardPosition] = null;
 
-  if (def?.ability?.trigger === "faint") {
+  if (def?.ability?.trigger === Trigger.faint) {
     const ctx: BattleAbilityContext = {
       self: pet,
       selfIndex,
@@ -169,11 +177,18 @@ export function fireShopFriendSummoned(
 
   const compacted = compactBoard(newBoard);
   const summonedIndex = compacted.indexOf(summonedPet);
-  const candidates = friendSummonedCandidates(compacted, summonedIndex, petRegistry);
+  const candidates = friendSummonedCandidates(
+    compacted,
+    summonedIndex,
+    petRegistry
+  );
 
   // Same-trigger pets fire highest-attack first (ties random), matching the
   // battle engine's ability-order rule.
-  for (const { pet, ability } of orderByAttack(candidates, (c) => c.pet.attack)) {
+  for (const { pet, ability } of orderByAttack(
+    candidates,
+    (c) => c.pet.attack
+  )) {
     const ctx: BattleAbilityContext = {
       self: pet,
       selfIndex: compacted.indexOf(pet),

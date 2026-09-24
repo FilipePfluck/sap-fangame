@@ -47,12 +47,12 @@ export default function BoardSlot({ pet, sprite, isSelected, isTargetable, onCli
           <span className="text-xs text-zinc-500 dark:text-zinc-400">
             {pet.attack}/{pet.health}
           </span>
-          {pet.perk && FOOD_SPRITES[pet.perk] && (
+          {pet.perk && FOOD_SPRITES[pet.perk.name] && (
             <Tooltip
-              text={FOOD_REGISTRY[pet.perk]?.description}
+              text={FOOD_REGISTRY[pet.perk.name]?.description}
               className="absolute top-1 right-1 w-4 h-4"
             >
-              <Image src={FOOD_SPRITES[pet.perk]} alt={pet.perk} fill className="object-contain" />
+              <Image src={FOOD_SPRITES[pet.perk.name]} alt={pet.perk.name} fill className="object-contain" />
             </Tooltip>
           )}
         </>

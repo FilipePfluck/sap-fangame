@@ -1,10 +1,11 @@
 import type { FoodType } from "@/lib/types";
+import { BreadPerk } from "@/lib/perks/bread";
 
 export const Bread: FoodType = {
   name: "Bread",
   sprite: "/sap/bread.webp",
   tier: 4,
-  isPerk: true,
+  perk: BreadPerk,
   isToken: false,
   effect: {},
   description:

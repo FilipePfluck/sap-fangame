@@ -1,4 +1,4 @@
-import type { PetType } from "@/lib/types";
+import { PetType, Trigger } from "@/lib/types";
 import { pickRandom } from "@/lib/utils/random";
 import { dealAbilityDamage } from "@/lib/utils/combat";
 
@@ -10,7 +10,7 @@ export const Leopard: PetType = {
   baseHealth: 4,
   isToken: false,
   ability: {
-    trigger: "start-of-battle",
+    trigger: Trigger.start_of_battle,
     fn: (ctx) => {
       if (ctx.enemyTeam.length === 0) return;
       const target = pickRandom(ctx.enemyTeam);

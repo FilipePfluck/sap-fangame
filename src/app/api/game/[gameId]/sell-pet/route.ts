@@ -7,7 +7,7 @@ import { fireShopAbility } from "@/lib/game/shop-ability";
 import { applyFrozenFlags } from "@/lib/game/shop";
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import { z } from "zod";
-import type { Board } from "@/lib/types";
+import { Board, Trigger } from "@/lib/types";
 
 const SellPetSchema = z.object({
   boardPosition: z.number().int().min(0).max(4),
@@ -53,7 +53,7 @@ export async function POST(
   newBoard[boardPosition] = null;
 
   const { board, shop, goldDelta } = fireShopAbility(
-    "sell",
+    Trigger.sell,
     pet,
     boardPosition,
     newBoard,

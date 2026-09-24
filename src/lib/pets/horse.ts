@@ -1,4 +1,4 @@
-import type { PetType } from "@/lib/types";
+import { PetType, Trigger } from "@/lib/types";
 
 export const Horse: PetType = {
   name: "Horse",
@@ -8,7 +8,7 @@ export const Horse: PetType = {
   baseHealth: 1,
   isToken: false,
   ability: {
-    trigger: "friend-summoned",
+    trigger: Trigger.friend_summoned,
     fn: (ctx) => {
       const target = ctx.team[ctx.summonedIndex!];
       if (!target) return;

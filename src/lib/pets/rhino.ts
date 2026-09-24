@@ -1,4 +1,4 @@
-import type { PetType } from "@/lib/types";
+import { PetType, Trigger } from "@/lib/types";
 import { dealAbilityDamage } from "@/lib/utils/combat";
 
 export const Rhino: PetType = {
@@ -9,7 +9,7 @@ export const Rhino: PetType = {
   baseHealth: 7,
   isToken: false,
   ability: {
-    trigger: "knock-out",
+    trigger: Trigger.knock_out,
     fn: (ctx) => {
       const target = ctx.enemyTeam[0];
       if (!target) return;
@@ -17,5 +17,6 @@ export const Rhino: PetType = {
       dealAbilityDamage(target, isTier1 ? 8 : 4);
     },
   },
-  description: "Knock out: Deal 4 damage to the first enemy. Double against Tier 1 Pets.",
+  description:
+    "Knock out: Deal 4 damage to the first enemy. Double against Tier 1 Pets.",
 };
