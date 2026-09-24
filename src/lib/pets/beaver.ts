@@ -19,9 +19,9 @@ export const Beaver: PetType = {
         }
       }
       for (const { pet, idx } of pickN(friends, 2)) {
-        ctx.board[idx] = { ...pet, attack: pet.attack + 1 };
+        ctx.board[idx] = { ...pet, attack: pet.attack + ctx.level };
       }
     },
   },
-  description: "Sell: Give two random friends +1 attack.",
+  description: (level: number) => `Sell: Give two random friends +${level} attack.`,
 };

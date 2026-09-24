@@ -15,12 +15,12 @@ export const Snail: PetType = {
       for (let i = ctx.selfIndex - 1; i >= 0 && buffed < 3; i--) {
         const friend = ctx.board[i];
         if (friend) {
-          friend.attack += 1;
+          friend.attack += ctx.level;
           buffed++;
         }
       }
     },
   },
-  description:
-    "End turn: If you lost last battle, give the three nearest friends ahead +1 attack.",
+  description: (level: number) =>
+    `End turn: If you lost last battle, give the three nearest friends ahead +${level} attack.`,
 };

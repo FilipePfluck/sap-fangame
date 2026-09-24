@@ -16,10 +16,10 @@ export const Bison: PetType = {
         (p, i) => p !== null && i !== ctx.selfIndex && p.level === 3
       );
       if (!hasLevel3Friend) return;
-      ctx.self.attack += 2;
-      ctx.self.health += 2;
+      ctx.self.attack += 2 * ctx.level;
+      ctx.self.health += 2 * ctx.level;
     },
   },
-  description:
-    "End turn: If this has a level 3 friend, gain +2 attack and +2 health. Works for 1 Bison.",
+  description: (level: number) =>
+    `End turn: If this has a level 3 friend, gain +${2 * level} attack and +${2 * level} health. Works for 1 Bison.`,
 };

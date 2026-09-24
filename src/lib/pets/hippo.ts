@@ -11,10 +11,11 @@ export const Hippo: PetType = {
     trigger: Trigger.knock_out,
     fn: (ctx) => {
       if (ctx.triggerCount > 3) return;
-      ctx.self.attack += 3;
-      ctx.self.health += 3;
+      ctx.self.attack += 3 * ctx.level;
+      ctx.self.health += 3 * ctx.level;
     },
   },
   description:
-    "Knock out: Gain +3 attack and +3 health. Works 3 times per battle.",
+    (level: number) =>
+    `Knock out: Gain +${3 * level} attack and +${3 * level} health. Works 3 times per battle.`,
 };

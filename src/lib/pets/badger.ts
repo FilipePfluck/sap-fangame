@@ -11,12 +11,12 @@ export const Badger: PetType = {
   ability: {
     trigger: Trigger.faint,
     fn: (ctx) => {
-      const damage = Math.round(ctx.self.attack * 0.5);
+      const damage = Math.round(ctx.self.attack * 0.5 * ctx.level);
       const ahead = ctx.team[ctx.selfIndex - 1];
       const behind = ctx.team[ctx.selfIndex + 1];
       if (ahead) dealAbilityDamage(ahead, damage);
       if (behind) dealAbilityDamage(behind, damage);
     },
   },
-  description: "Faint: Deal 50% attack damage to adjacent pets.",
+  description: (level) => `Faint: Deal ${level * 50}% attack damage to adjacent pets.`,
 };

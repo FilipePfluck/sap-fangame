@@ -23,8 +23,5 @@ export const Cricket: PetType = {
       );
     },
   },
-  description: (level: number) =>
-    level > 1
-      ? `Faint: Summon one ${level}/${level} Zombie Cricket.`
-      : "Faint: Summon one 1/1 Zombie Cricket.",
+  description: (level: number) => `Faint: Summon one ${level}/${level} Zombie Cricket.`
 };

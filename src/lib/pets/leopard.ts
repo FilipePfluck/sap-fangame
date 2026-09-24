@@ -1,6 +1,7 @@
 import { PetType, Trigger } from "@/lib/types";
-import { pickRandom } from "@/lib/utils/random";
+import { pickN } from "@/lib/utils/random";
 import { dealAbilityDamage } from "@/lib/utils/combat";
+import { numberToText } from "@/lib/utils/flavor-text";
 
 export const Leopard: PetType = {
   name: "Leopard",
@@ -13,9 +14,11 @@ export const Leopard: PetType = {
     trigger: Trigger.start_of_battle,
     fn: (ctx) => {
       if (ctx.enemyTeam.length === 0) return;
-      const target = pickRandom(ctx.enemyTeam);
-      dealAbilityDamage(target, Math.round(ctx.self.attack * 0.5));
+      for (const target of pickN(ctx.enemyTeam, ctx.level)) {
+        dealAbilityDamage(target, Math.round(ctx.self.attack * 0.5));
+      }
     },
   },
-  description: "Start of battle: Deal 50% attack damage to one random enemy.",
+  description: (level: number) =>
+    `Start of battle: Deal 50% attack damage to ${numberToText[level]} random enemy.`,
 };

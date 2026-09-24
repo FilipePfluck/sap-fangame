@@ -1,5 +1,6 @@
 import { PetInstance, PetType, Trigger } from "@/lib/types";
-import { pickRandom } from "@/lib/utils/random";
+import { pickN } from "@/lib/utils/random";
+import { numberToText } from "@/lib/utils/flavor-text";
 
 export const Otter: PetType = {
   name: "Otter",
@@ -19,9 +20,11 @@ export const Otter: PetType = {
         }
       }
       if (friends.length === 0) return;
-      const { pet, idx } = pickRandom(friends);
-      ctx.board[idx] = { ...pet, health: pet.health + 1 };
+      const targets = pickN(friends, ctx.level);
+      for (const target of targets) {
+        target.pet.health += 1;
+      }
     },
   },
-  description: "Buy: Give one random friend +1 health.",
+  description: (level: number) => `Buy: Give ${numberToText[level]} random friend +1 health.`,
 };
