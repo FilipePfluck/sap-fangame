@@ -99,7 +99,7 @@ describe("Beaver — sell", () => {
 
 
       const { board: result } = fireShopAbility(
-        "sell",
+        Trigger.sell,
         beaver,
         0,
         board,
@@ -345,7 +345,7 @@ describe("Squirrel — start-of-turn", () => {
   ])("discounts all shop food by $level gold at level $level", ({ level }) => {
     const board = makeBoard([makePet("Squirrel", level)]);
     const shop = makeShop([], ["Apple", "Pear"]);
-    const { shop: result } = fireBoardShopAbility("start-of-turn", board, shop, PET_REGISTRY);
+    const { shop: result } = fireBoardShopAbility(Trigger.start_of_turn, board, shop, PET_REGISTRY);
 
     const shopDiscounts = result.shopFoods.map(food => food.discount);
     expect(shopDiscounts).toEqual([level, level]);
