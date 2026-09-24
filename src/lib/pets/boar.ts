@@ -1,4 +1,4 @@
-import type { PetType } from "@/lib/types";
+import { PetType, Trigger } from "@/lib/types";
 
 export const Boar: PetType = {
   name: "Boar",
@@ -8,7 +8,7 @@ export const Boar: PetType = {
   baseHealth: 6,
   isToken: false,
   ability: {
-    trigger: "before-attack",
+    trigger: Trigger.before_attack,
     fn: (ctx) => {
       ctx.self.attack += 4 * ctx.level;
       ctx.self.health += 2 * ctx.level;

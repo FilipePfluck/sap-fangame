@@ -1,4 +1,4 @@
-import type { PetType, PetInstance } from "@/lib/types";
+import { PetInstance, PetType, Trigger } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 
 export const Fish: PetType = {
@@ -9,7 +9,7 @@ export const Fish: PetType = {
   baseHealth: 2,
   isToken: false,
   ability: {
-    trigger: "level-up",
+    trigger: Trigger.level_up,
     // ctx.level is the OLD level (before level-up) — see fireShopAbility call sites.
     // lvl1 fish levels up → ctx.level=1 → +1/+1 to 2 friends
     // lvl2 fish levels up → ctx.level=2 → +2/+2 to 2 friends

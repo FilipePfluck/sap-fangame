@@ -1,4 +1,4 @@
-import type { PetType } from "@/lib/types";
+import { PetType, Trigger } from "@/lib/types";
 import { numberToText } from "@/lib/utils/flavor-text";
 
 export const Pigeon: PetType = {
@@ -9,7 +9,7 @@ export const Pigeon: PetType = {
   baseHealth: 2,
   isToken: false,
   ability: {
-    trigger: "sell",
+    trigger: Trigger.sell,
     fn: (ctx) => {
       for (let i = 0; i < ctx.level; i++) {
         ctx.addShopFood("Bread Crumbs");

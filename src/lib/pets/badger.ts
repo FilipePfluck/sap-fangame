@@ -1,4 +1,4 @@
-import type { PetType } from "@/lib/types";
+import { PetType, Trigger } from "@/lib/types";
 import { dealAbilityDamage } from "@/lib/utils/combat";
 
 export const Badger: PetType = {
@@ -9,7 +9,7 @@ export const Badger: PetType = {
   baseHealth: 3,
   isToken: false,
   ability: {
-    trigger: "faint",
+    trigger: Trigger.faint,
     fn: (ctx) => {
       const damage = Math.round(ctx.self.attack * 0.5 * ctx.level);
       const ahead = ctx.team[ctx.selfIndex - 1];

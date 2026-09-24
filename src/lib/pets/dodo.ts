@@ -1,4 +1,4 @@
-import type { PetType } from "@/lib/types";
+import { PetType, Trigger } from "@/lib/types";
 
 export const Dodo: PetType = {
   name: "Dodo",
@@ -8,7 +8,7 @@ export const Dodo: PetType = {
   baseHealth: 2,
   isToken: false,
   ability: {
-    trigger: "start-of-battle",
+    trigger: Trigger.start_of_battle,
     fn: (ctx) => {
       const friend = ctx.team[ctx.selfIndex - 1];
       if (!friend) return;

@@ -1,4 +1,4 @@
-import type { PetType } from "@/lib/types";
+import { PetType, Trigger } from "@/lib/types";
 
 export const Cricket: PetType = {
   name: "Cricket",
@@ -8,7 +8,7 @@ export const Cricket: PetType = {
   baseHealth: 3,
   isToken: false,
   ability: {
-    trigger: "faint",
+    trigger: Trigger.faint,
     fn: (ctx) => {
       ctx.summon(
         {
@@ -19,7 +19,7 @@ export const Cricket: PetType = {
           xp: 0,
           level: 1,
         },
-        ctx.selfIndex,
+        ctx.selfIndex
       );
     },
   },

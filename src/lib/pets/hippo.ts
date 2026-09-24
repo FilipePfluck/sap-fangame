@@ -1,4 +1,4 @@
-import type { PetType } from "@/lib/types";
+import { PetType, Trigger } from "@/lib/types";
 
 export const Hippo: PetType = {
   name: "Hippo",
@@ -8,13 +8,14 @@ export const Hippo: PetType = {
   baseHealth: 7,
   isToken: false,
   ability: {
-    trigger: "knock-out",
+    trigger: Trigger.knock_out,
     fn: (ctx) => {
       if (ctx.triggerCount > 3) return;
       ctx.self.attack += 3 * ctx.level;
       ctx.self.health += 3 * ctx.level;
     },
   },
-  description: (level: number) =>
+  description:
+    (level: number) =>
     `Knock out: Gain +${3 * level} attack and +${3 * level} health. Works 3 times per battle.`,
 };

@@ -1,4 +1,4 @@
-import type { PetType } from "@/lib/types";
+import { PetType, Trigger } from "@/lib/types";
 
 export const Swan: PetType = {
   name: "Swan",
@@ -8,7 +8,7 @@ export const Swan: PetType = {
   baseHealth: 2,
   isToken: false,
   ability: {
-    trigger: "start-of-turn",
+    trigger: Trigger.start_of_turn,
     fn: (ctx) => {
       ctx.goldGain(ctx.level);
     },

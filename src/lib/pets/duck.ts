@@ -1,4 +1,4 @@
-import type { PetType } from "@/lib/types";
+import { PetType, Trigger } from "@/lib/types";
 
 export const Duck: PetType = {
   name: "Duck",
@@ -8,7 +8,7 @@ export const Duck: PetType = {
   baseHealth: 2,
   isToken: false,
   ability: {
-    trigger: "sell",
+    trigger: Trigger.sell,
     fn: (ctx) => {
       for (const shopPet of ctx.shop.shopPets) {
         shopPet.tempHealthBonus = (shopPet.tempHealthBonus ?? 0) + ctx.level;

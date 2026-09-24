@@ -1,4 +1,4 @@
-import type { PetType } from "@/lib/types";
+import { PetType, Trigger } from "@/lib/types";
 
 export const Bison: PetType = {
   name: "Bison",
@@ -8,7 +8,7 @@ export const Bison: PetType = {
   baseHealth: 4,
   isToken: false,
   ability: {
-    trigger: "end-turn",
+    trigger: Trigger.end_turn,
     fn: (ctx) => {
       const firstBisonIndex = ctx.board.findIndex((p) => p?.type === "Bison");
       if (ctx.selfIndex !== firstBisonIndex) return;
