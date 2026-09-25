@@ -17,5 +17,5 @@ export const Rabbit: PetType = {
     },
   },
   description: (level: number) =>
-    `Friend ate food: Give them +${level} health. Works 3 times per turn.`,
+    `Friendly ate food: Give them +${level} health. Works 3 times per turn.\n\nThis triggers when any ally (including Rabbit) eats a food. This can be bought food/perks or food eaten/perks gained by abilities even in battle.`,
 };

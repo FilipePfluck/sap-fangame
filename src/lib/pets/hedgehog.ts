@@ -16,6 +16,5 @@ export const Hedgehog: PetType = {
       }
     },
   },
-  description: (level: number) =>
-    `Faint: Deal ${2 * level} damage to all living pets.`,
+  description: (level: number) => `Faint: Deal ${2 * level} damage to ALL pets.`,
 };

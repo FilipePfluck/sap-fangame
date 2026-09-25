@@ -168,7 +168,22 @@ export const SHOP_PET_POOL: PetType[] = TURTLE_PACK_PETS.filter(
   (p) => !p.isToken
 );
 
+function stripTooltipNotes(text: string): string {
+  return text
+    .replace(/\s*\(\s*(?:Level up reward|Level-up reward|Note|Notes)\s*[:\-]?[\s\S]*?\)\s*/gi, " ")
+    .replace(/\s*(?:\r?\n)\s*(?:Note|Notes)\s*:\s*[\s\S]*$/gi, "")
+    .replace(/\s*(?:\r?\n)\s*(?:Note|Notes)\s*[-:]\s*[\s\S]*$/gi, "")
+    .replace(/\s*(?:\r?\n)\s*(?:Similar targeting to|Like|Equivalent to|Comparable to)\s+[\s\S]*$/gi, "")
+    .replace(/\s*\b(?:Similar targeting to|Like|Equivalent to|Comparable to)\s+[A-Z][\w\s-]*\.?\s*$/gi, "")
+    .trim();
+}
+
 export function getPetDescription(pet: PetType | undefined, level: number): string | undefined {
   if (!pet) return undefined;
-  return typeof pet.description === "function" ? pet.description(level) : pet.description;
+  const description = typeof pet.description === "function" ? pet.description(level) : pet.description;
+  return description ? stripTooltipNotes(description) : undefined;
+}
+
+export function getShopPetTooltipText(pet: PetType | undefined, level: number): string {
+  return getPetDescription(pet, level) ?? "";
 }

@@ -27,5 +27,5 @@ export const Rooster: PetType = {
     },
   },
   description: (level: number) =>
-    `Faint: Summon ${level} ${level === 1 ? "Chick" : "Chicks"} with 1 health and 50% of this pet's attack.`,
+    `Faint: Summon ${level === 1 ? "one" : level} ${level === 1 ? "Chick" : "Chicks"} with 1 health and 50% attack of this.\n\nChick is a token with no ability.\n\nA Rooster with 10 attack summons 5/1 chicks.`,
 };

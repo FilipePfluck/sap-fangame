@@ -20,5 +20,5 @@ export const Giraffe: PetType = {
     },
   },
   description: (level: number) =>
-    `Start of turn: Give the nearest friend ahead +${level}/+${level}.`,
+    `Start of turn: Give the nearest friend ahead +${level} attack and +${level} health.`,
 };

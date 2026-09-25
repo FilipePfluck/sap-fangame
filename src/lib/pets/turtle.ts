@@ -21,5 +21,5 @@ export const Turtle: PetType = {
     },
   },
   description: (level: number) =>
-    `Faint: Give the ${level === 1 ? "nearest friend" : `${level} nearest friends`} behind Melon.`,
+    `Faint: Give Melon perk to the ${level === 1 ? "nearest friend" : `${level === 2 ? "two" : level} nearest friends`} behind.`,
 };

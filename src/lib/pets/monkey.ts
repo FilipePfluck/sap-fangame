@@ -17,5 +17,5 @@ export const Monkey: PetType = {
     },
   },
   description: (level: number) =>
-    `End turn: Give the front-most friend +${2 * level}/+${2 * level}.`,
+    `End turn: Give front-most friendly pet +${2 * level} attack and +${2 * level} health.\n\nFriendly meaning it can target any ally including itself.`,
 };

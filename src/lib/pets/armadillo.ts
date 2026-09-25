@@ -17,5 +17,5 @@ export const Armadillo: PetType = {
     },
   },
   description: (level: number) =>
-    `Start of battle: Give all pets +${8 * level} health.`,
+    `Start of battle: Give ALL pets +${8 * level} health.\n\nAt the start of battle, the Armadillo will give a health buff to its friends and enemies, including itself.`,
 };

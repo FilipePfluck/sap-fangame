@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Board, ShopState, PetInstance } from "@/lib/types";
-import { PET_REGISTRY, getPetDescription } from "@/lib/pets";
+import { PET_REGISTRY, getPetDescription, getShopPetTooltipText } from "@/lib/pets";
 import { FOOD_REGISTRY } from "@/lib/foods";
 import { mergePets, openSlot, applyReorder } from "@/lib/game/merge";
 import { applyFoodEffect, feedError, needsTarget } from "@/lib/game/food";
@@ -611,10 +611,7 @@ export default function GameClient({
                       subtitle={`${atk}/${hp}`}
                       price={getPetCost(pet)}
                       discounted={!!pet.discount}
-                      description={
-                        (getPetDescription(def, 1) ?? "") +
-                        (pet.chainId ? " (Level up reward: buying one removes the other.)" : "")
-                      }
+                      description={getShopPetTooltipText(def, 1)}
                       chained={!!pet.chainId}
                       isSelected={selectedItem?.kind === "pet" && selectedItem.index === i}
                       isFrozen={frozenPets.has(i)}

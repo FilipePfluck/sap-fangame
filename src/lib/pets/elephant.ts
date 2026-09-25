@@ -21,6 +21,6 @@ export const Elephant: PetType = {
   },
   description: (level: number) =>
     level > 1
-      ? `After attack: Deal 1 damage to the nearest friend behind. Triggers ${level} times.`
-      : "After attack: Deal 1 damage to the nearest friend behind.",
+      ? `After attack: Deal 1 damage to the nearest friend behind. Triggers ${level} times.\n\nAfter attack means after this pet performs a standard attack.\n\nDeals ability damage.`
+      : "After attack: Deal 1 damage to the nearest friend behind.\n\nAfter attack means after this pet performs a standard attack.",
 };

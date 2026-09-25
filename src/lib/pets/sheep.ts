@@ -26,5 +26,5 @@ export const Sheep: PetType = {
     },
   },
   description: (level: number) =>
-    `Faint: Summon two ${2 * level}/${2 * level} Rams.`,
+    `Faint: Summon two ${2 * level}/${2 * level} Rams.\n\nRam is a token with no ability like Bee.`,
 };

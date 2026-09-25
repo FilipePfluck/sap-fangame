@@ -21,5 +21,5 @@ export const Seal: PetType = {
     },
   },
   description: (level: number) =>
-    `Eats food: Give three random friends +${level} attack.`,
+    `Eats food: Give three random friends +${level} attack.\n\nThis triggers only when this eats food.`,
 };

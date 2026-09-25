@@ -15,5 +15,5 @@ export const Kangaroo: PetType = {
     },
   },
   description: (level: number) =>
-    `Friend ahead attacks: Gain +${level} attack and +${level} health.`,
+    `Friend ahead attacks: Gain +${level} attack and +${level} health.\n\nFriend ahead "X". Where X is a specified action. This triggers when the friend directly ahead of the pet with the ability performs X.`,
 };

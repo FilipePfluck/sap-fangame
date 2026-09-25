@@ -21,5 +21,5 @@ export const Flamingo: PetType = {
     },
   },
   description: (level: number) =>
-    `Faint: Give the ${2 * level} nearest friends behind +${level}/+${level}.`,
+    `Faint: Give the ${2 * level === 2 ? "two" : 2 * level} nearest friends behind +${level} attack and +${level} health.`,
 };

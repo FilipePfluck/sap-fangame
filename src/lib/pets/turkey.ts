@@ -19,5 +19,5 @@ export const Turkey: PetType = {
     },
   },
   description: (level: number) =>
-    `Friend summoned: Give it +${3 * level} attack and +${level} health.`,
+    `Friend summoned: Give it +${3 * level} attack and +${level} health.\n\nSince this doesn't say "until next turn" this is permanent if in shop.`,
 };

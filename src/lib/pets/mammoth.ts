@@ -19,5 +19,5 @@ export const Mammoth: PetType = {
     },
   },
   description: (level: number) =>
-    `Faint: Give all friends +${2 * level}/+${2 * level}.`,
+    `Faint: Give all friends +${2 * level} attack and +${2 * level} health.`,
 };

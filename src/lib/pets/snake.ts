@@ -18,5 +18,5 @@ export const Snake: PetType = {
     },
   },
   description: (level: number) =>
-    `Friend ahead attacks: Deal ${5 * level} damage to one random enemy. Works 5 times per turn.`,
+    `Friend ahead attacks: Deal ${5 * level} damage to one random enemy. Works 5 times per turn.\n\nSame trigger as Kangaroo.`,
 };

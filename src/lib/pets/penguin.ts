@@ -25,5 +25,5 @@ export const Penguin: PetType = {
     },
   },
   description: (level: number) =>
-    `Start of turn: Give two level 2 or higher friends +${level} attack and +${level} health.`,
+    `Start of turn: Give two level 2 or higher friends +${level} attack and +${level} health.\n\nThis will buff up to 2 lvl 2 or 3 friends (not including itself). If there are no lvl 2/3 friends, it will buff none. If there are more than two, it will buff a random selection of those pets.`,
 };
