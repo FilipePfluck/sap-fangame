@@ -1,19 +1,34 @@
 import type { Board, PetInstance } from "@/lib/types";
 
+export const MAX_PET_EXPERIENCE = 5;
+
 export function compactBoard(board: Board): PetInstance[] {
   return board.filter((p): p is PetInstance => p !== null);
 }
 
 export function computeLevel(xp: number): 1 | 2 | 3 {
-  if (xp >= 6) return 3;
-  if (xp >= 3) return 2;
+  if (xp >= MAX_PET_EXPERIENCE) return 3;
+  if (xp >= 2) return 2;
   return 1;
+}
+
+export function grantExperience(pet: PetInstance, amount: number): void {
+  if (pet.health <= 0) return;
+  const experienceGained = Math.max(0, Math.floor(amount));
+  pet.attack += experienceGained;
+  pet.health += experienceGained;
+  pet.xp = Math.min(MAX_PET_EXPERIENCE, pet.xp + experienceGained);
+  pet.level = computeLevel(pet.xp);
+}
+
+function mergedXp(a: PetInstance, b: PetInstance): number {
+  return Math.min(MAX_PET_EXPERIENCE, a.xp + b.xp + 1);
 }
 
 // A level-up reward is earned whenever merging raises the pet above both
 // parents' levels — except merging two level-2 pets (reaching level 3).
 export function levelUpRewardEarned(a: PetInstance, b: PetInstance): boolean {
-  const mergedLevel = computeLevel(a.xp + b.xp);
+  const mergedLevel = computeLevel(mergedXp(a, b));
   if (mergedLevel <= Math.max(a.level, b.level)) return false;
   return !(a.level === 2 && b.level === 2);
 }
@@ -22,7 +37,7 @@ export function mergePets(a: PetInstance, b: PetInstance): PetInstance {
   if (a.type !== b.type) {
     throw new Error("Cannot merge pets of different types");
   }
-  const newXp = a.xp + b.xp;
+  const newXp = mergedXp(a, b);
   // Temp stats ride along with whichever pet supplied the higher stat.
   const attackSource = a.attack >= b.attack ? a : b;
   const healthSource = a.health >= b.health ? a : b;

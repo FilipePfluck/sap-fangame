@@ -8,6 +8,7 @@ export const Pill: FoodType = {
   isToken: false,
   cost: 1,
   effect: {},
+  triggersFriendAteFood: false,
   applyEffect: (ctx) => fireShopFaint(ctx.board, ctx.boardPosition, ctx.petRegistry),
   description: "Make one pet faint. Always on sale!",
 };

@@ -1,6 +1,6 @@
 import { PetType, Trigger } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
-import { dealAbilityDamage } from "@/lib/utils/combat";
+import { livingPets } from "@/lib/utils/combat";
 import { numberToText } from "@/lib/utils/flavor-text";
 
 export const Leopard: PetType = {
@@ -13,9 +13,10 @@ export const Leopard: PetType = {
   ability: {
     trigger: Trigger.start_of_battle,
     fn: (ctx) => {
-      if (ctx.enemyTeam.length === 0) return;
-      for (const target of pickN(ctx.enemyTeam, ctx.level)) {
-        dealAbilityDamage(target, Math.round(ctx.self.attack * 0.5));
+      const enemies = livingPets(ctx.enemyTeam);
+      if (enemies.length === 0) return;
+      for (const target of pickN(enemies, ctx.level)) {
+        ctx.dealAbilityDamage(target, Math.round(ctx.self.attack * 0.5));
       }
     },
   },

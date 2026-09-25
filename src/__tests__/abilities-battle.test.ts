@@ -4,11 +4,15 @@ import { PET_REGISTRY } from "@/lib/pets";
 import { petToString } from "@/lib/utils/flavor-text";
 import type {
   BasePerkType,
+  BattleAbilityContext,
   DefensivePerk,
   OffensivePerk,
   PetInstance,
+  PetType,
   TriggerPerk,
 } from "@/lib/types";
+import { Trigger } from "@/lib/types";
+import { grantExperience } from "@/lib/game/merge";
 import { GarlicPerk } from "@/lib/perks/garlic";
 import { MelonPerk } from "@/lib/perks/melon";
 import { PeanutPerk } from "@/lib/perks/peanut";
@@ -19,14 +23,557 @@ import { structuredClone } from "next/dist/compiled/@edge-runtime/primitives";
 import { SteakPerk } from "@/lib/perks/steak";
 
 function pet(type: string, attack: number, health: number, perk: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null = null): PetInstance {
-  return { type, attack, health, perk: structuredClone(perk), xp: 1, level: 1 };
+  return { type, attack, health, perk: structuredClone(perk), xp: 0, level: 1 };
 }
 
 function petLevel(type: string, attack: number, health: number, level: number): PetInstance {
-  return { type, attack, health, perk: null, xp: level === 3 ? 6 : level === 2 ? 3 : 1, level };
+  return { type, attack, health, perk: null, xp: level === 3 ? 5 : level === 2 ? 2 : 0, level };
+}
+
+function battleContext(
+  self: PetInstance,
+  team: PetInstance[],
+  enemyTeam: PetInstance[]
+): BattleAbilityContext {
+  return {
+    self,
+    selfIndex: team.indexOf(self),
+    team,
+    enemyTeam,
+    level: self.level,
+    summon: () => {},
+    triggerCount: 1,
+    petRegistry: PET_REGISTRY,
+    dealAbilityDamage: (target, damage) => {
+      if (target.health <= 0) return 0;
+      target.health -= damage;
+      return damage;
+    },
+    grantExperience,
+    friendAteFood: () => {},
+  };
 }
 
 describe("Pet Abilities", () => {
+  describe("Peacock — hurt", () => {
+    it.each([
+      { level: 1, expectedAttack: 5 },
+      { level: 2, expectedAttack: 8 },
+      { level: 3, expectedAttack: 11 },
+    ])(
+      "gains +$expectedAttack attack at level $level after attack damage",
+      ({ level, expectedAttack }) => {
+        const { steps } = simulateBattle(
+          [petLevel("Peacock", 2, 5, level)],
+          [pet("Sloth", 1, 20)],
+          PET_REGISTRY
+        );
+
+        expect(steps[1].attackerTeam[0].attack).toBe(expectedAttack);
+      }
+    );
+
+    it("triggers for ability damage", () => {
+      const { steps } = simulateBattle(
+        [pet("Mosquito", 2, 2)],
+        [pet("Peacock", 2, 5)],
+        PET_REGISTRY
+      );
+
+      expect(steps[1].defenderTeam[0].attack).toBe(8);
+    });
+
+    it("does not trigger when damage is fully blocked", () => {
+      const { steps } = simulateBattle(
+        [pet("Sloth", 1, 10)],
+        [pet("Peacock", 2, 5, MelonPerk)],
+        PET_REGISTRY
+      );
+
+      expect(steps[1].defenderTeam[0].attack).toBe(2);
+    });
+
+    it("does not trigger when health is removed", () => {
+      const { steps } = simulateBattle(
+        [pet("Skunk", 3, 5)],
+        [pet("Sloth", 1, 5), pet("Peacock", 2, 10)],
+        PET_REGISTRY
+      );
+
+      expect(steps[1].defenderTeam[1].health).toBe(6);
+      expect(steps[1].defenderTeam[1].attack).toBe(2);
+    });
+  });
+
+  describe("Kangaroo — friend ahead attacks", () => {
+    it.each([
+      { level: 1, expected: "Kangaroo (3/3)" },
+      { level: 2, expected: "Kangaroo (4/4)" },
+      { level: 3, expected: "Kangaroo (5/5)" },
+    ])("gains +$level/+${level} when its friend ahead attacks", ({ level, expected }) => {
+      const { steps } = simulateBattle(
+        [pet("Sloth", 1, 10), petLevel("Kangaroo", 2, 2, level)],
+        [pet("Sloth", 1, 100)],
+        PET_REGISTRY
+      );
+
+      expect(petToString(steps[1].attackerTeam[1])).toBe(expected);
+    });
+
+    it("does not trigger from its own attack when a friend is behind", () => {
+      const { steps } = simulateBattle(
+        [petLevel("Kangaroo", 2, 2, 1), pet("Sloth", 1, 10)],
+        [pet("Sloth", 1, 100)],
+        PET_REGISTRY
+      );
+
+      expect(petToString(steps[1].attackerTeam[0])).toBe("Kangaroo (2/1)");
+    });
+
+    it("orders both teams' reactions by the reacting pet's attack", () => {
+      const order: string[] = [];
+      const listener = (name: string): PetType => ({
+        name,
+        sprite: "/sap/sloth.webp",
+        tier: 1,
+        baseAttack: 1,
+        baseHealth: 1,
+        isToken: false,
+        ability: {
+          trigger: Trigger.friend_ahead_attacks,
+          fn: (ctx) => order.push(ctx.self.type),
+        },
+        description: "",
+      });
+      const low = listener("Low");
+      const high = listener("High");
+      const registry = { ...PET_REGISTRY, Low: low, High: high };
+
+      simulateBattle(
+        [pet("Sloth", 1, 50), { ...pet("Low", 1, 50), attack: 1 }],
+        [pet("Sloth", 1, 50), { ...pet("High", 1, 50), attack: 9 }],
+        registry
+      );
+
+      expect(order.slice(0, 2)).toEqual(["High", "Low"]);
+    });
+
+    it("resolves After attack, Friend ahead attacks, then Hurt", () => {
+      const order: string[] = [];
+      const listener = (
+        name: string,
+        trigger: Trigger.after_attack | Trigger.friend_ahead_attacks | Trigger.hurt
+      ): PetType => ({
+        name,
+        sprite: "/sap/sloth.webp",
+        tier: 1,
+        baseAttack: 1,
+        baseHealth: 1,
+        isToken: false,
+        ability: { trigger, fn: () => order.push(name) },
+        description: "",
+      });
+      const after = listener("After", Trigger.after_attack);
+      const ahead = listener("Ahead", Trigger.friend_ahead_attacks);
+      const hurt = listener("Hurt", Trigger.hurt);
+      const registry = {
+        ...PET_REGISTRY,
+        After: after,
+        Ahead: ahead,
+        Hurt: hurt,
+      };
+
+      simulateBattle(
+        [pet("After", 1, 10), pet("Ahead", 1, 10)],
+        [pet("Hurt", 1, 10)],
+        registry
+      );
+
+      expect(order.slice(0, 3)).toEqual(["After", "Ahead", "Hurt"]);
+    });
+  });
+
+  describe("Elephant — after attack", () => {
+    it.each([
+      { level: 1, expectedHealth: 9 },
+      { level: 2, expectedHealth: 8 },
+      { level: 3, expectedHealth: 7 },
+    ])("deals 1 damage per level to the friend behind", ({ level, expectedHealth }) => {
+      const { steps } = simulateBattle(
+        [petLevel("Elephant", 3, 7, level), pet("Sloth", 1, 10)],
+        [pet("Sloth", 1, 100)],
+        PET_REGISTRY
+      );
+
+      expect(steps[1].attackerTeam[1].health).toBe(expectedHealth);
+    });
+
+    it("targets only the nearest friend behind", () => {
+      const { steps } = simulateBattle(
+        [
+          petLevel("Elephant", 3, 7, 2),
+          pet("Sloth", 1, 10),
+          pet("Sloth", 1, 10),
+        ],
+        [pet("Sloth", 1, 100)],
+        PET_REGISTRY
+      );
+
+      expect(steps[1].attackerTeam[1].health).toBe(8);
+      expect(steps[1].attackerTeam[2].health).toBe(10);
+    });
+
+    it("retargets a living friend if the first one faints", () => {
+      const { steps } = simulateBattle(
+        [
+          petLevel("Elephant", 3, 7, 2),
+          pet("Sloth", 1, 1),
+          pet("Sloth", 1, 10),
+        ],
+        [pet("Sloth", 1, 100)],
+        PET_REGISTRY
+      );
+
+      expect(steps[1].attackerTeam).toHaveLength(2);
+      expect(steps[1].attackerTeam[1].health).toBe(9);
+    });
+  });
+
+  describe("Armadillo — start of battle", () => {
+    it.each([
+      { level: 1, bonus: 8 },
+      { level: 2, bonus: 16 },
+      { level: 3, bonus: 24 },
+    ])("gives all living pets +$bonus health at level $level", ({ level, bonus }) => {
+      const { steps } = simulateBattle(
+        [petLevel("Armadillo", 4, 8, level), pet("Sloth", 1, 20)],
+        [pet("Sloth", 1, 20)],
+        PET_REGISTRY
+      );
+
+      expect(steps[1].attackerTeam[0].health).toBe(7 + bonus);
+      expect(steps[1].attackerTeam[1].health).toBe(20 + bonus);
+      expect(steps[1].defenderTeam[0].health).toBe(16 + bonus);
+    });
+
+    it("does not buff pets already at zero health", () => {
+      const armadillo = pet("Armadillo", 4, 8);
+      const deadFriend = pet("Sloth", 1, 0);
+      const livingFriend = pet("Sloth", 1, 10);
+      const ability = PET_REGISTRY.Armadillo.ability;
+      if (ability?.trigger !== Trigger.start_of_battle) {
+        throw new Error("Expected Armadillo start-of-battle ability");
+      }
+
+      ability.fn(battleContext(armadillo, [armadillo, deadFriend, livingFriend], []));
+
+      expect(armadillo.health).toBe(16);
+      expect(deadFriend.health).toBe(0);
+      expect(livingFriend.health).toBe(18);
+    });
+  });
+
+  describe("Hedgehog — faint", () => {
+    it("deals damage to every living pet on both teams", () => {
+      const hedgehog = pet("Hedgehog", 4, 0);
+      const livingFriend = pet("Sloth", 1, 10);
+      const deadFriend = pet("Sloth", 1, 0);
+      const enemy = pet("Sloth", 1, 10);
+      const ability = PET_REGISTRY.Hedgehog.ability;
+      if (ability?.trigger !== Trigger.faint) throw new Error("Expected faint ability");
+
+      ability.fn(battleContext(hedgehog, [hedgehog, livingFriend, deadFriend], [enemy]));
+
+      expect(livingFriend.health).toBe(8);
+      expect(deadFriend.health).toBe(0);
+      expect(enemy.health).toBe(8);
+    });
+  });
+
+  describe("Flamingo — faint", () => {
+    it("skips pending faints and buffs the nearest living friends behind", () => {
+      const flamingo = pet("Flamingo", 3, 0);
+      const deadFriend = pet("Sloth", 1, 0);
+      const firstFriend = pet("Sloth", 1, 5);
+      const secondFriend = pet("Sloth", 1, 5);
+      const thirdFriend = pet("Sloth", 1, 5);
+      const team = [flamingo, deadFriend, firstFriend, secondFriend, thirdFriend];
+      const ability = PET_REGISTRY.Flamingo.ability;
+      if (ability?.trigger !== Trigger.faint) throw new Error("Expected faint ability");
+
+      ability.fn(battleContext(flamingo, team, []));
+
+      expect(firstFriend).toMatchObject({ attack: 2, health: 6 });
+      expect(secondFriend).toMatchObject({ attack: 2, health: 6 });
+      expect(thirdFriend).toMatchObject({ attack: 1, health: 5 });
+    });
+  });
+
+  describe("Camel — hurt", () => {
+    it("buffs the nearest living friend behind when damaged", () => {
+      const { steps } = simulateBattle(
+        [pet("Camel", 3, 3), pet("Sloth", 1, 10)],
+        [pet("Sloth", 1, 100)],
+        PET_REGISTRY
+      );
+
+      expect(steps[1].attackerTeam[1]).toMatchObject({ attack: 2, health: 12 });
+    });
+  });
+
+  describe("Blowfish — hurt", () => {
+    it("deals ability damage to an enemy after taking a hit", () => {
+      const { steps } = simulateBattle(
+        [pet("Blowfish", 3, 6)],
+        [pet("Sloth", 1, 20)],
+        PET_REGISTRY
+      );
+
+      expect(steps[1].defenderTeam[0].health).toBe(14);
+    });
+  });
+
+  describe("Sheep — faint", () => {
+    it("summons two Rams", () => {
+      const { steps } = simulateBattle(
+        [pet("Sheep", 2, 2)],
+        [pet("Sloth", 2, 2)],
+        PET_REGISTRY
+      );
+
+      expect(steps[1].attackerTeam).toMatchObject([
+        { type: "Ram", attack: 2, health: 2 },
+        { type: "Ram", attack: 2, health: 2 },
+      ]);
+    });
+
+    it("flings the second Ram when the team has room for only one summon", () => {
+      const { steps } = simulateBattle(
+        [
+          pet("Sheep", 2, 1),
+          pet("Sloth", 1, 10),
+          pet("Sloth", 1, 10),
+          pet("Sloth", 1, 10),
+          pet("Sloth", 1, 10),
+        ],
+        [pet("Sloth", 2, 10)],
+        PET_REGISTRY
+      );
+
+      expect(steps[1].attackerTeam.filter((friend) => friend.type === "Ram")).toHaveLength(1);
+      expect(steps[1].attackerTeam).toHaveLength(5);
+    });
+  });
+
+  describe("Turtle — faint", () => {
+    it("gives Melon to the nearest living friends behind", () => {
+      const turtle = pet("Turtle", 2, 0);
+      const deadFriend = pet("Sloth", 1, 0);
+      const firstFriend = pet("Sloth", 1, 5);
+      const secondFriend = pet("Sloth", 1, 5);
+      const ability = PET_REGISTRY.Turtle.ability;
+      if (ability?.trigger !== Trigger.faint) throw new Error("Expected faint ability");
+
+      ability.fn(battleContext(turtle, [turtle, deadFriend, firstFriend, secondFriend], []));
+
+      expect(deadFriend.perk).toBeNull();
+      expect(firstFriend.perk?.name).toBe("Melon");
+    });
+  });
+
+  describe("Rooster — faint", () => {
+    it.each([1, 2, 3])("summons %i Chick tokens with half its attack", (level) => {
+      const { steps } = simulateBattle(
+        [petLevel("Rooster", 6, 4, level)],
+        [pet("Sloth", 4, 100)],
+        PET_REGISTRY
+      );
+
+      expect(steps[1].attackerTeam).toHaveLength(level);
+      expect(steps[1].attackerTeam.every((chick) =>
+        chick.type === "Chick" && chick.attack === 3 && chick.health === 1
+      )).toBe(true);
+    });
+  });
+
+  describe("Mammoth — faint", () => {
+    it("buffs living friends but not itself or pending faints", () => {
+      const mammoth = pet("Mammoth", 4, 0);
+      const deadFriend = pet("Sloth", 1, 0);
+      const livingFriend = pet("Sloth", 1, 10);
+      const ability = PET_REGISTRY.Mammoth.ability;
+      if (ability?.trigger !== Trigger.faint) throw new Error("Expected faint ability");
+
+      ability.fn(battleContext(mammoth, [mammoth, deadFriend, livingFriend], []));
+
+      expect(mammoth.health).toBe(0);
+      expect(deadFriend.health).toBe(0);
+      expect(livingFriend).toMatchObject({ attack: 3, health: 12 });
+    });
+  });
+
+  describe("Snake — friend ahead attacks", () => {
+    it("deals damage at most five times", () => {
+      const { steps } = simulateBattle(
+        [pet("Sloth", 1, 100), pet("Snake", 8, 3)],
+        [pet("Sloth", 1, 200)],
+        PET_REGISTRY
+      );
+
+      expect(steps.at(-1)?.defenderTeam[0].health).toBe(125);
+    });
+  });
+
+  describe("Rabbit — food gained by ability", () => {
+    it("triggers when a battle ability gives a friend a perk", () => {
+      const perkGiver: PetType = {
+        name: "Perk Giver",
+        sprite: "/sap/sloth.webp",
+        tier: 1,
+        baseAttack: 1,
+        baseHealth: 50,
+        isToken: false,
+        ability: {
+          trigger: Trigger.start_of_battle,
+          fn: (ctx) => {
+            const friend = ctx.team[1];
+            if (!friend) return;
+            friend.perk = MelonPerk;
+            ctx.friendAteFood(friend);
+          },
+        },
+        description: "",
+      };
+      const registry = { ...PET_REGISTRY, [perkGiver.name]: perkGiver };
+      const { steps } = simulateBattle(
+        [pet("Perk Giver", 1, 50), pet("Rabbit", 1, 5)],
+        [pet("Sloth", 1, 50)],
+        registry
+      );
+
+      expect(steps[1].attackerTeam[1].health).toBe(6);
+      expect(steps[1].attackerTeam[1].perk).toBe(MelonPerk);
+    });
+  });
+
+  describe("Ability-granted experience", () => {
+    it("still grants stats at max XP without exceeding the cap", () => {
+      const experienceGiver: PetType = {
+        name: "Experience Giver",
+        sprite: "/sap/sloth.webp",
+        tier: 1,
+        baseAttack: 1,
+        baseHealth: 50,
+        isToken: false,
+        ability: {
+          trigger: Trigger.start_of_battle,
+          fn: (ctx) => {
+            const target = ctx.team[1];
+            if (target) ctx.grantExperience(target, 1);
+          },
+        },
+        description: "",
+      };
+      const registry = { ...PET_REGISTRY, [experienceGiver.name]: experienceGiver };
+      const { steps } = simulateBattle(
+        [pet("Experience Giver", 1, 50), petLevel("Sloth", 2, 2, 3)],
+        [pet("Sloth", 1, 50)],
+        registry
+      );
+
+      expect(steps[1].attackerTeam[1]).toMatchObject({
+        attack: 3,
+        health: 3,
+        xp: 5,
+        level: 3,
+      });
+    });
+  });
+
+  describe("Abilities cannot target pending faints", () => {
+    it("does not fire a queued start-of-battle ability after its pet faints", () => {
+      const killer: PetType = {
+        name: "Start Phase Killer",
+        sprite: "/sap/sloth.webp",
+        tier: 1,
+        baseAttack: 10,
+        baseHealth: 50,
+        isToken: false,
+        ability: {
+          trigger: Trigger.start_of_battle,
+          fn: (ctx) => {
+            const target = ctx.team[1];
+            if (target) ctx.dealAbilityDamage(target, 2);
+          },
+        },
+        description: "",
+      };
+      const registry = { ...PET_REGISTRY, [killer.name]: killer };
+      const { steps } = simulateBattle(
+        [pet(killer.name, 10, 50), pet("Mosquito", 2, 2)],
+        [pet("Sloth", 1, 100)],
+        registry
+      );
+
+      expect(steps[1].defenderTeam[0].health).toBe(90);
+    });
+
+    it("does not run a pending-faint Dog's friend-summoned ability", () => {
+      const summoner: PetType = {
+        name: "Summoner",
+        sprite: "/sap/sloth.webp",
+        tier: 1,
+        baseAttack: 1,
+        baseHealth: 50,
+        isToken: false,
+        ability: {
+          trigger: Trigger.start_of_battle,
+          fn: (ctx) =>
+            ctx.summon(
+              { type: "Sloth", attack: 1, health: 1, perk: null, xp: 0, level: 1 },
+              ctx.selfIndex
+            ),
+        },
+        description: "",
+      };
+      const registry = { ...PET_REGISTRY, [summoner.name]: summoner };
+      const { steps } = simulateBattle(
+        [pet(summoner.name, 1, 50), pet("Dog", 3, 0)],
+        [pet("Sloth", 1, 100)],
+        registry
+      );
+
+      expect(steps[1].attackerTeam.some((friend) => friend.type === "Dog")).toBe(false);
+    });
+
+    it("Mosquito only selects enemies with health remaining", () => {
+      const deadEnemy = pet("Sloth", 1, 0);
+      const livingEnemy = pet("Sloth", 1, 10);
+      const mosquito = pet("Mosquito", 2, 2);
+      const ability = PET_REGISTRY.Mosquito.ability;
+      if (ability?.trigger !== Trigger.start_of_battle) throw new Error("Expected Mosquito start-of-battle ability");
+
+      ability.fn(battleContext(mosquito, [mosquito], [deadEnemy, livingEnemy]));
+
+      expect(deadEnemy.health).toBe(0);
+      expect(livingEnemy.health).toBe(9);
+    });
+
+    it("Elephant skips a pending faint and targets the nearest living friend behind", () => {
+      const elephant = pet("Elephant", 3, 7);
+      const deadFriend = pet("Sloth", 1, 0);
+      const livingFriend = pet("Sloth", 1, 10);
+      const team = [elephant, deadFriend, livingFriend];
+      const ability = PET_REGISTRY.Elephant.ability;
+      if (ability?.trigger !== Trigger.after_attack) throw new Error("Expected Elephant after-attack ability");
+
+      ability.fn(battleContext(elephant, team, []));
+
+      expect(deadFriend.health).toBe(0);
+      expect(livingFriend.health).toBe(9);
+    });
+  });
+
   describe("Mosquito — start-of-battle", () => {
     it.each([
       { level: 1, expected: "LOSS" },
@@ -186,6 +733,28 @@ describe("Pet Abilities", () => {
       // Badger's faint: no friend ahead, friend behind takes 3 dmg → 1/2.
       expect(result).toBe("WIN");
       expect(steps[1].attackerTeam[0].health).toBe(2);
+    });
+
+    it("hits living pets on both sides and skips pending faints", () => {
+      const deadFriendAhead = pet("Sloth", 1, 0);
+      const badger = pet("Badger", 6, 0);
+      const livingFriendBehind = pet("Sloth", 1, 10);
+      const deadEnemyFront = pet("Sloth", 1, 0);
+      const livingEnemyBehind = pet("Sloth", 1, 10);
+      const team = [deadFriendAhead, badger, livingFriendBehind];
+      const ability = PET_REGISTRY.Badger.ability;
+      if (ability?.trigger !== Trigger.faint) {
+        throw new Error("Expected Badger faint ability");
+      }
+
+      ability.fn(
+        battleContext(badger, team, [deadEnemyFront, livingEnemyBehind])
+      );
+
+      expect(deadFriendAhead.health).toBe(0);
+      expect(deadEnemyFront.health).toBe(0);
+      expect(livingFriendBehind.health).toBe(7);
+      expect(livingEnemyBehind.health).toBe(7);
     });
   });
 
@@ -439,6 +1008,20 @@ describe("Pet Abilities", () => {
   });
 
   describe("Tiger — ability repeat", () => {
+    it("repeats a friend's Faint ability before that friend is removed", () => {
+      const { steps } = simulateBattle(
+        [pet("Ant", 1, 1), petLevel("Tiger", 6, 4, 1)],
+        [pet("Sloth", 1, 100)],
+        PET_REGISTRY
+      );
+
+      expect(steps[1].attackerTeam[0]).toMatchObject({
+        type: "Tiger",
+        attack: 8,
+        health: 6,
+      });
+    });
+
     // TODO - Tiger only triggers the friend ahead at level 2, for some reason
     it.skip.each([
       { level: 1, result: "Sloth (3/5)" },
@@ -481,6 +1064,24 @@ describe("Perks", () => {
       // After round 1, Bee should appear in attacker team
       const stepAfterRound1 = steps[1];
       expect(stepAfterRound1.attackerTeam[0].type).toBe("Bee");
+    });
+
+    it("flings Honey's Bee when Cricket's Zombie Cricket fills the last slot", () => {
+      const { steps } = simulateBattle(
+        [
+          pet("Cricket", 1, 1, HoneyPerk),
+          pet("Sloth", 1, 10),
+          pet("Sloth", 1, 10),
+          pet("Sloth", 1, 10),
+          pet("Sloth", 1, 10),
+        ],
+        [pet("Sloth", 2, 10)],
+        PET_REGISTRY
+      );
+
+      expect(steps[1].attackerTeam).toHaveLength(5);
+      expect(steps[1].attackerTeam[0].type).toBe("Zombie Cricket");
+      expect(steps[1].attackerTeam.some((friend) => friend.type === "Bee")).toBe(false);
     });
 
     it("does not mutate input teams", () => {
