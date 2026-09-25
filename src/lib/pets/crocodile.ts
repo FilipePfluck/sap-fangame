@@ -1,5 +1,5 @@
 import { PetType, Trigger } from "@/lib/types";
-import { dealAbilityDamage } from "@/lib/utils/combat";
+import { livingPets } from "@/lib/utils/combat";
 
 export const Crocodile: PetType = {
   name: "Crocodile",
@@ -12,10 +12,10 @@ export const Crocodile: PetType = {
     trigger: Trigger.start_of_battle,
     fn: (ctx) => {
       for (let i = 0; i < ctx.level; i++) {
-        const alive = ctx.enemyTeam.filter((p) => p.health > 0);
+        const alive = livingPets(ctx.enemyTeam);
         const target = alive[alive.length - 1];
         if (!target) break;
-        dealAbilityDamage(target, 8);
+        ctx.dealAbilityDamage(target, 8);
       }
     },
   },

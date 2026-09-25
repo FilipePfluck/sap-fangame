@@ -1,5 +1,4 @@
 import { PetType, Trigger } from "@/lib/types";
-import { dealAbilityDamage } from "@/lib/utils/combat";
 
 export const Badger: PetType = {
   name: "Badger",
@@ -12,11 +11,17 @@ export const Badger: PetType = {
     trigger: Trigger.faint,
     fn: (ctx) => {
       const damage = Math.round(ctx.self.attack * 0.5 * ctx.level);
-      const ahead = ctx.team[ctx.selfIndex - 1];
-      const behind = ctx.team[ctx.selfIndex + 1];
-      if (ahead) dealAbilityDamage(ahead, damage);
-      if (behind) dealAbilityDamage(behind, damage);
+      const aheadTarget = [
+        ...ctx.team.slice(0, ctx.selfIndex).reverse(),
+        ...ctx.enemyTeam,
+      ].find((target) => target.health > 0);
+      const behindTarget = ctx.team
+        .slice(ctx.selfIndex + 1)
+        .find((target) => target.health > 0);
+      if (aheadTarget) ctx.dealAbilityDamage(aheadTarget, damage);
+      if (behindTarget) ctx.dealAbilityDamage(behindTarget, damage);
     },
   },
-  description: (level) => `Faint: Deal ${level * 50}% attack damage to adjacent pets.`,
+  description: (level) =>
+    `Faint: Deal ${level * 50}% attack damage to the nearest living pets ahead and behind.`,
 };

@@ -5,6 +5,8 @@ export const Chocolate: FoodType = {
   sprite: "/sap/chocolate.webp",
   tier: 5,
   isToken: false,
-  effect: { attack: 1, health: 1 }, // TODO: Implement XP
+  effect: {},
+  experience: 1,
+  maxTargetXp: 5,
   description: "Give one pet +1 experience.",
 };

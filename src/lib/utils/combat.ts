@@ -5,6 +5,10 @@ import {
   PetInstance,
 } from "@/lib/types";
 
+export function livingPets(pets: readonly PetInstance[]): PetInstance[] {
+  return pets.filter((pet) => pet.health > 0);
+}
+
 // The single place damage is ever applied to a pet — a normal front-line
 // attack and every damage-dealing ability (Mosquito, Badger, Leopard, Rhino,
 // Crocodile, Dolphin, ...) all route through this, so Garlic/Melon mitigation

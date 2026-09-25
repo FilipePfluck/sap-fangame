@@ -1,5 +1,5 @@
 import { PetType, Trigger } from "@/lib/types";
-import { dealAbilityDamage } from "@/lib/utils/combat";
+import { livingPets } from "@/lib/utils/combat";
 
 export const Rhino: PetType = {
   name: "Rhino",
@@ -11,10 +11,10 @@ export const Rhino: PetType = {
   ability: {
     trigger: Trigger.knock_out,
     fn: (ctx) => {
-      const target = ctx.enemyTeam[0];
+      const target = livingPets(ctx.enemyTeam)[0];
       if (!target) return;
       const isTier1 = ctx.petRegistry[target.type]?.tier === 1;
-      dealAbilityDamage(target, (isTier1 ? 8 : 4) * ctx.level);
+      ctx.dealAbilityDamage(target, (isTier1 ? 8 : 4) * ctx.level);
     },
   },
   description:

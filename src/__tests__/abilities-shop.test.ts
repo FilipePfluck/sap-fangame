@@ -3,17 +3,19 @@ import {
   fireShopAbility,
   fireBoardShopAbility,
   fireShopFaint,
+  fireShopFriendBought,
   fireShopFriendSummoned,
 } from "@/lib/game/shop-ability";
 import { PET_REGISTRY } from "@/lib/pets";
 import { FOOD_REGISTRY } from "@/lib/foods";
 import { getFoodCost } from "@/lib/game/costs";
-import { PetInstance, ShopState, Board, Trigger } from "@/lib/types";
+import { PetInstance, PetType, ShopState, Board, Trigger } from "@/lib/types";
 import { BreadPerk } from "@/lib/perks/bread";
 import { GarlicPerk } from "@/lib/perks/garlic";
+import { HoneyPerk } from "@/lib/perks/honey";
 
 function makePet(type: string, level = 1): PetInstance {
-  return { type, attack: 1, health: 1, perk: null, xp: level === 3 ? 6 : level === 2 ? 3 : 1, level };
+  return { type, attack: 1, health: 1, perk: null, xp: level === 3 ? 5 : level === 2 ? 2 : 0, level };
 }
 
 function makeShop(petTypes: string[] = [], foodTypes: string[] = []): ShopState {
@@ -28,6 +30,46 @@ function makeBoard(pets: (PetInstance | null)[]): Board {
   pets.forEach((p, i) => { board[i] = p; });
   return board;
 }
+
+describe("Ability-granted experience", () => {
+  it("grants stats without exceeding the XP cap", () => {
+    const experienceGiver: PetType = {
+      name: "Experience Giver",
+      sprite: "/sap/sloth.webp",
+      tier: 1,
+      baseAttack: 1,
+      baseHealth: 1,
+      isToken: false,
+      ability: {
+        trigger: Trigger.buy,
+        fn: (ctx) => {
+          const target = ctx.board[1];
+          if (target) ctx.grantExperience(target, 1);
+        },
+      },
+      description: "",
+    };
+    const board = makeBoard([
+      makePet("Experience Giver"),
+      { ...makePet("Sloth", 3), attack: 2, health: 2 },
+    ]);
+    const result = fireShopAbility(
+      Trigger.buy,
+      board[0]!,
+      0,
+      board,
+      makeShop(),
+      { ...PET_REGISTRY, [experienceGiver.name]: experienceGiver }
+    ).board;
+
+    expect(result[1]).toMatchObject({
+      attack: 3,
+      health: 3,
+      xp: 5,
+      level: 3,
+    });
+  });
+});
 
 describe("Duck — sell", () => {
   it.each([
@@ -385,6 +427,307 @@ describe("Squirrel — start-of-turn", () => {
   });
 });
 
+describe("Penguin — start-of-turn", () => {
+  it.each([
+    { level: 1, expected: 2 },
+    { level: 2, expected: 3 },
+    { level: 3, expected: 4 },
+  ])("buffs two level 2+ friends by +$level/+${level}", ({ level, expected }) => {
+    const board = makeBoard([
+      makePet("Penguin", level),
+      makePet("Sloth", 2),
+      makePet("Sloth", 3),
+    ]);
+    const { board: result } = fireBoardShopAbility(
+      Trigger.start_of_turn,
+      board,
+      makeShop(),
+      PET_REGISTRY
+    );
+
+    expect(result[1]).toMatchObject({ attack: expected, health: expected });
+    expect(result[2]).toMatchObject({ attack: expected, health: expected });
+  });
+
+  it("buffs at most two eligible friends and never buffs itself or level 1 friends", () => {
+    const board = makeBoard([
+      makePet("Penguin", 3),
+      makePet("Sloth", 2),
+      makePet("Sloth", 2),
+      makePet("Sloth", 3),
+      makePet("Sloth", 1),
+    ]);
+    const { board: result } = fireBoardShopAbility(
+      Trigger.start_of_turn,
+      board,
+      makeShop(),
+      PET_REGISTRY
+    );
+
+    const buffedEligibleFriends = result
+      .slice(1, 4)
+      .filter((friend) => friend?.attack === 4 && friend.health === 4);
+    expect(buffedEligibleFriends).toHaveLength(2);
+    expect(result[0]).toMatchObject({ attack: 1, health: 1 });
+    expect(result[4]).toMatchObject({ attack: 1, health: 1 });
+  });
+
+  it("does nothing when there are no eligible friends", () => {
+    const board = makeBoard([makePet("Penguin", 3), makePet("Sloth", 1)]);
+    const { board: result } = fireBoardShopAbility(
+      Trigger.start_of_turn,
+      board,
+      makeShop(),
+      PET_REGISTRY
+    );
+
+    expect(result[0]).toMatchObject({ attack: 1, health: 1 });
+    expect(result[1]).toMatchObject({ attack: 1, health: 1 });
+  });
+});
+
+describe("Giraffe — start-of-turn", () => {
+  it("buffs the nearest friend ahead", () => {
+    const board = makeBoard([
+      makePet("Sloth", 2),
+      makePet("Sloth", 1),
+      makePet("Giraffe", 3),
+    ]);
+    const { board: result } = fireBoardShopAbility(
+      Trigger.start_of_turn,
+      board,
+      makeShop(),
+      PET_REGISTRY
+    );
+
+    expect(result[1]).toMatchObject({ attack: 4, health: 4 });
+    expect(result[0]).toMatchObject({ attack: 1, health: 1 });
+  });
+});
+
+describe("Dog — friend summoned", () => {
+  it("gains temporary attack and health until the next turn", () => {
+    const board = makeBoard([makePet("Dog", 2), makePet("Sloth")]);
+    const summoned = fireShopFriendSummoned(board, 1, PET_REGISTRY);
+
+    expect(summoned[0]).toMatchObject({
+      attack: 5,
+      health: 3,
+      tempAttack: 4,
+      tempHealth: 2,
+    });
+
+    const nextTurn = fireBoardShopAbility(
+      Trigger.start_of_turn,
+      summoned,
+      makeShop(),
+      PET_REGISTRY
+    ).board;
+    expect(nextTurn[0]).toMatchObject({ attack: 1, health: 1 });
+    expect(nextTurn[0]?.tempAttack).toBeUndefined();
+    expect(nextTurn[0]?.tempHealth).toBeUndefined();
+  });
+});
+
+describe("Turkey — friend summoned", () => {
+  it("permanently buffs the summoned pet in the shop", () => {
+    const board = makeBoard([makePet("Turkey", 2), makePet("Sloth")]);
+    const summoned = fireShopFriendSummoned(board, 1, PET_REGISTRY);
+    const nextTurn = fireBoardShopAbility(
+      Trigger.start_of_turn,
+      summoned,
+      makeShop(),
+      PET_REGISTRY
+    ).board;
+
+    expect(nextTurn[1]).toMatchObject({ attack: 7, health: 3 });
+    expect(nextTurn[1]?.tempAttack).toBeUndefined();
+    expect(nextTurn[1]?.tempHealth).toBeUndefined();
+  });
+});
+
+describe("Monkey — end turn", () => {
+  it("buffs the front-most pet, including itself", () => {
+    const board = makeBoard([makePet("Monkey"), makePet("Sloth")]);
+    const { board: result } = fireBoardShopAbility(
+      Trigger.end_turn,
+      board,
+      makeShop(),
+      PET_REGISTRY
+    );
+
+    expect(result[0]).toMatchObject({ attack: 3, health: 3 });
+    expect(result[1]).toMatchObject({ attack: 1, health: 1 });
+  });
+});
+
+describe("Dragon — Tier 1 friend bought", () => {
+  it("buffs friends four times per turn and resets the limit", () => {
+    let board = makeBoard([makePet("Dragon"), makePet("Sloth")]);
+    const shop = makeShop();
+    for (let i = 0; i < 4; i++) {
+      board = fireShopFriendBought(1, board, shop, PET_REGISTRY).board;
+    }
+    board = fireShopFriendBought(2, board, shop, PET_REGISTRY).board;
+    expect(board[1]).toMatchObject({ attack: 5, health: 5 });
+
+    board = fireShopFriendBought(1, board, shop, PET_REGISTRY).board;
+    expect(board[1]).toMatchObject({ attack: 5, health: 5 });
+
+    board = fireBoardShopAbility(Trigger.start_of_turn, board, shop, PET_REGISTRY).board;
+    board = fireShopFriendBought(1, board, shop, PET_REGISTRY).board;
+    expect(board[1]).toMatchObject({ attack: 6, health: 6 });
+  });
+});
+
+describe("Giraffe — start-of-turn", () => {
+  it("buffs the nearest friend ahead", () => {
+    const board = makeBoard([
+      makePet("Sloth", 2),
+      makePet("Sloth", 1),
+      makePet("Giraffe"),
+    ]);
+    const { board: result } = fireBoardShopAbility(
+      Trigger.start_of_turn,
+      board,
+      makeShop(),
+      PET_REGISTRY
+    );
+
+    expect(result[1]).toMatchObject({ attack: 2, health: 2 });
+    expect(result[0]).toMatchObject({ attack: 1, health: 1 });
+  });
+});
+
+describe("Dog — friend summoned", () => {
+  it("gains temporary attack and health until next turn", () => {
+    const board = makeBoard([makePet("Dog", 2), makePet("Sloth")]);
+    const summoned = fireShopFriendSummoned(board, 1, PET_REGISTRY);
+
+    expect(summoned[0]).toMatchObject({
+      attack: 5,
+      health: 3,
+      tempAttack: 4,
+      tempHealth: 2,
+    });
+
+    const nextTurn = fireBoardShopAbility(
+      Trigger.start_of_turn,
+      summoned,
+      makeShop(),
+      PET_REGISTRY
+    ).board;
+    expect(nextTurn[0]).toMatchObject({ attack: 1, health: 1 });
+  });
+});
+
+describe("Turkey — friend summoned", () => {
+  it("permanently buffs the summoned pet in the shop", () => {
+    const board = makeBoard([makePet("Turkey"), makePet("Sloth")]);
+    const summoned = fireShopFriendSummoned(board, 1, PET_REGISTRY);
+    const nextTurn = fireBoardShopAbility(
+      Trigger.start_of_turn,
+      summoned,
+      makeShop(),
+      PET_REGISTRY
+    ).board;
+
+    expect(nextTurn[1]).toMatchObject({ attack: 4, health: 2 });
+    expect(nextTurn[1]?.tempAttack).toBeUndefined();
+    expect(nextTurn[1]?.tempHealth).toBeUndefined();
+  });
+});
+
+describe("Monkey — end turn", () => {
+  it("buffs the front-most pet, including itself", () => {
+    const board = makeBoard([makePet("Monkey"), makePet("Sloth")]);
+    const { board: result } = fireBoardShopAbility(
+      Trigger.end_turn,
+      board,
+      makeShop(),
+      PET_REGISTRY
+    );
+
+    expect(result[0]).toMatchObject({ attack: 3, health: 3 });
+    expect(result[1]).toMatchObject({ attack: 1, health: 1 });
+  });
+});
+
+describe("Dragon — Tier 1 friend bought", () => {
+  it("counts only Tier 1 purchases, caps at four, and resets next turn", () => {
+    const shop = makeShop();
+    let board = makeBoard([makePet("Dragon", 2), makePet("Sloth")]);
+    for (let i = 0; i < 4; i++) {
+      board = fireShopFriendBought(1, board, shop, PET_REGISTRY).board;
+    }
+    board = fireShopFriendBought(2, board, shop, PET_REGISTRY).board;
+    board = fireShopFriendBought(1, board, shop, PET_REGISTRY).board;
+    expect(board[1]).toMatchObject({ attack: 9, health: 9 });
+
+    board = fireBoardShopAbility(Trigger.start_of_turn, board, shop, PET_REGISTRY).board;
+    board = fireShopFriendBought(1, board, shop, PET_REGISTRY).board;
+    expect(board[1]).toMatchObject({ attack: 11, health: 11 });
+  });
+});
+
+describe("Ability order", () => {
+  it("fires end-turn abilities from highest attack to lowest", () => {
+    const order: string[] = [];
+    const listener = (name: string): PetType => ({
+      name,
+      sprite: "/sap/sloth.webp",
+      tier: 1,
+      baseAttack: 1,
+      baseHealth: 1,
+      isToken: false,
+      ability: {
+        trigger: Trigger.end_turn,
+        fn: ({ self }) => order.push(self.type),
+      },
+      description: "",
+    });
+    const low = listener("Low");
+    const high = listener("High");
+    const registry = { ...PET_REGISTRY, Low: low, High: high };
+    const board = makeBoard([
+      { ...makePet("Low"), attack: 1 },
+      { ...makePet("High"), attack: 9 },
+    ]);
+
+    fireBoardShopAbility(Trigger.end_turn, board, makeShop(), registry);
+
+    expect(order).toEqual(["High", "Low"]);
+  });
+
+  it("fires friend-bought abilities from highest attack to lowest", () => {
+    const order: string[] = [];
+    const listener = (name: string): PetType => ({
+      name,
+      sprite: "/sap/sloth.webp",
+      tier: 6,
+      baseAttack: 1,
+      baseHealth: 1,
+      isToken: false,
+      ability: {
+        trigger: Trigger.friend_bought,
+        fn: ({ self }) => order.push(self.type),
+      },
+      description: "",
+    });
+    const low = listener("Low Dragon");
+    const high = listener("High Dragon");
+    const registry = { ...PET_REGISTRY, [low.name]: low, [high.name]: high };
+    const board = makeBoard([
+      { ...makePet(low.name), attack: 1 },
+      { ...makePet(high.name), attack: 9 },
+    ]);
+
+    fireShopFriendBought(1, board, makeShop(), registry);
+
+    expect(order).toEqual([high.name, low.name]);
+  });
+});
+
 describe("Bison — end-turn", () => {
   it.each([
     { level: 1, ability: "+2/+2", expected: 3 },
@@ -521,13 +864,34 @@ describe("Bread perk — end-turn / start-of-turn", () => {
   });
 });
 
-// TODO - Add test and support for Faint Perks
 describe("fireShopFaint — Pill", () => {
   it("fires the target's faint ability, landing any summon in the same slot", () => {
     const cricket = makePet("Cricket");
     const board = makeBoard([cricket]);
     const result = fireShopFaint(board, 0, PET_REGISTRY);
     expect(result[0]?.type).toBe("Zombie Cricket");
+  });
+
+  it("flings later summons when the Pill opens only one slot", () => {
+    const cricket = { ...makePet("Cricket"), perk: { ...HoneyPerk } };
+    const board = makeBoard([cricket]);
+    const result = fireShopFaint(board, 0, PET_REGISTRY);
+
+    expect(result[0]?.type).toBe("Zombie Cricket");
+    expect(result.some((pet) => pet?.type === "Bee")).toBe(false);
+  });
+
+  it("flings the second Ram when Sheep faints in a full shop board", () => {
+    const board = makeBoard([
+      makePet("Sheep"),
+      makePet("Sloth"),
+      makePet("Sloth"),
+      makePet("Sloth"),
+      makePet("Sloth"),
+    ]);
+    const result = fireShopFaint(board, 0, PET_REGISTRY);
+
+    expect(result.filter((pet) => pet?.type === "Ram")).toHaveLength(1);
   });
 
   it("just removes a pet with no faint ability", () => {

@@ -1,5 +1,5 @@
 import { PetType, Trigger } from "@/lib/types";
-import { dealAbilityDamage } from "@/lib/utils/combat";
+import { livingPets } from "@/lib/utils/combat";
 
 export const Dolphin: PetType = {
   name: "Dolphin",
@@ -12,12 +12,12 @@ export const Dolphin: PetType = {
     trigger: Trigger.start_of_battle,
     fn: (ctx) => {
       for (let i = 0; i < ctx.level; i++) {
-        const alive = ctx.enemyTeam.filter((p) => p.health > 0);
+        const alive = livingPets(ctx.enemyTeam);
         if (alive.length === 0) break;
         const target = alive.reduce((lowest, p) =>
           p.health < lowest.health ? p : lowest
         );
-        dealAbilityDamage(target, 4);
+        ctx.dealAbilityDamage(target, 4);
       }
     },
   },

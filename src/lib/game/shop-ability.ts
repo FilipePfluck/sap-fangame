@@ -1,4 +1,5 @@
 import {
+  Ability,
   BattleAbilityContext,
   isTriggerPerk,
   PetInstance,
@@ -9,15 +10,19 @@ import {
 } from "@/lib/types";
 import { orderByAttack } from "@/lib/utils/random";
 import { stockFood } from "@/lib/game/shop";
-import { compactBoard } from "@/lib/game/merge";
+import { compactBoard, grantExperience } from "@/lib/game/merge";
 import { friendSummonedCandidates } from "@/lib/game/friend-summoned";
 import { triggerEffect } from "@/lib/perks/trigger-functions";
+import { dealAbilityDamage } from "@/lib/utils/combat";
+import { triggerFriendAteFood } from "@/lib/game/food";
 
 export type ShopAbilityResult = {
   board: (PetInstance | null)[];
   shop: ShopState;
   goldDelta: number;
 };
+
+type FriendBoughtAbility = Extract<Ability, { trigger: Trigger.friend_bought }>;
 
 function cloneShop(shop: ShopState): ShopState {
   return {
@@ -33,7 +38,8 @@ function createShopContext(
   shop: ShopState,
   gold: { delta: number },
   justStocked: Set<object>,
-  lastBattleResult?: "WIN" | "DRAW" | "LOSS"
+  lastBattleResult?: "WIN" | "DRAW" | "LOSS",
+  boughtPetTier?: number
 ): ShopAbilityContext {
   return {
     self,
@@ -45,7 +51,9 @@ function createShopContext(
       gold.delta += amount;
     },
     addShopFood: (foodName) => stockFood(shop, foodName, justStocked),
+    grantExperience,
     lastBattleResult,
+    boughtPetTier,
   };
 }
 
@@ -92,29 +100,94 @@ export function fireBoardShopAbility(
   const currentShop = cloneShop(shop);
   const gold = { delta: 0 };
   const justStocked = new Set<object>();
+  type Job = {
+    pet: PetInstance;
+    index: number;
+    perk: Extract<PetInstance["perk"], { trigger: Trigger }> | null;
+    ability: Extract<Ability, { trigger: Trigger.start_of_turn | Trigger.end_turn }> | null;
+  };
+  const jobs: Job[] = [];
 
   for (let i = 0; i < currentBoard.length; i++) {
     const pet = currentBoard[i];
     if (!pet) continue;
 
-    if (isTriggerPerk(pet.perk) && pet.perk.trigger === Trigger.end_turn) {
-      triggerEffect(pet.perk, { self: pet});
+    if (trigger === Trigger.start_of_turn) {
+      clearTempStats(pet);
+      delete pet.foodTriggersThisTurn;
+      delete pet.friendBuysThisTurn;
     }
 
-    if (trigger === Trigger.start_of_turn) clearTempStats(pet);
+    const perk = isTriggerPerk(pet.perk) && pet.perk.trigger === trigger
+      ? pet.perk
+      : null;
+    const ability = petRegistry[pet.type]?.ability;
+    const petAbility = ability?.trigger === trigger ? ability : null;
+    if (pet.health > 0 && (perk || petAbility)) {
+      jobs.push({ pet, index: i, perk, ability: petAbility });
+    }
+  }
 
-    const def = petRegistry[pet.type];
-    if (def?.ability?.trigger !== trigger) continue;
+  for (const { pet, index, perk, ability } of orderByAttack(
+    jobs,
+    (job) => job.pet.attack
+  )) {
+    if (pet.health <= 0) continue;
+    if (perk) triggerEffect(perk, { self: pet });
+    if (ability) {
+      ability.fn(
+        createShopContext(
+          pet,
+          index,
+          currentBoard,
+          currentShop,
+          gold,
+          justStocked,
+          lastBattleResult
+        )
+      );
+    }
+  }
 
-    def.ability.fn(
+  return { board: currentBoard, shop: currentShop, goldDelta: gold.delta };
+}
+
+export function fireShopFriendBought(
+  boughtPetTier: number,
+  board: (PetInstance | null)[],
+  shop: ShopState,
+  petRegistry: Record<string, PetType>
+): ShopAbilityResult {
+  const currentBoard = [...board];
+  const currentShop = cloneShop(shop);
+  const gold = { delta: 0 };
+  if (boughtPetTier !== 1) {
+    return { board: currentBoard, shop: currentShop, goldDelta: 0 };
+  }
+
+  const justStocked = new Set<object>();
+  const listeners: { pet: PetInstance; index: number; ability: FriendBoughtAbility }[] = [];
+  for (let i = 0; i < currentBoard.length; i++) {
+    const pet = currentBoard[i];
+    const ability = pet && petRegistry[pet.type]?.ability;
+    if (!pet || pet.health <= 0 || ability?.trigger !== Trigger.friend_bought) continue;
+    listeners.push({ pet, index: i, ability });
+  }
+  for (const { pet, index, ability } of orderByAttack(
+    listeners,
+    (job) => job.pet.attack
+  )) {
+    if (pet.health <= 0) continue;
+    ability.fn(
       createShopContext(
         pet,
-        i,
+        index,
         currentBoard,
         currentShop,
         gold,
         justStocked,
-        lastBattleResult
+        undefined,
+        boughtPetTier
       )
     );
   }
@@ -132,7 +205,7 @@ export function fireShopFaint(
   petRegistry: Record<string, PetType>
 ): (PetInstance | null)[] {
   // Faint abilities can buff other pets in place, so work on copies.
-  const newBoard = board.map((p) => (p ? { ...p } : null));
+  let newBoard = board.map((p) => (p ? { ...p } : null));
   const pet = newBoard[boardPosition];
   if (!pet) return newBoard;
 
@@ -141,6 +214,7 @@ export function fireShopFaint(
   const selfIndex = compacted.indexOf(pet);
 
   newBoard[boardPosition] = null;
+  const summonRequests: PetInstance[] = [];
 
   if (def?.ability?.trigger === Trigger.faint) {
     const ctx: BattleAbilityContext = {
@@ -149,13 +223,27 @@ export function fireShopFaint(
       team: compacted,
       enemyTeam: [],
       level: pet.level,
-      summon: (newPet) => {
-        newBoard[boardPosition] = newPet;
-      },
+      summon: (newPet) => summonRequests.push(newPet),
       triggerCount: 1,
       petRegistry,
+      friendAteFood: (fedPet) =>
+        triggerFriendAteFood(compacted, fedPet, petRegistry),
+      dealAbilityDamage,
+      grantExperience,
     };
     def.ability.fn(ctx);
+  }
+
+  if (isTriggerPerk(pet.perk) && pet.perk.trigger === Trigger.faint) {
+    const summonRequest = triggerEffect(pet.perk, { self: pet }).summonRequest;
+    if (summonRequest) summonRequests.push(summonRequest);
+  }
+
+  // Pill frees one slot, so any later summon requests are flung.
+  for (const summon of summonRequests) {
+    if (newBoard[boardPosition] !== null) break;
+    newBoard[boardPosition] = summon;
+    newBoard = fireShopFriendSummoned(newBoard, boardPosition, petRegistry);
   }
 
   return newBoard;
@@ -199,6 +287,10 @@ export function fireShopFriendSummoned(
       summonedIndex,
       triggerCount: 1,
       petRegistry,
+      dealAbilityDamage,
+      grantExperience,
+      friendAteFood: (fedPet) =>
+        triggerFriendAteFood(compacted, fedPet, petRegistry),
       inShop: true,
     };
     ability.fn(ctx);

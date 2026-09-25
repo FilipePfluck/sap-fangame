@@ -1,4 +1,5 @@
 import { PetType, Trigger } from "@/lib/types";
+import { livingPets } from "@/lib/utils/combat";
 
 export const Crab: PetType = {
   name: "Crab",
@@ -10,8 +11,8 @@ export const Crab: PetType = {
   ability: {
     trigger: Trigger.start_of_battle,
     fn: (ctx) => {
-      const friendHealths = ctx.team
-        .filter((_, i) => i !== ctx.selfIndex)
+      const friendHealths = livingPets(ctx.team)
+        .filter((friend) => friend !== ctx.self)
         .map((p) => p.health);
       if (friendHealths.length === 0) return;
       const healthiest = Math.max(...friendHealths);

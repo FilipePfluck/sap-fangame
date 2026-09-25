@@ -1,5 +1,6 @@
 import { PetType, Trigger } from "@/lib/types";
 import { removeHealth } from "@/lib/utils/combat";
+import { livingPets } from "@/lib/utils/combat";
 
 export const Skunk: PetType = {
   name: "Skunk",
@@ -11,8 +12,9 @@ export const Skunk: PetType = {
   ability: {
     trigger: Trigger.start_of_battle,
     fn: (ctx) => {
-      if (ctx.enemyTeam.length === 0) return;
-      const target = ctx.enemyTeam.reduce((highest, p) =>
+      const enemies = livingPets(ctx.enemyTeam);
+      if (enemies.length === 0) return;
+      const target = enemies.reduce((highest, p) =>
         p.health > highest.health ? p : highest
       );
       removeHealth(target, 0.33 * ctx.level);
