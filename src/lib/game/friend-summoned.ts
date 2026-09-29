@@ -14,7 +14,7 @@ export function friendSummonedCandidates(
 ): { pet: PetInstance; ability: FriendSummonedAbility }[] {
   const candidates: { pet: PetInstance; ability: FriendSummonedAbility }[] = [];
   team.forEach((pet, i) => {
-    if (i === summonedIndex) return;
+    if (i === summonedIndex || pet.health <= 0) return;
     const ability = petRegistry[pet.type]?.ability;
     if (ability?.trigger === Trigger.friend_summoned)
       candidates.push({ pet, ability });

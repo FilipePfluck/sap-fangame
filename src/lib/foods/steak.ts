@@ -1,6 +1,5 @@
 import type { FoodType } from "@/lib/types";
 import { SteakPerk } from "@/lib/perks/steak";
-import { structuredClone } from "next/dist/compiled/@edge-runtime/primitives";
 
 export const Steak: FoodType = {
   name: "Steak",

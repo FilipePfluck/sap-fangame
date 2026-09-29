@@ -1,6 +1,6 @@
 import { PetType, Trigger } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
-import { dealAbilityDamage } from "@/lib/utils/combat";
+import { livingPets } from "@/lib/utils/combat";
 import { numberToText } from "@/lib/utils/flavor-text";
 
 export const Mosquito: PetType = {
@@ -13,8 +13,8 @@ export const Mosquito: PetType = {
   ability: {
     trigger: Trigger.start_of_battle,
     fn: (ctx) => {
-      for (const target of pickN(ctx.enemyTeam, ctx.level)) {
-        dealAbilityDamage(target, 1);
+      for (const target of pickN(livingPets(ctx.enemyTeam), ctx.level)) {
+        ctx.dealAbilityDamage(target, 1);
       }
     },
   },

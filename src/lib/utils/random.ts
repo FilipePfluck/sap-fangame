@@ -30,3 +30,16 @@ export function orderByAttack<T>(entries: T[], getAttack: (entry: T) => number):
   if (entries.length < 2) return entries;
   return shuffle(entries).sort((a, b) => getAttack(b) - getAttack(a));
 }
+
+// Re-sorts by attack before each pick, so the order reflects stat changes.
+export function* byCurrentAttack<T>(
+  entries: T[],
+  getAttack: (entry: T) => number
+): Generator<T> {
+  const remaining = [...entries];
+  while (remaining.length > 0) {
+    const next = orderByAttack(remaining, getAttack)[0];
+    remaining.splice(remaining.indexOf(next), 1);
+    yield next;
+  }
+}

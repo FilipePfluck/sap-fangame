@@ -11,6 +11,9 @@ export type PetInstance = {
   // start of the next turn (e.g. Horse's shop buff).
   tempAttack?: number;
   tempHealth?: number;
+  foodTriggersThisTurn?: number;
+  friendBuysThisTurn?: number;
+  friendAheadFaintsThisTurn?: number;
 };
 
 export type ShopPet = {
@@ -53,7 +56,17 @@ export type BattleAbilityContext = {
   summonedIndex?: number;
   triggerCount: number;
   petRegistry: Record<string, PetType>;
+  dealAbilityDamage: (target: PetInstance, damage: number) => number;
+  grantExperience: (target: PetInstance, amount: number) => void;
+  friendAteFood: (fedPet: PetInstance) => void;
   inShop?: boolean;
+};
+
+export type FoodAbilityContext = {
+  self: PetInstance;
+  fedPet: PetInstance;
+  friends: PetInstance[];
+  level: number;
 };
 
 export type ShopAbilityContext = {
@@ -64,7 +77,9 @@ export type ShopAbilityContext = {
   level: number;
   goldGain: (amount: number) => void;
   addShopFood: (foodName: string) => void;
+  grantExperience: (target: PetInstance, amount: number) => void;
   lastBattleResult?: "WIN" | "DRAW" | "LOSS";
+  boughtPet?: PetType;
 };
 
 export enum Trigger {
@@ -79,6 +94,11 @@ export enum Trigger {
   before_attack,
   after_attack,
   knock_out,
+  hurt,
+  friend_ahead_attacks,
+  friend_ate_food,
+  friend_bought,
+  friend_ahead_faints,
 }
 
 export type Ability =
@@ -91,6 +111,12 @@ export type Ability =
   | { trigger: Trigger.start_of_turn; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.end_turn; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.before_attack; fn: (ctx: BattleAbilityContext) => void }
+  | { trigger: Trigger.after_attack; fn: (ctx: BattleAbilityContext) => void }
+  | { trigger: Trigger.hurt; fn: (ctx: BattleAbilityContext) => void }
+  | { trigger: Trigger.friend_ahead_attacks; fn: (ctx: BattleAbilityContext) => void }
+  | { trigger: Trigger.friend_ahead_faints; fn: (ctx: BattleAbilityContext) => void }
+  | { trigger: Trigger.friend_ate_food; fn: (ctx: FoodAbilityContext) => void }
+  | { trigger: Trigger.friend_bought; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.knock_out; fn: (ctx: BattleAbilityContext) => void };
 
 export type PetType = {
@@ -118,10 +144,17 @@ export type FoodType = {
   perk?: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null;
   isToken: boolean;
   cost?: number;
-  effect: { attack?: number; health?: number };
+  effect: {
+    attack?: number;
+    health?: number;
+    experience?: number;
+    // Attack/health last until the start of next turn.
+    temporary?: boolean;
+  };
   // Foods that pick their own random targets instead of the player choosing
   // one (e.g. Sushi). Unset means the player picks a pet to feed.
   targeting?: { random: number };
+  skipsFriendAteFood?: boolean;
   // Overrides the standard "apply effect/perk to the targeted pet" behavior
   // for foods that don't fit it (e.g. Pill). Returns a new board and
   // must not mutate the one it's given.

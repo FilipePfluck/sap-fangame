@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { generateShop, clearDiscount } from "@/lib/game/shop";
-import { SHOP_PET_POOL } from "@/lib/pets";
+import { SHOP_PET_POOL, getShopPetTooltipText } from "@/lib/pets";
 import { SHOP_FOOD_POOL } from "@/lib/foods";
 import type { PetType, FoodType } from "@/lib/types";
 
@@ -178,5 +178,25 @@ describe("generateShop — discounts", () => {
     expect(shop.shopFoods[0].discount).toBe(1);
     expect(shop.shopFoods.length).toBeGreaterThan(1);
     expect(shop.shopFoods.slice(1).every((f) => f.discount === undefined)).toBe(true);
+  });
+});
+
+describe("shop pet tooltip text", () => {
+  it("shows only the pet ability and not any note text", () => {
+    const pet = {
+      name: "Duck",
+      sprite: "",
+      tier: 1,
+      baseAttack: 1,
+      baseHealth: 1,
+      isToken: false,
+      ability: null,
+      description: (level: number) => `Sell: Give shop pets +${level} health.\n\nSimilar targeting to Armadillo.`,
+    };
+
+    expect(getShopPetTooltipText(pet, 1)).toBe("Sell: Give shop pets +1 health.");
+    expect(getShopPetTooltipText(pet, 1)).not.toContain("Similar targeting");
+    expect(getShopPetTooltipText(pet, 1)).not.toContain("Notes:");
+    expect(getShopPetTooltipText(pet, 1)).not.toContain("Level up reward");
   });
 });

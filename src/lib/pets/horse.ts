@@ -11,7 +11,7 @@ export const Horse: PetType = {
     trigger: Trigger.friend_summoned,
     fn: (ctx) => {
       const target = ctx.team[ctx.summonedIndex!];
-      if (!target) return;
+      if (!target || target.health <= 0) return;
       target.attack += ctx.level;
       if (ctx.inShop) target.tempAttack = (target.tempAttack ?? 0) + ctx.level;
     },

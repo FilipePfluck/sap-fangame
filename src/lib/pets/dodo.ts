@@ -10,9 +10,12 @@ export const Dodo: PetType = {
   ability: {
     trigger: Trigger.start_of_battle,
     fn: (ctx) => {
-      const friend = ctx.team[ctx.selfIndex - 1];
+      const friend = ctx.team
+        .slice(0, ctx.selfIndex)
+        .filter((candidate) => candidate.health > 0)
+        .pop();
       if (!friend) return;
-      friend.attack += Math.round(ctx.self.attack * 0.5 * ctx.level);
+      friend.attack += Math.floor(ctx.self.attack * 0.5 * ctx.level);
     },
   },
   description: (level: number) =>

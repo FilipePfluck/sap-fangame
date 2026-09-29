@@ -2,10 +2,14 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
-import { mergePets, openSlot, levelUpRewardEarned } from "@/lib/game/merge";
+import { mergePets, mergeError, openSlot, levelUpRewardEarned } from "@/lib/game/merge";
 import { addLevelUpReward, applyFrozenFlags } from "@/lib/game/shop";
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
-import { fireShopAbility, fireShopFriendSummoned } from "@/lib/game/shop-ability";
+import {
+  fireShopAbility,
+  fireShopFriendBought,
+  fireShopFriendSummoned,
+} from "@/lib/game/shop-ability";
 import { getPetCost } from "@/lib/game/costs";
 import { createPet } from "@/lib/game/pet";
 import { z } from "zod";
@@ -76,6 +80,10 @@ export async function POST(
     currentBoard[boardPosition] = freshPet;
     wasSummoned = true;
   } else if (occupant.type === shopPet.type) {
+    const error = mergeError(occupant, freshPet);
+    if (error) {
+      return Response.json({ error }, { status: 400 });
+    }
     preMergeLevel = occupant.level;
     const merged = mergePets(occupant, freshPet);
     didLevelUp = merged.level > preMergeLevel;
@@ -114,6 +122,16 @@ export async function POST(
   currentBoard = buyResult.board;
   currentShop = buyResult.shop;
   extraGold += buyResult.goldDelta;
+
+  const friendBoughtResult = fireShopFriendBought(
+    petDef,
+    currentBoard,
+    currentShop,
+    PET_REGISTRY
+  );
+  currentBoard = friendBoughtResult.board;
+  currentShop = friendBoughtResult.shop;
+  extraGold += friendBoughtResult.goldDelta;
 
   // Fire level-up ability if a merge caused a level-up.
   // Pass old level via a patched pet so ctx.level = old level in the ability fn.

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { existsSync, readdirSync, readFileSync } from "fs";
+import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
 import { PET_REGISTRY } from "@/lib/pets";
 import { FOOD_REGISTRY } from "@/lib/foods";
@@ -19,15 +19,21 @@ describe("sprites", () => {
     expect(onDisk.has(sprite.slice("/sap/".length))).toBe(true);
   });
 
-  it.each(entries)("$name sprite is a real WebP", ({ sprite }) => {
+  it.each(entries)("$name sprite matches its image format", ({ sprite }) => {
     const bytes = readFileSync(join(process.cwd(), "public", sprite));
-    expect(bytes.subarray(0, 4).toString()).toBe("RIFF");
-    expect(bytes.subarray(8, 12).toString()).toBe("WEBP");
+    if (sprite.endsWith(".png")) {
+      expect(bytes.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
+    } else {
+      expect(bytes.subarray(0, 4).toString()).toBe("RIFF");
+      expect(bytes.subarray(8, 12).toString()).toBe("WEBP");
+    }
   });
 
   it("has no orphaned sprite files", () => {
     const used = new Set(entries.map((e) => e.sprite.slice("/sap/".length)));
-    const orphans = [...onDisk].filter((f) => f.endsWith(".webp") && !used.has(f));
+    const orphans = [...onDisk].filter(
+      (f) => (f.endsWith(".webp") || f.endsWith(".png")) && !used.has(f)
+    );
     expect(orphans).toEqual([]);
   });
 });
