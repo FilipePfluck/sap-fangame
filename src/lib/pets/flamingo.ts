@@ -13,7 +13,7 @@ export const Flamingo: PetType = {
       const friends = ctx.team
         .slice(ctx.selfIndex + 1)
         .filter((friend) => friend.health > 0)
-        .slice(0, 2 * ctx.level);
+        .slice(0, 2);
       for (const friend of friends) {
         friend.attack += ctx.level;
         friend.health += ctx.level;
@@ -21,5 +21,5 @@ export const Flamingo: PetType = {
     },
   },
   description: (level: number) =>
-    `Faint: Give the ${2 * level === 2 ? "two" : 2 * level} nearest friends behind +${level} attack and +${level} health.`,
+    `Faint: Give the two nearest friends behind +${level} attack and +${level} health.`,
 };

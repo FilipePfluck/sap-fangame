@@ -10,8 +10,8 @@ export const Monkey: PetType = {
   ability: {
     trigger: Trigger.end_turn,
     fn: (ctx) => {
-      const frontFriend = ctx.board.find((pet) => pet !== null && pet.health > 0);
-      if (!frontFriend) return;
+      const frontFriend =
+        ctx.board.find((pet) => pet !== null && pet.health > 0) ?? ctx.self;
       frontFriend.attack += 2 * ctx.level;
       frontFriend.health += 2 * ctx.level;
     },

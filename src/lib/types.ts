@@ -13,6 +13,7 @@ export type PetInstance = {
   tempHealth?: number;
   foodTriggersThisTurn?: number;
   friendBuysThisTurn?: number;
+  friendAheadFaintsThisTurn?: number;
 };
 
 export type ShopPet = {
@@ -78,7 +79,7 @@ export type ShopAbilityContext = {
   addShopFood: (foodName: string) => void;
   grantExperience: (target: PetInstance, amount: number) => void;
   lastBattleResult?: "WIN" | "DRAW" | "LOSS";
-  boughtPetTier?: number;
+  boughtPet?: PetType;
 };
 
 export enum Trigger {
@@ -97,6 +98,7 @@ export enum Trigger {
   friend_ahead_attacks,
   friend_ate_food,
   friend_bought,
+  friend_ahead_faints,
 }
 
 export type Ability =
@@ -112,6 +114,7 @@ export type Ability =
   | { trigger: Trigger.after_attack; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: Trigger.hurt; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: Trigger.friend_ahead_attacks; fn: (ctx: BattleAbilityContext) => void }
+  | { trigger: Trigger.friend_ahead_faints; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: Trigger.friend_ate_food; fn: (ctx: FoodAbilityContext) => void }
   | { trigger: Trigger.friend_bought; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.knock_out; fn: (ctx: BattleAbilityContext) => void };
@@ -141,14 +144,17 @@ export type FoodType = {
   perk?: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null;
   isToken: boolean;
   cost?: number;
-  effect: { attack?: number; health?: number };
-  temporary?: boolean;
-  experience?: number;
-  maxTargetXp?: number;
+  effect: {
+    attack?: number;
+    health?: number;
+    experience?: number;
+    // Attack/health last until the start of next turn.
+    temporary?: boolean;
+  };
   // Foods that pick their own random targets instead of the player choosing
   // one (e.g. Sushi). Unset means the player picks a pet to feed.
   targeting?: { random: number };
-  triggersFriendAteFood?: boolean;
+  skipsFriendAteFood?: boolean;
   // Overrides the standard "apply effect/perk to the targeted pet" behavior
   // for foods that don't fit it (e.g. Pill). Returns a new board and
   // must not mutate the one it's given.

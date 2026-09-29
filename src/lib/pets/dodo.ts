@@ -15,7 +15,7 @@ export const Dodo: PetType = {
         .filter((candidate) => candidate.health > 0)
         .pop();
       if (!friend) return;
-      friend.attack += Math.round(ctx.self.attack * 0.5 * ctx.level);
+      friend.attack += Math.floor(ctx.self.attack * 0.5 * ctx.level);
     },
   },
   description: (level: number) =>

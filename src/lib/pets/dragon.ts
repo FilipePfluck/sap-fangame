@@ -1,5 +1,7 @@
 import { PetType, Trigger } from "@/lib/types";
 
+const TRIGGER_LIMIT = 4;
+
 export const Dragon: PetType = {
   name: "Dragon",
   sprite: "/sap/Dragon.png",
@@ -10,9 +12,9 @@ export const Dragon: PetType = {
   ability: {
     trigger: Trigger.friend_bought,
     fn: (ctx) => {
-      if (ctx.boughtPetTier !== 1) return;
+      if (ctx.boughtPet?.tier !== 1) return;
       const triggers = ctx.self.friendBuysThisTurn ?? 0;
-      if (triggers >= 4) return;
+      if (triggers >= TRIGGER_LIMIT) return;
       ctx.self.friendBuysThisTurn = triggers + 1;
       for (const friend of ctx.board) {
         if (!friend || friend === ctx.self || friend.health <= 0) continue;

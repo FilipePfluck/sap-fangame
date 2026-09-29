@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { mergePets, computeLevel } from "@/lib/game/merge";
+import { mergePets, mergeError, computeLevel } from "@/lib/game/merge";
 import { createPet } from "@/lib/game/pet";
 import { PET_REGISTRY } from "@/lib/pets";
 import type { PetInstance } from "@/lib/types";
@@ -39,9 +39,11 @@ describe("mergePets", () => {
   });
 
   it("accumulates xp correctly after a second merge", () => {
-    // Each merged copy adds one XP: two merges reach level 2 at 2 XP.
-    const afterFirstMerge = mergePets(sloth(0), sloth(0)); // xp:1
-    const afterSecondMerge = mergePets(afterFirstMerge, sloth(0)); // xp:2
+    const afterFirstMerge = mergePets(sloth(0), sloth(0));
+    expect(afterFirstMerge.xp).toBe(1);
+    expect(afterFirstMerge.level).toBe(1);
+
+    const afterSecondMerge = mergePets(afterFirstMerge, sloth(0));
     expect(afterSecondMerge.xp).toBe(2);
     expect(afterSecondMerge.level).toBe(2);
   });
@@ -63,7 +65,13 @@ describe("mergePets", () => {
   });
 
   it("caps merged XP at 5", () => {
-    expect(mergePets(sloth(5), sloth(0)).xp).toBe(5);
+    expect(mergePets(sloth(4), sloth(4)).xp).toBe(5);
+  });
+
+  it("refuses to merge a pet at max XP", () => {
+    expect(mergeError(sloth(5), sloth(0))).toBe("Pet has reached max experience");
+    expect(mergeError(sloth(0), sloth(5))).toBe("Pet has reached max experience");
+    expect(() => mergePets(sloth(5), sloth(0))).toThrow("Pet has reached max experience");
   });
 
   it("boosts attack and health by 1 over the max of both", () => {

@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
-import { mergePets, openSlot, levelUpRewardEarned } from "@/lib/game/merge";
+import { mergePets, mergeError, openSlot, levelUpRewardEarned } from "@/lib/game/merge";
 import { addLevelUpReward, applyFrozenFlags } from "@/lib/game/shop";
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import {
@@ -80,6 +80,10 @@ export async function POST(
     currentBoard[boardPosition] = freshPet;
     wasSummoned = true;
   } else if (occupant.type === shopPet.type) {
+    const error = mergeError(occupant, freshPet);
+    if (error) {
+      return Response.json({ error }, { status: 400 });
+    }
     preMergeLevel = occupant.level;
     const merged = mergePets(occupant, freshPet);
     didLevelUp = merged.level > preMergeLevel;
@@ -120,7 +124,7 @@ export async function POST(
   extraGold += buyResult.goldDelta;
 
   const friendBoughtResult = fireShopFriendBought(
-    petDef.tier,
+    petDef,
     currentBoard,
     currentShop,
     PET_REGISTRY

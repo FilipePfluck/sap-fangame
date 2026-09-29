@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Board, ShopState, PetInstance } from "@/lib/types";
 import { PET_REGISTRY, getPetDescription, getShopPetTooltipText } from "@/lib/pets";
 import { FOOD_REGISTRY } from "@/lib/foods";
-import { mergePets, openSlot, applyReorder } from "@/lib/game/merge";
+import { mergePets, mergeError, openSlot, applyReorder } from "@/lib/game/merge";
 import { applyFoodEffect, feedError, needsTarget } from "@/lib/game/food";
 import { getPetCost, getFoodCost, getSellValue, ROLL_COST } from "@/lib/game/costs";
 import { createPet } from "@/lib/game/pet";
@@ -183,6 +183,8 @@ export default function GameClient({
     if (occupant === null) {
       optimisticBoard[boardPosition] = freshPet;
     } else if (occupant.type === shopPet.type) {
+      const error = mergeError(occupant, freshPet);
+      if (error) { setError(error); return; }
       optimisticBoard[boardPosition] = mergePets(occupant, freshPet);
     } else {
       const shifted = openSlot(board, boardPosition);
@@ -333,6 +335,8 @@ export default function GameClient({
     const petFrom = board[selectedBoardIndex];
     const petTo = board[targetPosition];
     if (!petFrom || !petTo) return;
+    const error = mergeError(petFrom, petTo);
+    if (error) { setError(error); return; }
 
     const merged = mergePets(petFrom, petTo);
     const optimisticBoard: Board = [...board];
@@ -539,7 +543,7 @@ export default function GameClient({
                   const canMerge =
                     isOtherSlot &&
                     pet !== null &&
-                    pet.type === board[selectedBoardIndex!]!.type;
+                    mergeError(pet, board[selectedBoardIndex!]!) === null;
                   return (
                     <div key={i} className="flex flex-col items-center gap-1">
                       <BoardSlot

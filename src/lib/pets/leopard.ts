@@ -16,7 +16,7 @@ export const Leopard: PetType = {
       const enemies = livingPets(ctx.enemyTeam);
       if (enemies.length === 0) return;
       for (const target of pickN(enemies, ctx.level)) {
-        ctx.dealAbilityDamage(target, Math.round(ctx.self.attack * 0.5));
+        ctx.dealAbilityDamage(target, Math.floor(ctx.self.attack * 0.5));
       }
     },
   },

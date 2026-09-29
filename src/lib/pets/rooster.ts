@@ -10,7 +10,8 @@ export const Rooster: PetType = {
   ability: {
     trigger: Trigger.faint,
     fn: (ctx) => {
-      const attack = Math.round(ctx.self.attack * 0.5);
+      const attack = Math.floor(ctx.self.attack * 0.5);
+      if (attack === 0) return;
       for (let i = 0; i < ctx.level; i++) {
         ctx.summon(
           {

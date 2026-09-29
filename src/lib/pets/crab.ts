@@ -16,7 +16,7 @@ export const Crab: PetType = {
         .map((p) => p.health);
       if (friendHealths.length === 0) return;
       const healthiest = Math.max(...friendHealths);
-      ctx.self.health += Math.round(healthiest * 0.25 * ctx.level);
+      ctx.self.health += Math.floor(healthiest * 0.25 * ctx.level);
     },
   },
   description:

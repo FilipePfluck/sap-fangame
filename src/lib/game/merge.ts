@@ -1,6 +1,5 @@
 import type { Board, PetInstance } from "@/lib/types";
-
-export const MAX_PET_EXPERIENCE = 5;
+import { MAX_PET_EXPERIENCE } from "@/lib/game/rules";
 
 export function compactBoard(board: Board): PetInstance[] {
   return board.filter((p): p is PetInstance => p !== null);
@@ -33,10 +32,17 @@ export function levelUpRewardEarned(a: PetInstance, b: PetInstance): boolean {
   return !(a.level === 2 && b.level === 2);
 }
 
-export function mergePets(a: PetInstance, b: PetInstance): PetInstance {
-  if (a.type !== b.type) {
-    throw new Error("Cannot merge pets of different types");
+export function mergeError(a: PetInstance, b: PetInstance): string | null {
+  if (a.type !== b.type) return "Pets must be the same type to merge";
+  if (a.xp >= MAX_PET_EXPERIENCE || b.xp >= MAX_PET_EXPERIENCE) {
+    return "Pet has reached max experience";
   }
+  return null;
+}
+
+export function mergePets(a: PetInstance, b: PetInstance): PetInstance {
+  const error = mergeError(a, b);
+  if (error) throw new Error(error);
   const newXp = mergedXp(a, b);
   // Temp stats ride along with whichever pet supplied the higher stat.
   const attackSource = a.attack >= b.attack ? a : b;
