@@ -24,5 +24,5 @@ export const Dragon: PetType = {
     },
   },
   description: (level: number) =>
-    `Tier 1 friend bought: Give friends +${level} attack and +${level} health. Works 4 times per turn.\n\nWorks if it is any tier 1 pet bought (newly summoned or combined on an existing tier 1).`,
+    `Tier 1 friend bought: Give friends +${level} attack and +${level} health. Works 4 times per turn.`,
 };

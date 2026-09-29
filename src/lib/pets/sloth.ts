@@ -8,5 +8,5 @@ export const Sloth: PetType = {
   baseHealth: 1,
   isToken: false,
   ability: null,
-  description: "No special ability.",
+  description: "No ability.",
 };

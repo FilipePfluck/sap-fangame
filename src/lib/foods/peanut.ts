@@ -9,5 +9,5 @@ export const Peanut: FoodType = {
   isToken: true,
   effect: {},
   description:
-    "A hidden perk carried by Scorpion: any pet it hits in combat is knocked out, regardless of damage dealt.",
+    "Knock out any pet attacked and hurt by this.",
 };

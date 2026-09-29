@@ -8,5 +8,5 @@ export const Honey: FoodType = {
   perk: HoneyPerk,
   isToken: false,
   effect: {},
-  description: "Give one pet the Honey perk: when it faints, summon a 1/1 Bee.",
+  description: "Give one pet the Honey perk: Faint: Summon a 1/1 Bee.",
 };
