@@ -14,5 +14,5 @@ export const Peacock: PetType = {
     },
   },
   description: (level: number) =>
-    `Hurt: Gain +${3 * level} attack.\n\nHurt is when a pet's health reduces from a standard attack or ability damage (not health removed).`,
+    `Hurt: Gain +${3 * level} attack.`,
 };

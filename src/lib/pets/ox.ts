@@ -21,5 +21,5 @@ export const Ox: PetType = {
     },
   },
   description: (level: number) =>
-    `Friend ahead faints: Gain Melon perk and +${level} attack. Works 1 time per turn.\n\nSame as Kangaroo.`,
+    `Friend ahead faints: Gain Melon perk and +${level} attack. Works 1 time per turn.`,
 };

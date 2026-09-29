@@ -8,5 +8,5 @@ export const Chick: PetType = {
   baseHealth: 1,
   isToken: true,
   ability: null,
-  description: "Token with no ability.",
+  description: "No ability.",
 };
