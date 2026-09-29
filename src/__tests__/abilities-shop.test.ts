@@ -16,7 +16,7 @@ import { PetInstance, ShopState, Board, Trigger } from "@/lib/types";
 import { BreadPerk } from "@/lib/perks/bread";
 import { GarlicPerk } from "@/lib/perks/garlic";
 import { HoneyPerk } from "@/lib/perks/honey";
-import { Ox } from "@/lib/pets/ox";
+import { Ox } from "@/lib/pets/turtle/tier 3/ox";
 import { abilityPet, registryWith } from "./helpers";
 
 function makePet(type: string, level = 1): PetInstance {
