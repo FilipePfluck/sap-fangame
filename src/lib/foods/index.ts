@@ -1,6 +1,9 @@
 export { Apple } from "./apple";
 export { BetterApple } from "./better-apple";
 export { BestApple } from "./best-apple";
+export { Milk } from "./milk";
+export { BetterMilk } from "./better-milk";
+export { BestMilk } from "./best-milk";
 export { Honey } from "./honey";
 export { BreadCrumbs } from "./bread-crumbs";
 export { Pill } from "./pill";
@@ -25,6 +28,9 @@ import { BreadCrumbs } from "@/lib/foods/bread-crumbs";
 import { Apple } from "@/lib/foods/apple";
 import { BetterApple } from "@/lib/foods/better-apple";
 import { BestApple } from "@/lib/foods/best-apple";
+import { Milk } from "@/lib/foods/milk";
+import { BetterMilk } from "@/lib/foods/better-milk";
+import { BestMilk } from "@/lib/foods/best-milk";
 import { Honey } from "@/lib/foods/honey";
 import { Pill } from "@/lib/foods/pill";
 import { MeatBone } from "@/lib/foods/meat-bone";
@@ -39,6 +45,9 @@ export const TURTLE_PACK_FOODS: FoodType[] = [
   Apple,
   BetterApple,
   BestApple,
+  Milk,
+  BetterMilk,
+  BestMilk,
   Honey,
   Pill,
   MeatBone,

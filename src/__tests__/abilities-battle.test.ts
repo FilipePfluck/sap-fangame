@@ -238,6 +238,29 @@ describe("Pet Abilities", () => {
     });
   });
 
+  describe("Spider — faint", () => {
+    it.each([
+      { level: 1, stats: 2, xp: 0 },
+      { level: 2, stats: 4, xp: 2 },
+      { level: 3, stats: 6, xp: 5 },
+    ])("summons a level $level tier 3 pet as $stats/$stats", ({ level, stats, xp }) => {
+      const { steps } = simulateBattle(
+        [petLevel("Spider", 2, 2, level)],
+        [pet("Sloth", 3, 100)],
+        PET_REGISTRY
+      );
+      const summoned = steps[1].attackerTeam[0];
+
+      expect(PET_REGISTRY[summoned.type]?.tier).toBe(3);
+      expect(summoned).toMatchObject({
+        attack: stats,
+        health: stats,
+        xp,
+        level,
+      });
+    });
+  });
+
   describe("Flamingo — faint", () => {
     it.each([
       { level: 1, expected: ["Sloth (2/6)", "Sloth (2/6)", "Sloth (1/5)", "Sloth (1/5)"] },

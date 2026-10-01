@@ -15,6 +15,7 @@ export { Snail } from "./snail";
 export { Crab } from "./crab";
 export { Swan } from "./swan";
 export { Dodo } from "./dodo";
+export { Ox } from "./ox";
 export { Badger } from "./badger";
 export { Dolphin } from "./dolphin";
 export { Skunk } from "./skunk";
@@ -54,6 +55,8 @@ export { Jerboa } from "./jerboa";
 export { Worm } from "./worm";
 export { Bus } from "./bus";
 export { Deer } from "./deer";
+export { Spider } from "./spider";
+export { Cow } from "./cow";
 
 import { Sloth } from "./sloth";
 import { Duck } from "./duck";
@@ -72,6 +75,7 @@ import { Snail } from "./snail";
 import { Crab } from "./crab";
 import { Swan } from "./swan";
 import { Dodo } from "./dodo";
+import { Ox } from "./ox";
 import { Badger } from "./badger";
 import { Dolphin } from "./dolphin";
 import { Skunk } from "./skunk";
@@ -111,6 +115,8 @@ import { Jerboa } from "./jerboa";
 import { Worm } from "./worm";
 import { Bus } from "./bus";
 import { Deer } from "./deer";
+import { Spider } from "./spider";
+import { Cow } from "./cow";
 import type { PetType } from "@/lib/types";
 
 export const TURTLE_PACK_PETS: PetType[] = [
@@ -130,7 +136,9 @@ export const TURTLE_PACK_PETS: PetType[] = [
   Crab,
   Swan,
   Worm,
+  Spider,
   Dodo,
+  Ox,
   Badger,
   Dolphin,
   Skunk,
@@ -169,6 +177,7 @@ export const TURTLE_PACK_PETS: PetType[] = [
   Snake,
   Bus,
   Deer,
+  Cow,
 ];
 
 export const PET_REGISTRY: Record<string, PetType> = Object.fromEntries([
