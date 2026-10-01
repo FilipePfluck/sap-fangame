@@ -361,6 +361,22 @@ function fireSingleTrigger(
   );
 }
 
+function applyChili(
+  pet: PetInstance,
+  team: PetInstance[],
+  enemyTeam: PetInstance[]
+) {
+  if (pet.perk?.name !== "Chili") return null;
+
+  const target = enemyTeam[1];
+  if (!target || target.health <= 0) return null;
+  const healthBefore = target.health;
+  dealAbilityDamage(target, 5);
+  return target.health < healthBefore
+    ? { pet: target, team: enemyTeam, enemyTeam: team }
+    : null;
+}
+
 type FriendAheadJob = {
   pet: PetInstance;
   team: PetInstance[];
@@ -485,6 +501,11 @@ export function simulateBattle(
       atkFront.health = Math.min(atkFront.health, 0);
     }
 
+    const chiliHits = [
+      applyChili(atkFront, attacker, defender),
+      applyChili(defFront, defender, attacker),
+    ].filter((hit) => hit !== null);
+
     // Queued before after-attack abilities so a pet they faint still reacts.
     const friendAheadQueue = queueFriendAheadAttacks(
       [
@@ -517,6 +538,7 @@ export function simulateBattle(
 
     const hurtOrder = byCurrentAttack(
       [
+        ...chiliHits,
         ...(defFront.health < defenderHealthBefore
           ? [{ pet: defFront, team: defender, enemyTeam: attacker }]
           : []),

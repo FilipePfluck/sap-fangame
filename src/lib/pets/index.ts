@@ -50,6 +50,8 @@ export { Chick } from "./chick";
 export { Dragon } from "./dragon";
 export { Mammoth } from "./mammoth";
 export { Snake } from "./snake";
+export { Bus } from "./bus";
+export { Deer } from "./deer";
 
 import { Sloth } from "./sloth";
 import { Duck } from "./duck";
@@ -103,6 +105,8 @@ import { Chick } from "./chick";
 import { Dragon } from "./dragon";
 import { Mammoth } from "./mammoth";
 import { Snake } from "./snake";
+import { Bus } from "./bus";
+import { Deer } from "./deer";
 import type { PetType } from "@/lib/types";
 
 export const TURTLE_PACK_PETS: PetType[] = [
@@ -157,6 +161,8 @@ export const TURTLE_PACK_PETS: PetType[] = [
   Dragon,
   Mammoth,
   Snake,
+  Bus,
+  Deer,
 ];
 
 export const PET_REGISTRY: Record<string, PetType> = Object.fromEntries([

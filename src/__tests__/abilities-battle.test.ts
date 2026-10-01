@@ -20,6 +20,7 @@ import { MeatBonePerk } from "@/lib/perks/meat-bone";
 import { MushroomPerk } from "@/lib/perks/mushroom";
 import { structuredClone } from "next/dist/compiled/@edge-runtime/primitives";
 import { SteakPerk } from "@/lib/perks/steak";
+import { ChiliPerk } from "@/lib/perks/chili";
 import { Ox } from "@/lib/pets/ox";
 import { abilityPet, registryWith } from "./helpers";
 
@@ -1138,6 +1139,67 @@ describe("Pet Abilities", () => {
 })
 
 describe("Perks", () => {
+  describe("Chili perk — attack", () => {
+    it("deals 5 ability damage to the second enemy during the attack", () => {
+      const { steps } = simulateBattle(
+        [pet("Sloth", 1, 10, ChiliPerk)],
+        [pet("Sloth", 1, 10), pet("Sloth", 1, 10)],
+        PET_REGISTRY
+      );
+
+      expect(steps[1].defenderTeam[0].health).toBe(9);
+      expect(steps[1].defenderTeam[1].health).toBe(5);
+    });
+
+    it("uses ability-damage defenses", () => {
+      const { steps } = simulateBattle(
+        [pet("Sloth", 1, 10, ChiliPerk)],
+        [pet("Sloth", 1, 10), pet("Sloth", 1, 10, GarlicPerk)],
+        PET_REGISTRY
+      );
+
+      expect(steps[1].defenderTeam[1].health).toBe(7);
+    });
+
+    it("fires the second enemy's Hurt ability", () => {
+      const hurtPet = abilityPet("Hurt Listener", {
+        trigger: Trigger.hurt,
+        fn: ({ self }) => {
+          self.attack += 1;
+        },
+      });
+      const { steps } = simulateBattle(
+        [pet("Sloth", 1, 10, ChiliPerk)],
+        [pet("Sloth", 1, 10), pet("Hurt Listener", 1, 10)],
+        registryWith(hurtPet)
+      );
+
+      expect(steps[1].defenderTeam[1].attack).toBe(2);
+    });
+  });
+
+  describe("Deer — faint", () => {
+    it.each([
+      { level: 1, attack: 5, health: 3 },
+      { level: 2, attack: 10, health: 6 },
+      { level: 3, attack: 15, health: 9 },
+    ])("summons one $attack/$health Bus at level $level", ({ level, attack, health }) => {
+      const { steps } = simulateBattle(
+        [petLevel("Deer", 2, 2, level), pet("Rabbit", 1, 2)],
+        [pet("Sloth", 2, 100), pet("Sloth", 0, 100)],
+        PET_REGISTRY
+      );
+      const bus = steps[1].attackerTeam.find((friend) => friend.type === "Bus");
+
+      expect(bus).toMatchObject({
+        attack,
+        health,
+        perk: { name: "Chili", description: "Attack second enemy for 5 damage" },
+      });
+      expect(steps[2].defenderTeam[1].health).toBe(95);
+    });
+  });
+
   describe("Honey perk — faint", () => {
     it("summons a 1/1 Bee when a Honey-perked pet faints", () => {
       // Sloth with Honey 1/1 vs Sloth 2/2. Sloth takes 2 → faints. Honey triggers: Bee (1/1) appears.
