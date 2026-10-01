@@ -50,6 +50,8 @@ export { Chick } from "./chick";
 export { Dragon } from "./dragon";
 export { Mammoth } from "./mammoth";
 export { Snake } from "./snake";
+export { Jerboa } from "./jerboa";
+export { Worm } from "./worm";
 export { Bus } from "./bus";
 export { Deer } from "./deer";
 
@@ -105,6 +107,8 @@ import { Chick } from "./chick";
 import { Dragon } from "./dragon";
 import { Mammoth } from "./mammoth";
 import { Snake } from "./snake";
+import { Jerboa } from "./jerboa";
+import { Worm } from "./worm";
 import { Bus } from "./bus";
 import { Deer } from "./deer";
 import type { PetType } from "@/lib/types";
@@ -125,6 +129,7 @@ export const TURTLE_PACK_PETS: PetType[] = [
   Snail,
   Crab,
   Swan,
+  Worm,
   Dodo,
   Badger,
   Dolphin,
@@ -142,6 +147,7 @@ export const TURTLE_PACK_PETS: PetType[] = [
   Kangaroo,
   Elephant,
   Rabbit,
+  Jerboa,
   Penguin,
   Armadillo,
   Hedgehog,

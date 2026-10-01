@@ -67,6 +67,7 @@ export type FoodAbilityContext = {
   fedPet: PetInstance;
   friends: PetInstance[];
   level: number;
+  foodGroup?: FoodType["foodGroup"];
 };
 
 export type ShopAbilityContext = {
@@ -76,7 +77,7 @@ export type ShopAbilityContext = {
   shop: ShopState;
   level: number;
   goldGain: (amount: number) => void;
-  addShopFood: (foodName: string) => void;
+  addShopFood: (foodName: string, discount?: number) => void;
   grantExperience: (target: PetInstance, amount: number) => void;
   lastBattleResult?: "WIN" | "DRAW" | "LOSS";
   boughtPet?: PetType;
@@ -141,6 +142,7 @@ export type FoodType = {
   name: string;
   sprite: string;
   tier: number;
+  foodGroup?: "apple";
   perk?: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null;
   isToken: boolean;
   cost?: number;

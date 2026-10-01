@@ -69,7 +69,8 @@ function pickTargets(food: FoodType, board: Board, boardPosition: number | undef
 export function triggerFriendAteFood(
   board: Board,
   fedPet: PetInstance,
-  petRegistry: Record<string, PetType>
+  petRegistry: Record<string, PetType>,
+  foodGroup?: FoodType["foodGroup"]
 ): void {
   if (fedPet.health <= 0) return;
   // TODO - Wrap board in a class with board.friends() / board.friendly() helpers
@@ -88,6 +89,7 @@ export function triggerFriendAteFood(
       fedPet,
       friends,
       level: pet.level,
+      foodGroup,
     });
   }
 }
@@ -106,7 +108,7 @@ export function applyFoodEffect(
     const newBoard = cloneBoard(board);
     const fedPet = newBoard[boardPosition];
     if (fedPet && !food.skipsFriendAteFood) {
-      triggerFriendAteFood(newBoard, fedPet, petRegistry);
+      triggerFriendAteFood(newBoard, fedPet, petRegistry, food.foodGroup);
     }
     return food.applyEffect({ board: newBoard, boardPosition, petRegistry });
   }
@@ -119,7 +121,7 @@ export function applyFoodEffect(
       const fedPet = applyStandardEffect(food, pet);
       newBoard[i] = fedPet;
       if (!food.skipsFriendAteFood) {
-        triggerFriendAteFood(newBoard, fedPet, petRegistry);
+        triggerFriendAteFood(newBoard, fedPet, petRegistry, food.foodGroup);
       }
     }
   }

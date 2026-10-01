@@ -7,10 +7,16 @@ import {
   fireShopFriendSummoned,
 } from "@/lib/game/shop-ability";
 import { PET_REGISTRY } from "@/lib/pets";
-import { FOOD_REGISTRY } from "@/lib/foods";
+import {
+  Apple,
+  BestApple,
+  BetterApple,
+  FOOD_REGISTRY,
+  Pill,
+  SHOP_FOOD_POOL,
+} from "@/lib/foods";
 import { getFoodCost } from "@/lib/game/costs";
 import { applyFoodEffect } from "@/lib/game/food";
-import { Apple, Pill } from "@/lib/foods";
 import { Cupcake } from "@/lib/foods/cupcake";
 import { PetInstance, ShopState, Board, Trigger } from "@/lib/types";
 import { BreadPerk } from "@/lib/perks/bread";
@@ -423,6 +429,29 @@ describe("Squirrel — start-of-turn", () => {
   });
 });
 
+describe("Worm — start-of-turn", () => {
+  it.each([
+    { level: 1, food: "Apple" },
+    { level: 2, food: "Better Apple" },
+    { level: 3, food: "Best Apple" },
+  ])("stocks one 2-gold $food at level $level", ({ level, food }) => {
+    const { shop } = fireBoardShopAbility(
+      Trigger.start_of_turn,
+      makeBoard([makePet("Worm", level)]),
+      makeShop(),
+      PET_REGISTRY
+    );
+    const stockedFood = shop.shopFoods[0];
+
+    expect(stockedFood).toMatchObject({ type: food, discount: 1 });
+    expect(getFoodCost(stockedFood, FOOD_REGISTRY[food])).toBe(2);
+  });
+
+  it("keeps the upgraded Apples out of the random shop pool", () => {
+    expect(SHOP_FOOD_POOL.some((food) => food.name === "Better Apple" || food.name === "Best Apple")).toBe(false);
+  });
+});
+
 describe("Penguin — start-of-turn", () => {
   it.each([
     { level: 1, expected: 2 },
@@ -701,6 +730,32 @@ describe("Rabbit — friend ate food", () => {
 
     expect(result[1]?.health).toBe(2);
     expect(result[0]?.foodTriggersThisTurn).toBeUndefined();
+  });
+});
+
+describe("Jerboa — eats Apple", () => {
+  it.each([
+    { level: 1, food: Apple, expected: 2 },
+    { level: 2, food: BetterApple, expected: 3 },
+    { level: 3, food: BestApple, expected: 4 },
+  ])("buffs a friend by +$level/+$level for $food.name", ({ level, food, expected }) => {
+    const result = applyFoodEffect(
+      food,
+      makeBoard([makePet("Jerboa", level), makePet("Ant")]),
+      0,
+      PET_REGISTRY
+    );
+
+    expect(result[1]).toMatchObject({ attack: expected, health: expected });
+  });
+
+  it("triggers only once per turn and ignores non-Apple foods", () => {
+    let board = makeBoard([makePet("Jerboa"), makePet("Ant")]);
+    board = applyFoodEffect(Apple, board, 0, PET_REGISTRY);
+    board = applyFoodEffect(Apple, board, 0, PET_REGISTRY);
+    board = applyFoodEffect(Cupcake, board, 0, PET_REGISTRY);
+
+    expect(board[1]).toMatchObject({ attack: 2, health: 2 });
   });
 });
 

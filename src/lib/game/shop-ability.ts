@@ -54,7 +54,7 @@ function createShopContext(
     goldGain: (amount) => {
       gold.delta += amount;
     },
-    addShopFood: (foodName) => stockFood(shop, foodName, justStocked),
+    addShopFood: (foodName, discount) => stockFood(shop, foodName, justStocked, discount),
     grantExperience,
     lastBattleResult,
     boughtPet,
