@@ -1,8 +1,8 @@
-import { PetInstance, PetType, Trigger } from "@/lib/types";
+import { PetInstance, StaticPet, Trigger } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 import { numberToText } from "@/lib/utils/flavor-text";
 
-export const Otter: PetType = {
+export const Otter: StaticPet = {
   name: "Otter",
   sprite: "/sap/otter.webp",
   tier: 1,

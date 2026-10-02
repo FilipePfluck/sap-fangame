@@ -1,8 +1,8 @@
-import { PetType, Trigger } from "@/lib/types";
+import { StaticPet, Trigger } from "@/lib/types";
 import { pickRandom } from "@/lib/utils/random";
 import { livingPets } from "@/lib/utils/combat";
 
-export const Ant: PetType = {
+export const Ant: StaticPet = {
   name: "Ant",
   sprite: "/sap/ant.webp",
   tier: 1,

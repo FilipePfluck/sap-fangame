@@ -1,9 +1,9 @@
-import { PetType, Trigger } from "@/lib/types";
+import { StaticPet, Trigger } from "@/lib/types";
 import { MelonPerk } from "@/lib/perks/melon";
 
 const TRIGGER_LIMIT = 1;
 
-export const Ox: PetType = {
+export const Ox: StaticPet = {
   name: "Ox",
   sprite: "/sap/Ox.webp",
   tier: 3,

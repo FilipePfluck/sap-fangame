@@ -103,9 +103,9 @@ import { Chick } from "./turtle/token/chick";
 import { Dragon } from "./turtle/tier 6/dragon";
 import { Mammoth } from "./turtle/tier 6/mammoth";
 import { Snake } from "./turtle/tier 6/snake";
-import type { PetType } from "@/lib/types";
+import type { StaticPet } from "@/lib/types";
 
-export const TURTLE_PACK_PETS: PetType[] = [
+export const TURTLE_PACK_PETS: StaticPet[] = [
   Duck,
   Beaver,
   Pigeon,
@@ -159,12 +159,12 @@ export const TURTLE_PACK_PETS: PetType[] = [
   Snake,
 ];
 
-export const PET_REGISTRY: Record<string, PetType> = Object.fromEntries([
+export const PET_REGISTRY: Record<string, StaticPet> = Object.fromEntries([
   ...TURTLE_PACK_PETS.map((p) => [p.name, p]),
   [Sloth.name, Sloth],
 ]);
 
-export const SHOP_PET_POOL: PetType[] = TURTLE_PACK_PETS.filter(
+export const SHOP_PET_POOL: StaticPet[] = TURTLE_PACK_PETS.filter(
   (p) => !p.isToken
 );
 
@@ -178,12 +178,12 @@ function stripTooltipNotes(text: string): string {
     .trim();
 }
 
-export function getPetDescription(pet: PetType | undefined, level: number): string | undefined {
+export function getPetDescription(pet: StaticPet | undefined, level: number): string | undefined {
   if (!pet) return undefined;
   const description = typeof pet.description === "function" ? pet.description(level) : pet.description;
   return description ? stripTooltipNotes(description) : undefined;
 }
 
-export function getShopPetTooltipText(pet: PetType | undefined, level: number): string {
+export function getShopPetTooltipText(pet: StaticPet | undefined, level: number): string {
   return getPetDescription(pet, level) ?? "";
 }

@@ -23,9 +23,9 @@ function makePet(type: string, level = 1): PetInstance {
   return { type, attack: 1, health: 1, perk: null, xp: level === 3 ? 5 : level === 2 ? 2 : 0, level };
 }
 
-function makeShop(petTypes: string[] = [], foodTypes: string[] = []): ShopState {
+function makeShop(StaticPets: string[] = [], foodTypes: string[] = []): ShopState {
   return {
-    shopPets: petTypes.map((t) => ({ type: t, frozen: false })),
+    shopPets: StaticPets.map((t) => ({ type: t, frozen: false })),
     shopFoods: foodTypes.map((t) => ({ type: t, frozen: false })),
   };
 }

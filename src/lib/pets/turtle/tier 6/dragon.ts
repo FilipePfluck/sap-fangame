@@ -1,8 +1,8 @@
-import { PetType, Trigger } from "@/lib/types";
+import { StaticPet, Trigger } from "@/lib/types";
 
 const TRIGGER_LIMIT = 4;
 
-export const Dragon: PetType = {
+export const Dragon: StaticPet = {
   name: "Dragon",
   sprite: "/sap/Dragon.png",
   tier: 6,

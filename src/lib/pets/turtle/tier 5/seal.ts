@@ -1,7 +1,7 @@
-import { PetType, Trigger } from "@/lib/types";
+import { StaticPet, Trigger } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 
-export const Seal: PetType = {
+export const Seal: StaticPet = {
   name: "Seal",
   sprite: "/sap/Seal.webp",
   tier: 5,

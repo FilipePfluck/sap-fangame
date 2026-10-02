@@ -1,4 +1,4 @@
-import type { PetType, FoodType, ShopPet, ShopFood, ShopState } from "@/lib/types";
+import type { StaticPet, FoodType, ShopPet, ShopFood, ShopState } from "@/lib/types";
 import { pickN, pickRandom } from "@/lib/utils/random";
 
 // Hard ceiling on total shop size (pets + food combined). The turn-based
@@ -30,7 +30,7 @@ export function getUnlockedTiers(turn: number): number[] {
 
 export type GenerateShopArgs = {
   turn: number;
-  pack: PetType[];
+  pack: StaticPet[];
   foodTypes: FoodType[];
   frozenPets?: ShopPet[];
   frozenFoods?: ShopFood[];
@@ -165,7 +165,7 @@ export function stockFood(shop: ShopState, type: string, justStocked: Set<object
 export function addLevelUpReward(
   shop: ShopState,
   turn: number,
-  pack: PetType[],
+  pack: StaticPet[],
   chainId: string = crypto.randomUUID()
 ): ShopState {
   const tier = getRewardTier(turn);

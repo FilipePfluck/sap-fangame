@@ -55,7 +55,7 @@ export type BattleAbilityContext = {
   summon: (pet: PetInstance, afterIndex: number) => void;
   summonedIndex?: number;
   triggerCount: number;
-  petRegistry: Record<string, PetType>;
+  petRegistry: Record<string, StaticPet>;
   dealAbilityDamage: (target: PetInstance, damage: number) => number;
   grantExperience: (target: PetInstance, amount: number) => void;
   friendAteFood: (fedPet: PetInstance) => void;
@@ -79,7 +79,7 @@ export type ShopAbilityContext = {
   addShopFood: (foodName: string) => void;
   grantExperience: (target: PetInstance, amount: number) => void;
   lastBattleResult?: "WIN" | "DRAW" | "LOSS";
-  boughtPet?: PetType;
+  boughtPet?: StaticPet;
 };
 
 export enum Trigger {
@@ -119,7 +119,7 @@ export type Ability =
   | { trigger: Trigger.friend_bought; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.knock_out; fn: (ctx: BattleAbilityContext) => void };
 
-export type PetType = {
+export type StaticPet = {
   name: string;
   sprite: string;
   tier: number;
@@ -134,7 +134,7 @@ export type PetType = {
 export type FoodApplyContext = {
   board: Board;
   boardPosition: number;
-  petRegistry: Record<string, PetType>;
+  petRegistry: Record<string, StaticPet>;
 };
 
 export type FoodType = {

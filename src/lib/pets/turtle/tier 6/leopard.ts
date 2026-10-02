@@ -1,9 +1,9 @@
-import { PetType, Trigger } from "@/lib/types";
+import { StaticPet, Trigger } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 import { livingPets } from "@/lib/utils/combat";
 import { numberToText } from "@/lib/utils/flavor-text";
 
-export const Leopard: PetType = {
+export const Leopard: StaticPet = {
   name: "Leopard",
   sprite: "/sap/leopard.webp",
   tier: 6,

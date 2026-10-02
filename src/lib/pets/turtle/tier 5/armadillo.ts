@@ -1,7 +1,7 @@
-import { PetType, Trigger } from "@/lib/types";
+import { StaticPet, Trigger } from "@/lib/types";
 import { livingPets } from "@/lib/utils/combat";
 
-export const Armadillo: PetType = {
+export const Armadillo: StaticPet = {
   name: "Armadillo",
   sprite: "/sap/Armadillo.webp",
   tier: 5,

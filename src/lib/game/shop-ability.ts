@@ -3,7 +3,7 @@ import {
   BattleAbilityContext,
   isTriggerPerk,
   PetInstance,
-  PetType,
+  StaticPet,
   ShopAbilityContext,
   ShopState,
   Trigger,
@@ -43,7 +43,7 @@ function createShopContext(
   gold: { delta: number },
   justStocked: Set<object>,
   lastBattleResult?: "WIN" | "DRAW" | "LOSS",
-  boughtPet?: PetType
+  boughtPet?: StaticPet
 ): ShopAbilityContext {
   return {
     self,
@@ -74,7 +74,7 @@ export function fireShopAbility(
   petIndex: number,
   board: (PetInstance | null)[],
   shop: ShopState,
-  petRegistry: Record<string, PetType>
+  petRegistry: Record<string, StaticPet>
 ): ShopAbilityResult {
   const def = petRegistry[pet.type];
   if (!def?.ability || def.ability.trigger !== trigger) {
@@ -97,7 +97,7 @@ export function fireBoardShopAbility(
   trigger: Trigger.start_of_turn | Trigger.end_turn,
   board: (PetInstance | null)[],
   shop: ShopState,
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   lastBattleResult?: "WIN" | "DRAW" | "LOSS"
 ): ShopAbilityResult {
   const currentBoard = [...board];
@@ -157,10 +157,10 @@ export function fireBoardShopAbility(
 }
 
 export function fireShopFriendBought(
-  boughtPet: PetType,
+  boughtPet: StaticPet,
   board: (PetInstance | null)[],
   shop: ShopState,
-  petRegistry: Record<string, PetType>
+  petRegistry: Record<string, StaticPet>
 ): ShopAbilityResult {
   const currentBoard = [...board];
   const currentShop = cloneShop(shop);
@@ -201,7 +201,7 @@ export function fireShopFriendBought(
 export function fireShopFaint(
   board: (PetInstance | null)[],
   boardPosition: number,
-  petRegistry: Record<string, PetType>
+  petRegistry: Record<string, StaticPet>
 ): (PetInstance | null)[] {
   // Faint abilities can buff other pets in place, so work on copies.
   let newBoard = board.map((p) => (p ? { ...p } : null));
@@ -261,7 +261,7 @@ export function fireShopFaint(
 export function fireShopFriendSummoned(
   board: (PetInstance | null)[],
   summonedBoardPosition: number,
-  petRegistry: Record<string, PetType>
+  petRegistry: Record<string, StaticPet>
 ): (PetInstance | null)[] {
   const newBoard = [...board];
   const summonedPet = newBoard[summonedBoardPosition];

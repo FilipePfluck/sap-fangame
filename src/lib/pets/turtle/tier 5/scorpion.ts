@@ -1,7 +1,7 @@
-import type { PetType } from "@/lib/types";
+import type { StaticPet } from "@/lib/types";
 import { PeanutPerk } from "@/lib/perks/peanut";
 
-export const Scorpion: PetType = {
+export const Scorpion: StaticPet = {
   name: "Scorpion",
   sprite: "/sap/scorpion.webp",
   tier: 5,

@@ -1,8 +1,8 @@
-import { PetType, Trigger } from "@/lib/types";
+import { StaticPet, Trigger } from "@/lib/types";
 import { removeHealth } from "@/lib/utils/combat";
 import { livingPets } from "@/lib/utils/combat";
 
-export const Skunk: PetType = {
+export const Skunk: StaticPet = {
   name: "Skunk",
   sprite: "/sap/skunk.webp",
   tier: 4,

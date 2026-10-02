@@ -1,7 +1,7 @@
-import { PetType, Trigger } from "@/lib/types";
+import { StaticPet, Trigger } from "@/lib/types";
 import { MelonPerk } from "@/lib/perks/melon";
 
-export const Turtle: PetType = {
+export const Turtle: StaticPet = {
   name: "Turtle",
   sprite: "/sap/Turtle.webp",
   tier: 4,

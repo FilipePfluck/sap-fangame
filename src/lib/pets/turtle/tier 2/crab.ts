@@ -1,7 +1,7 @@
-import { PetType, Trigger } from "@/lib/types";
+import { StaticPet, Trigger } from "@/lib/types";
 import { livingPets } from "@/lib/utils/combat";
 
-export const Crab: PetType = {
+export const Crab: StaticPet = {
   name: "Crab",
   sprite: "/sap/crab.webp",
   tier: 2,

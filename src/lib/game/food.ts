@@ -3,7 +3,7 @@ import {
   type Board,
   type FoodType,
   type PetInstance,
-  type PetType,
+  type StaticPet,
 } from "@/lib/types";
 import { orderByAttack, pickN } from "@/lib/utils/random";
 import { grantExperience } from "@/lib/game/merge";
@@ -69,7 +69,7 @@ function pickTargets(food: FoodType, board: Board, boardPosition: number | undef
 export function triggerFriendAteFood(
   board: Board,
   fedPet: PetInstance,
-  petRegistry: Record<string, PetType>
+  petRegistry: Record<string, StaticPet>
 ): void {
   if (fedPet.health <= 0) return;
   // TODO - Wrap board in a class with board.friends() / board.friendly() helpers
@@ -99,7 +99,7 @@ export function applyFoodEffect(
   food: FoodType,
   board: Board,
   boardPosition: number | undefined,
-  petRegistry: Record<string, PetType>
+  petRegistry: Record<string, StaticPet>
 ): Board {
   if (food.applyEffect) {
     if (boardPosition === undefined) return [...board];

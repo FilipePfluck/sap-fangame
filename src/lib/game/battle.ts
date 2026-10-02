@@ -4,7 +4,7 @@ import {
   isOffensivePerk,
   isTriggerPerk,
   PetInstance,
-  PetType,
+  StaticPet,
   Trigger,
 } from "@/lib/types";
 import { byCurrentAttack } from "@/lib/utils/random";
@@ -54,7 +54,7 @@ function fireAbilityOn(
   index: number,
   team: PetInstance[],
   enemyTeam: PetInstance[],
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   counts: WeakMap<PetInstance, number>,
   summon: (pet: PetInstance, afterIndex: number) => void,
   summonedIndex?: number,
@@ -120,7 +120,7 @@ function fireFriendSummoned(
   team: PetInstance[],
   summonedIndex: number,
   enemyTeam: PetInstance[],
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   counts: WeakMap<PetInstance, number>
 ): void {
   const candidates = friendSummonedCandidates(team, summonedIndex, petRegistry);
@@ -154,7 +154,7 @@ function fireFaintAbility(
   faintedIndex: number,
   team: PetInstance[],
   enemyTeam: PetInstance[],
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   counts: WeakMap<PetInstance, number>,
   pendingSummons: PendingSummon[]
 ): void {
@@ -187,7 +187,7 @@ function insertSummons(
   team: PetInstance[],
   pendingSummons: PendingSummon[],
   enemyTeam: PetInstance[],
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   counts: WeakMap<PetInstance, number>
 ): void {
   const insertionsAt = new Map<number, number>();
@@ -205,7 +205,7 @@ function fireFriendAheadFaints(
   faintedIndex: number,
   team: PetInstance[],
   enemyTeam: PetInstance[],
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   counts: WeakMap<PetInstance, number>
 ): void {
   const pet = team[faintedIndex + 1];
@@ -227,7 +227,7 @@ function handleFaint(
   team: PetInstance[],
   faintedIndex: number,
   enemyTeam: PetInstance[],
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   counts: WeakMap<PetInstance, number>
 ): void {
   const fainted = team[faintedIndex];
@@ -247,7 +247,7 @@ function handleFaint(
 function handleDeathsPhase(
   attacker: PetInstance[],
   defender: PetInstance[],
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   counts: WeakMap<PetInstance, number>
 ): void {
   type DeadJob = {
@@ -281,7 +281,7 @@ function handleDeathsPhase(
 function fireStartOfBattlePhase(
   attacker: PetInstance[],
   defender: PetInstance[],
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   counts: WeakMap<PetInstance, number>
 ): void {
   type Job = {
@@ -344,7 +344,7 @@ function fireSingleTrigger(
   index: number,
   team: PetInstance[],
   enemyTeam: PetInstance[],
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   counts: WeakMap<PetInstance, number>
 ): void {
   const def = petRegistry[pet.type];
@@ -374,7 +374,7 @@ function queueFriendAheadAttacks(
     team: PetInstance[];
     enemyTeam: PetInstance[];
   }[],
-  petRegistry: Record<string, PetType>
+  petRegistry: Record<string, StaticPet>
 ): FriendAheadJob[] {
   const candidates: FriendAheadJob[] = [];
 
@@ -390,7 +390,7 @@ function queueFriendAheadAttacks(
 
 function fireFriendAheadAttacks(
   candidates: FriendAheadJob[],
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   counts: WeakMap<PetInstance, number>
 ): void {
   for (const { pet, team, enemyTeam, ability } of byCurrentAttack(
@@ -415,7 +415,7 @@ function fireFriendAheadAttacks(
 export function simulateBattle(
   playerTeam: (PetInstance | null)[],
   opponentTeam: (PetInstance | null)[],
-  petRegistry: Record<string, PetType> = {}
+  petRegistry: Record<string, StaticPet> = {}
 ): BattleSimulationResult {
   const attacker: PetInstance[] = compactTeam(playerTeam);
   const defender: PetInstance[] = compactTeam(opponentTeam);

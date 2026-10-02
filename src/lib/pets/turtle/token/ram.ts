@@ -1,6 +1,6 @@
-import { PetType } from "@/lib/types";
+import { StaticPet } from "@/lib/types";
 
-export const Ram: PetType = {
+export const Ram: StaticPet = {
   name: "Ram",
   sprite: "/sap/Ram.png",
   tier: 3,

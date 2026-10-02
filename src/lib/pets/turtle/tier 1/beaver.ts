@@ -1,7 +1,7 @@
-import { PetInstance, PetType, Trigger } from "@/lib/types";
+import { PetInstance, StaticPet, Trigger } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 
-export const Beaver: PetType = {
+export const Beaver: StaticPet = {
   name: "Beaver",
   sprite: "/sap/beaver.webp",
   tier: 1,
