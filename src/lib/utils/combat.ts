@@ -37,10 +37,12 @@ export function dealDirectDamage(
   }
 
   if (isDefensivePerk(target.perk) && target.perk.blocksDirectDamage) {
-    damage = Math.max(
-      damage - target.perk.blocksFor,
-      Math.min(damage, target.perk.minimumDamageTaken)
-    );
+    damage = target.perk.blocksAllDamage
+      ? 0
+      : Math.max(
+          damage - target.perk.blocksFor,
+          Math.min(damage, target.perk.minimumDamageTaken)
+        );
     
     if (target.perk.usesRemaining !== DOES_NOT_DECAY) {
       target.perk.usesRemaining -= 1;
@@ -60,10 +62,12 @@ export function dealAbilityDamage(
   damage: number
 ): number {
   if (isDefensivePerk(target.perk) && target.perk.blocksAbilityDamage) {
-    damage = Math.max(
-      damage - target.perk.blocksFor,
-      target.perk.minimumDamageTaken
-    );
+    damage = target.perk.blocksAllDamage
+      ? 0
+      : Math.max(
+          damage - target.perk.blocksFor,
+          target.perk.minimumDamageTaken
+        );
 
     if (target.perk.usesRemaining !== DOES_NOT_DECAY) {
       target.perk.usesRemaining -= 1;

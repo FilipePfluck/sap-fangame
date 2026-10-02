@@ -8,6 +8,7 @@ import {
   ShopState,
   Trigger,
 } from "@/lib/types";
+import { clonePetInstance } from "@/lib/utils/clone";
 import { orderByAttack } from "@/lib/utils/random";
 import { stockFood } from "@/lib/game/shop";
 import { compactBoard, grantExperience } from "@/lib/game/merge";
@@ -121,6 +122,7 @@ export function fireBoardShopAbility(
       delete pet.foodTriggersThisTurn;
       delete pet.friendBuysThisTurn;
       delete pet.friendAheadFaintsThisTurn;
+      delete pet.friendSummonsThisTurn;
     }
 
     const perk = isTriggerPerk(pet.perk) && pet.perk.trigger === trigger
@@ -204,7 +206,7 @@ export function fireShopFaint(
   petRegistry: Record<string, PetType>
 ): (PetInstance | null)[] {
   // Faint abilities can buff other pets in place, so work on copies.
-  let newBoard = board.map((p) => (p ? { ...p } : null));
+  let newBoard = board.map((p) => (p ? clonePetInstance(p) : null));
   const pet = newBoard[boardPosition];
   if (!pet) return newBoard;
 

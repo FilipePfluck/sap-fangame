@@ -5,6 +5,7 @@ import {
   type PetInstance,
   type PetType,
 } from "@/lib/types";
+import { clonePetInstance } from "@/lib/utils/clone";
 import { orderByAttack, pickN } from "@/lib/utils/random";
 import { grantExperience } from "@/lib/game/merge";
 import { MAX_PET_EXPERIENCE } from "@/lib/game/rules";
@@ -44,7 +45,7 @@ function applyStandardEffect(food: FoodType, pet: PetInstance): PetInstance {
     ...pet,
     attack: pet.attack + attackBonus,
     health: pet.health + healthBonus,
-    perk: food.perk ? food.perk : pet.perk,
+    perk: food.perk ? { ...food.perk } : pet.perk,
   };
   if (food.effect.temporary) {
     if (attackBonus) updatedPet.tempAttack = (pet.tempAttack ?? 0) + attackBonus;
@@ -55,7 +56,7 @@ function applyStandardEffect(food: FoodType, pet: PetInstance): PetInstance {
 }
 
 function cloneBoard(board: Board): Board {
-  return board.map((pet) => (pet ? { ...pet } : null));
+  return board.map((pet) => (pet ? clonePetInstance(pet) : null));
 }
 
 // Board positions the food acts on: the chosen one, or a random selection of

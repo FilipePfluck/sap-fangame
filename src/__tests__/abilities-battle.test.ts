@@ -14,6 +14,7 @@ import { Trigger } from "@/lib/types";
 import { grantExperience } from "@/lib/game/merge";
 import { GarlicPerk } from "@/lib/perks/garlic";
 import { MelonPerk } from "@/lib/perks/melon";
+import { CoconutPerk } from "@/lib/perks/coconut";
 import { PeanutPerk } from "@/lib/perks/peanut";
 import { HoneyPerk } from "@/lib/perks/honey";
 import { MeatBonePerk } from "@/lib/perks/meat-bone";
@@ -23,6 +24,8 @@ import { SteakPerk } from "@/lib/perks/steak";
 import { ChiliPerk } from "@/lib/perks/chili";
 import { Ox } from "@/lib/pets/ox";
 import { abilityPet, registryWith } from "./helpers";
+import { dealAbilityDamage, dealDirectDamage } from "@/lib/utils/combat";
+import { fireShopFriendSummoned } from "@/lib/game/shop-ability";
 
 function pet(type: string, attack: number, health: number, perk: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null = null): PetInstance {
   return { type, attack, health, perk: structuredClone(perk), xp: 0, level: 1 };
@@ -107,6 +110,73 @@ describe("Pet Abilities", () => {
     });
   });
 
+  describe("Coconut perk — full damage block", () => {
+    it("blocks one direct hit completely", () => {
+      const attacker = pet("Sloth", 30, 10);
+      const target = pet("Sloth", 1, 10, CoconutPerk);
+
+      expect(dealDirectDamage(attacker, target)).toBe(0);
+      expect(target.health).toBe(10);
+      expect(target.perk).toBeNull();
+    });
+
+    it("blocks one ability hit completely", () => {
+      const target = pet("Sloth", 1, 10, CoconutPerk);
+
+      expect(dealAbilityDamage(target, 30)).toBe(0);
+      expect(target.health).toBe(10);
+      expect(target.perk).toBeNull();
+    });
+  });
+
+  describe("Gorilla — hurt", () => {
+    it.each([
+      { level: 1, expectedActivationStep: 1 },
+      { level: 2, expectedActivationStep: 3 },
+      { level: 3, expectedActivationStep: 5 },
+    ])("gains Coconut up to $level times per battle", ({ level, expectedActivationStep }) => {
+      const { steps } = simulateBattle(
+        [petLevel("Gorilla", 7, 10, level)],
+        [pet("Sloth", 1, 100)],
+        PET_REGISTRY
+      );
+
+      expect(steps[expectedActivationStep].attackerTeam[0].perk?.name).toBe("Coconut");
+      expect(steps[expectedActivationStep + 2].attackerTeam[0].perk).toBeNull();
+    });
+
+    it("resolves both level 2 Elephant hits before Gorilla activates Hurt", () => {
+      const { steps } = simulateBattle(
+        [petLevel("Elephant", 3, 7, 2), petLevel("Gorilla", 7, 10, 2)],
+        [pet("Sloth", 1, 100)],
+        PET_REGISTRY
+      );
+
+      expect(steps[1].attackerTeam[1]).toMatchObject({
+        health: 8,
+        perk: { name: "Coconut" },
+      });
+    });
+  });
+
+  describe("Seagull — friend summoned", () => {
+    it("shares its shop use limit with battle summons", () => {
+      const seagull = pet("Seagull", 4, 3, MelonPerk);
+      const team = fireShopFriendSummoned(
+        [pet("Cricket", 2, 2), seagull, pet("Sloth", 1, 10)],
+        2,
+        PET_REGISTRY
+      );
+
+      expect(seagull.friendSummonsThisTurn).toBe(1);
+
+      const { steps } = simulateBattle(team, [pet("Sloth", 100, 100)], PET_REGISTRY);
+
+      expect(steps[1].attackerTeam[0].type).toBe("Zombie Cricket");
+      expect(steps[1].attackerTeam[0].perk).toBeNull();
+    });
+  });
+
   describe("Kangaroo — friend ahead attacks", () => {
     it.each([
       { level: 1, expected: "Kangaroo (3/3)" },
@@ -146,6 +216,22 @@ describe("Pet Abilities", () => {
       );
 
       expect(steps[1].attackerTeam[1].health).toBe(expectedHealth);
+    });
+
+    it("resolves both level 2 hits before the friend's two Hurt activations", () => {
+      const triggerCounts: number[] = [];
+      const hurtListener = abilityPet("Hurt Listener", {
+        trigger: Trigger.hurt,
+        fn: (ctx) => triggerCounts.push(ctx.triggerCount),
+      });
+
+      simulateBattle(
+        [petLevel("Elephant", 3, 7, 2), pet("Hurt Listener", 1, 10)],
+        [pet("Sloth", 1, 3)],
+        registryWith(hurtListener)
+      );
+
+      expect(triggerCounts).toEqual([1, 2]);
     });
 
     it("targets only the nearest friend behind", () => {
@@ -577,7 +663,11 @@ describe("Pet Abilities", () => {
       );
 
       expect(steps[1].attackerTeam[1].health).toBe(6);
-      expect(steps[1].attackerTeam[1].perk).toBe(MelonPerk);
+      expect(steps[1].attackerTeam[1].perk).toMatchObject({
+        name: "Melon",
+        usesRemaining: 1,
+      });
+      expect(steps[1].attackerTeam[1].perk).not.toBe(MelonPerk);
     });
   });
 
@@ -1508,8 +1598,7 @@ describe("Engine Behavior", () => {
     });
   });
 
-  // TODO - Implement skipping friends that already have the perk
-  it.skip("skips giving Melon to friends with Melon", () => {
+  it("skips friends with Melon and gives it to the next eligible friend", () => {
     const turtle = pet("Turtle", 2, 0);
     const melonFriend = pet("Sloth", 1, 5, MelonPerk);
     const plainFriend = pet("Sloth", 1, 5);
@@ -1518,6 +1607,7 @@ describe("Engine Behavior", () => {
 
     ability.fn(battleContext(turtle, [turtle, melonFriend, plainFriend], []));
 
+    expect(melonFriend.perk?.name).toBe("Melon");
     expect(plainFriend.perk?.name).toBe("Melon");
   });
 

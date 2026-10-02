@@ -19,9 +19,11 @@ import { getFoodCost } from "@/lib/game/costs";
 import { applyFoodEffect } from "@/lib/game/food";
 import { Cupcake } from "@/lib/foods/cupcake";
 import { PetInstance, ShopState, Board, Trigger } from "@/lib/types";
+import { dealDirectDamage } from "@/lib/utils/combat";
 import { BreadPerk } from "@/lib/perks/bread";
 import { GarlicPerk } from "@/lib/perks/garlic";
 import { HoneyPerk } from "@/lib/perks/honey";
+import { MelonPerk } from "@/lib/perks/melon";
 import { Ox } from "@/lib/pets/ox";
 import { abilityPet, registryWith } from "./helpers";
 
@@ -631,6 +633,45 @@ describe("Turkey — friend summoned", () => {
   });
 });
 
+describe("Seagull — friend summoned", () => {
+  it.each([
+    { level: 1 },
+    { level: 2 },
+    { level: 3 },
+  ])("copies its perk to up to $level valid summons per turn", ({ level }) => {
+    const seagull = makePet("Seagull", level);
+    seagull.perk = { ...MelonPerk };
+    const samePerk = makePet("Sloth");
+    samePerk.perk = { ...MelonPerk };
+    let board = makeBoard([
+      seagull,
+      samePerk,
+      makePet("Sloth"),
+      makePet("Sloth"),
+      makePet("Sloth"),
+    ]);
+
+    for (let summonedIndex = 1; summonedIndex < board.length; summonedIndex++) {
+      board = fireShopFriendSummoned(board, summonedIndex, PET_REGISTRY);
+    }
+
+    expect(board[1]?.perk?.name).toBe("Melon");
+    for (let index = 2; index < board.length; index++) {
+      expect(board[index]?.perk?.name).toBe(index < 2 + level ? "Melon" : undefined);
+    }
+    expect(seagull.friendSummonsThisTurn).toBe(level);
+    expect(board[2]?.perk).not.toBe(seagull.perk);
+
+    const nextTurn = fireBoardShopAbility(
+      Trigger.start_of_turn,
+      board,
+      makeShop(),
+      PET_REGISTRY
+    ).board;
+    expect(nextTurn[0]?.friendSummonsThisTurn).toBeUndefined();
+  });
+});
+
 describe("Monkey — end turn", () => {
   it.each([
     { level: 1, buff: 2, expected: 3 },
@@ -1056,6 +1097,24 @@ describe("fireShopFaint — Pill", () => {
     const afterSecond = fireShopFaint(afterFirst, 0, registryWith(Ox));
 
     expect(afterSecond[2]).toMatchObject({ attack: 2, health: 1 });
+  });
+
+  it("does not share Melon perk instances between the original board and a pilled Turtle clone", () => {
+    const board = makeBoard([
+      makePet("Turtle"),
+      { ...makePet("Sloth"), perk: { ...MelonPerk } },
+    ]);
+
+    const result = fireShopFaint(board, 0, PET_REGISTRY);
+    const melonPet = result[1] as PetInstance;
+
+    expect(board[1]?.perk).toBeTruthy();
+    expect(melonPet.perk).not.toBe(board[1]?.perk);
+
+    dealDirectDamage({ ...makePet("Ant"), attack: 3 }, melonPet);
+
+    expect(melonPet.perk).toBeNull();
+    expect(board[1]?.perk).toMatchObject({ name: "Melon", usesRemaining: 1 });
   });
 
   it("refreshes Friend ahead faints at start of turn", () => {

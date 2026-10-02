@@ -14,6 +14,7 @@ export type PetInstance = {
   foodTriggersThisTurn?: number;
   friendBuysThisTurn?: number;
   friendAheadFaintsThisTurn?: number;
+  friendSummonsThisTurn?: number;
 };
 
 export type ShopPet = {
@@ -180,6 +181,7 @@ export interface OffensivePerk extends BasePerkType {
 export interface DefensivePerk extends BasePerkType {
   blocksFor: number,
   minimumDamageTaken: number,
+  blocksAllDamage?: boolean,
   blocksAbilityDamage: boolean,
   blocksDirectDamage: boolean,
 }
