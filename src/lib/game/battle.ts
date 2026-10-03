@@ -265,9 +265,9 @@ function fireFriendFaints(
   petRegistry: Record<string, PetType>,
   counts: TriggerState
 ): void {
-  if (petRegistry[fainted.type]?.ignoreFriendFaints) return;
+  const ignoredListeners = petRegistry[fainted.type]?.ignoresFriendFaintsFrom ?? [];
   const candidates = team.flatMap((pet) => {
-    if (pet === fainted || pet.health <= 0) return [];
+    if (pet === fainted || pet.health <= 0 || ignoredListeners.includes(pet.type)) return [];
     const ability = petRegistry[pet.type]?.ability;
     return ability?.trigger === Trigger.friend_faints ? [{ pet, ability }] : [];
   });

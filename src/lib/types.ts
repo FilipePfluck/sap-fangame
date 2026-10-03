@@ -139,7 +139,7 @@ export type PetType = {
   isToken: boolean;
   ability: Ability | null;
   innatePerk?: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null;
-  ignoreFriendFaints?: boolean;
+  ignoresFriendFaintsFrom?: string[];
   description: string | ((level: number) => string);
 };
 

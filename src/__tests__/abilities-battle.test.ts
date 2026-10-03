@@ -878,15 +878,20 @@ describe("Pet Abilities", () => {
       expect(steps[2].attackerTeam.filter((friend) => friend.type === "Zombie Fly")).toHaveLength(1);
     });
 
-    it("does not trigger from a Zombie Fly faint", () => {
+    it("only suppresses Fly when a Zombie Fly faints", () => {
+      const listenerTriggers: number[] = [];
+      const listener = abilityPet("Faint Listener", {
+        trigger: Trigger.friend_faints,
+        fn: (ctx) => listenerTriggers.push(ctx.triggerCount),
+      });
       const { steps } = simulateBattle(
-        [pet("Zombie Fly", 4, 4), pet("Fly", 4, 4)],
-        [pet("Sloth", 100, 100)],
-        PET_REGISTRY
+        [pet("Zombie Fly", 4, 4), pet("Fly", 4, 4), pet(listener.name, 1, 10)],
+        [pet("Sloth", 4, 4)],
+        registryWith(listener)
       );
 
+      expect(listenerTriggers).toEqual([1]);
       expect(steps[1].attackerTeam.some((friend) => friend.type === "Zombie Fly")).toBe(false);
-      expect(steps[2].attackerTeam).toHaveLength(0);
     });
   });
 

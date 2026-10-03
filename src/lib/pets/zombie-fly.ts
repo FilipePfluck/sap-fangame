@@ -8,6 +8,6 @@ export const ZombieFly: PetType = {
   baseHealth: 4,
   isToken: true,
   ability: null,
-  ignoreFriendFaints: true,
+  ignoresFriendFaintsFrom: ["Fly"],
   description: "No ability.",
 };
