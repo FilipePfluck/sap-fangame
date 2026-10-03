@@ -472,7 +472,7 @@ describe("Pet Abilities", () => {
 
     it("does not trigger in battle after triggering in the shop that turn", () => {
       const { steps } = simulateBattle(
-        [pet("Sloth", 1, 1), { ...pet("Ox", 1, 3), friendAheadFaintsThisTurn: 1 }],
+        [pet("Sloth", 1, 1), { ...pet("Ox", 1, 3), triggers: 1 }],
         [pet("Sloth", 1, 100)],
         registryWith(Ox)
       );
@@ -517,7 +517,7 @@ describe("Pet Abilities", () => {
 
     it("has only the triggers left over from the shop", () => {
       const { steps } = simulateBattle(
-        [pet("Triple Feeder", 1, 50), { ...pet("Rabbit", 1, 5), foodTriggersThisTurn: 1 }],
+        [pet("Triple Feeder", 1, 50), { ...pet("Rabbit", 1, 5), triggers: 1 }],
         [pet("Sloth", 1, 50)],
         registryWith(tripleFeeder)
       );
@@ -526,14 +526,14 @@ describe("Pet Abilities", () => {
     });
 
     it("does not carry battle triggers back to the shop", () => {
-      const rabbit = { ...pet("Rabbit", 1, 5), foodTriggersThisTurn: 1 };
+      const rabbit = { ...pet("Rabbit", 1, 5), triggers: 1 };
       simulateBattle(
         [pet("Triple Feeder", 1, 50), rabbit],
         [pet("Sloth", 1, 50)],
         registryWith(tripleFeeder)
       );
 
-      expect(rabbit.foodTriggersThisTurn).toBe(1);
+      expect(rabbit.triggers).toBe(1);
     });
 
     it("triggers when a battle ability gives a friend a perk", () => {
@@ -1283,7 +1283,7 @@ describe("Perks", () => {
       const opponent = pet("Sloth", 1, 22);
 
       const { steps } = simulateBattle([steakSloth], [opponent], PET_REGISTRY);
-      expect(steps[0].attackerTeam[0].perk.name).toBe("Steak");
+      expect(steps[0].attackerTeam[0].perk?.name).toBe("Steak");
       expect(steps[1].attackerTeam[0].perk).toBe(null);
     });
   })

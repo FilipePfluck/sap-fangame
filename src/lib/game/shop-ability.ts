@@ -124,9 +124,7 @@ export function fireBoardShopAbility(
 
     if (trigger === Trigger.start_of_turn) {
       clearTempStats(pet);
-      delete pet.foodTriggersThisTurn;
-      delete pet.friendBuysThisTurn;
-      delete pet.friendAheadFaintsThisTurn;
+      delete pet.triggers;
     }
 
     const perk = isTriggerPerk(pet.perk) && pet.perk.trigger === trigger

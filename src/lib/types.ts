@@ -17,9 +17,7 @@ export type PetData = {
   tempAttack?: number;
   tempHealth?: number;
 
-  foodTriggersThisTurn?: number;
-  friendBuysThisTurn?: number;
-  friendAheadFaintsThisTurn?: number;
+  triggers?: number;
 };
 
 export type ShopPet = {

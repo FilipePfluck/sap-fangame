@@ -905,7 +905,7 @@ describe("Rabbit — friend ate food", () => {
     const result = applyFoodEffect(Pill, board, 1, PET_REGISTRY);
 
     expect(result[0]?.health).toBe(1);
-    expect(result[0]?.foodTriggersThisTurn).toBeUndefined();
+    expect(result[0]?.triggers).toBeUndefined();
     expect(result[1]).toBeNull();
 
     const fedFish = applyFoodEffect(Apple, result, 2, PET_REGISTRY);
@@ -920,7 +920,7 @@ describe("Rabbit — friend ate food", () => {
     const result = applyFoodEffect(Apple, board, 1, PET_REGISTRY);
 
     expect(result[1]?.health).toBe(2);
-    expect(result[0]?.foodTriggersThisTurn).toBeUndefined();
+    expect(result[0]?.triggers).toBeUndefined();
   });
 });
 
@@ -1301,7 +1301,7 @@ describe("fireShopFaint — Pill", () => {
   it("refreshes Friend ahead faints at start of turn", () => {
     const board = makeBoard([
       makePet("Sloth"),
-      { ...makePet("Ox"), friendAheadFaintsThisTurn: 1 },
+      { ...makePet("Ox"), triggers: 1 },
     ]);
     const nextTurn = fireBoardShopAbility(
       Trigger.start_of_turn,

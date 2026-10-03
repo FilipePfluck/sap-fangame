@@ -13,9 +13,9 @@ export const Ox: StaticPet = {
   ability: {
     trigger: Trigger.friend_ahead_faints,
     fn: (ctx) => {
-      const triggers = ctx.self.friendAheadFaintsThisTurn ?? 0;
+      const triggers = ctx.self.triggers ?? 0;
       if (triggers >= TRIGGER_LIMIT) return;
-      ctx.self.friendAheadFaintsThisTurn = triggers + 1;
+      ctx.self.triggers = triggers + 1;
       ctx.self.attack += ctx.level;
       ctx.self.perk = { ...MelonPerk };
     },

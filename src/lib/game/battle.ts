@@ -9,7 +9,6 @@ import { byCurrentAttack } from "@/lib/utils/random";
 import { dealAbilityDamage, dealDirectDamage } from "@/lib/utils/combat";
 import {
   compactApiBoard,
-  compactBoard,
   grantExperience,
 } from "@/lib/game/merge";
 import { friendSummonedCandidates } from "@/lib/game/friend-summoned";

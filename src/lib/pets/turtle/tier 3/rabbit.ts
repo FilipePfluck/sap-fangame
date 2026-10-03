@@ -10,9 +10,9 @@ export const Rabbit: StaticPet = {
   ability: {
     trigger: Trigger.friend_ate_food,
     fn: (ctx) => {
-      const triggerCount = ctx.self.foodTriggersThisTurn ?? 0;
+      const triggerCount = ctx.self.triggers ?? 0;
       if (triggerCount >= 3) return;
-      ctx.self.foodTriggersThisTurn = triggerCount + 1;
+      ctx.self.triggers = triggerCount + 1;
       ctx.fedPet.health += ctx.level;
     },
   },
