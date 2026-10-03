@@ -1,8 +1,6 @@
 import {
   BattleAbilityContext,
   BattleStep,
-  isOffensivePerk,
-  isTriggerPerk,
   PetData,
   StaticPet,
   Trigger,
@@ -18,6 +16,7 @@ import { friendSummonedCandidates } from "@/lib/game/friend-summoned";
 import { friendAheadAbility } from "@/lib/game/pet";
 import { triggerEffect } from "@/lib/perks/trigger-functions";
 import { triggerFriendAteFood } from "@/lib/game/food";
+import { isOffensivePerk, isTriggerPerk } from "@/lib/game/perk";
 
 const MAX_TEAM_SIZE = 5;
 const NOOP_SUMMON = () => {};

@@ -1,16 +1,22 @@
 export type PetData = {
   type: string;
+
   attack: number;
   health: number;
+  maxAttack?: number;
+  maxHealth?: number;
+
   perk: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null;
+
   xp: number;
   level: number;
+
   // TODO - Retrofit tests to remove "optional" tag
   sellValue?: number;
-  // Portions of attack/health already included above that are removed at the
-  // start of the next turn (e.g. Horse's shop buff).
+
   tempAttack?: number;
   tempHealth?: number;
+
   foodTriggersThisTurn?: number;
   friendBuysThisTurn?: number;
   friendAheadFaintsThisTurn?: number;
@@ -172,7 +178,7 @@ export type FoodType = {
 
 export const DOES_NOT_DECAY = -1
 
-export type BasePerkType = {
+export interface BasePerkType {
   name: string;
   description: string;
   usesRemaining: number;
@@ -194,29 +200,8 @@ export interface TriggerPerk extends BasePerkType {
   trigger: Trigger;
 }
 
-export function isOffensivePerk(object: BasePerkType | null): object is OffensivePerk {
-  if (object === null) return false;
-  try {
-    return 'extraDamage' in object;
-  } catch {
-    return false;
-  }
-}
-
-export function isDefensivePerk(object: BasePerkType | null): object is DefensivePerk {
-  if (object === null) return false;
-  try {
-    return 'blocksFor' in object;
-  } catch {
-    return false;
-  }
-}
-
-export function isTriggerPerk(object: BasePerkType | null): object is TriggerPerk {
-  if (object === null) return false;
-  try {
-    return "trigger" in object;
-  } catch {
-    return false;
-  }
+export enum DamageType {
+  UNDEFINED,
+  DIRECT,
+  ABILITY,
 }

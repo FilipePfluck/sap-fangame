@@ -1,7 +1,6 @@
 import {
   Ability,
   BattleAbilityContext,
-  isTriggerPerk,
   PetData,
   StaticPet,
   ShopAbilityContext,
@@ -22,6 +21,7 @@ import { triggerEffect } from "@/lib/perks/trigger-functions";
 import { dealAbilityDamage } from "@/lib/utils/combat";
 import { triggerFriendAteFood } from "@/lib/game/food";
 import { Board } from "@/lib/game/board";
+import { isTriggerPerk } from "@/lib/game/perk";
 
 // TODO - Order shop abilities through a shared queue manager (supporting dynamic
 // updates) and remove the per-function orderByAttack sorting below.
