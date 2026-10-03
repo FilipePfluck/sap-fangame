@@ -53,14 +53,21 @@ export type BattleAbilityContext = {
   team: PetInstance[];
   enemyTeam: PetInstance[];
   level: number;
-  summon: (pet: PetInstance, afterIndex: number) => void;
+  summon: (pet: PetInstance, afterIndex: number, options?: SummonOptions) => void;
   summonedIndex?: number;
+  faintedIndex?: number;
   triggerCount: number;
   petRegistry: Record<string, PetType>;
   dealAbilityDamage: (target: PetInstance, damage: number) => number;
   grantExperience: (target: PetInstance, amount: number) => void;
   friendAteFood: (fedPet: PetInstance) => void;
   inShop?: boolean;
+};
+
+export type SummonOptions = {
+  side?: "self" | "enemy";
+  triggerFriendSummoned?: boolean;
+  waitForSpace?: boolean;
 };
 
 export type FoodAbilityContext = {
@@ -91,6 +98,7 @@ export enum Trigger {
   start_of_battle,
   level_up,
   friend_summoned,
+  friend_faints,
   start_of_turn,
   end_turn,
   before_attack,
@@ -110,6 +118,7 @@ export type Ability =
   | { trigger: Trigger.start_of_battle; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: Trigger.level_up; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.friend_summoned; fn: (ctx: BattleAbilityContext) => void }
+  | { trigger: Trigger.friend_faints; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: Trigger.start_of_turn; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.end_turn; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.before_attack; fn: (ctx: BattleAbilityContext) => void }
@@ -130,6 +139,7 @@ export type PetType = {
   isToken: boolean;
   ability: Ability | null;
   innatePerk?: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null;
+  ignoreFriendFaints?: boolean;
   description: string | ((level: number) => string);
 };
 

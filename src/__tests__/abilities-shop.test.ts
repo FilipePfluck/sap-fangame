@@ -1061,6 +1061,12 @@ describe("fireShopFaint — Pill", () => {
     expect(result[0]?.type).toBe("Zombie Cricket");
   });
 
+  it("does not put Rat's summons on the player's shop board", () => {
+    const result = fireShopFaint(makeBoard([makePet("Rat")]), 0, PET_REGISTRY);
+
+    expect(result[0]).toBeNull();
+  });
+
   it("flings later summons when the Pill opens only one slot", () => {
     const cricket = { ...makePet("Cricket"), perk: { ...HoneyPerk } };
     const board = makeBoard([cricket]);

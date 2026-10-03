@@ -815,9 +815,79 @@ describe("Pet Abilities", () => {
           PET_REGISTRY
         );
 
+
         expect(petToString(steps[1].attackerTeam[0])).toBe(result);
       }
     );
+  });
+
+  describe("Rat — faint", () => {
+    it.each([
+      { level: 1, count: 1 },
+      { level: 2, count: 2 },
+      { level: 3, count: 3 },
+    ])("summons $count Dirty Rats at the front of the opposing team", ({ level, count }) => {
+      const { steps } = simulateBattle(
+        [petLevel("Rat", 3, 1, level)],
+        [pet("Horse", 2, 10)],
+        PET_REGISTRY
+      );
+
+      const opposingTeam = steps[1].defenderTeam;
+      expect(opposingTeam.slice(0, count).map((summon) => summon.type)).toEqual(
+        Array(count).fill("Dirty Rat")
+      );
+      expect(opposingTeam[count]).toMatchObject({ type: "Horse", attack: 2 });
+    });
+  });
+
+  describe("Fly — friend faints", () => {
+    it.each([
+      { level: 1, stats: 4 },
+      { level: 2, stats: 8 },
+      { level: 3, stats: 12 },
+    ])("summons a $stats/$stats Zombie Fly at level $level", ({ level, stats }) => {
+      const { steps } = simulateBattle(
+        [pet("Sloth", 1, 1), petLevel("Fly", 4, 4, level)],
+        [pet("Sloth", 10, 100)],
+        PET_REGISTRY
+      );
+
+      expect(steps[1].attackerTeam[0]).toMatchObject({
+        type: "Zombie Fly",
+        attack: stats,
+        health: stats,
+      });
+    });
+
+    it("waits until Rooster's Chick leaves room, then summons a Zombie Fly", () => {
+      const { steps } = simulateBattle(
+        [
+          pet("Rooster", 6, 1),
+          pet("Fly", 4, 4),
+          pet("Sloth", 1, 1),
+          pet("Sloth", 1, 1),
+          pet("Sloth", 1, 1),
+        ],
+        [pet("Sloth", 10, 100)],
+        PET_REGISTRY
+      );
+
+      expect(steps[1].attackerTeam.some((friend) => friend.type === "Zombie Fly")).toBe(false);
+      expect(steps[1].attackerTeam[0].type).toBe("Chick");
+      expect(steps[2].attackerTeam.filter((friend) => friend.type === "Zombie Fly")).toHaveLength(1);
+    });
+
+    it("does not trigger from a Zombie Fly faint", () => {
+      const { steps } = simulateBattle(
+        [pet("Zombie Fly", 4, 4), pet("Fly", 4, 4)],
+        [pet("Sloth", 100, 100)],
+        PET_REGISTRY
+      );
+
+      expect(steps[1].attackerTeam.some((friend) => friend.type === "Zombie Fly")).toBe(false);
+      expect(steps[2].attackerTeam).toHaveLength(0);
+    });
   });
 
   describe("Dog — friend summoned", () => {

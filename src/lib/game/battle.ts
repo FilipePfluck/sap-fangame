@@ -1,10 +1,12 @@
 import {
   BattleAbilityContext,
   BattleStep,
+  Board,
   isOffensivePerk,
   isTriggerPerk,
   PetInstance,
   PetType,
+  SummonOptions,
   Trigger,
 } from "@/lib/types";
 import { clonePetInstance } from "@/lib/utils/clone";
@@ -24,6 +26,7 @@ type HurtJob = {
 type TriggerState = {
   counts: WeakMap<PetInstance, number>;
   pendingHurt: HurtJob[];
+  pendingSummons: PendingSummon[];
 };
 
 const MAX_TEAM_SIZE = 5;
@@ -36,7 +39,7 @@ export type BattleSimulationResult = {
 
 type BattleAbility = { fn: (ctx: BattleAbilityContext) => void };
 
-function compactTeam(team: (PetInstance | null)[]): PetInstance[] {
+function compactTeam(team: Board): PetInstance[] {
   return compactBoard(team).map(clonePetInstance);
 }
 
@@ -51,10 +54,6 @@ function nextTriggerCount(
 
 // Fires `ability` for `pet`, then repeats it once more at level 1 if a
 // Tiger sits directly behind (skipped on the repeat itself).
-// TODO - Tiger support makes this function grow with every new trigger. Options:
-//   - Tiger directly calls the pet ahead's ability
-//   - battle.ts checks for a Tiger behind whenever any ability activates, then repeats it
-//   - (worst) move as much of this as possible into helpers in tiger.ts
 function fireAbilityOn(
   ability: BattleAbility,
   pet: PetInstance,
@@ -63,9 +62,10 @@ function fireAbilityOn(
   enemyTeam: PetInstance[],
   petRegistry: Record<string, PetType>,
   counts: TriggerState,
-  summon: (pet: PetInstance, afterIndex: number) => void,
+  summon: (pet: PetInstance, afterIndex: number, options?: SummonOptions) => void,
   summonedIndex?: number,
-  levelOverride?: number
+  levelOverride?: number,
+  faintedIndex?: number
 ): void {
   const triggerCount = nextTriggerCount(counts, pet);
   const ctx: BattleAbilityContext = {
@@ -76,6 +76,7 @@ function fireAbilityOn(
     level: levelOverride ?? pet.level,
     summon,
     summonedIndex,
+    faintedIndex,
     triggerCount,
     petRegistry,
     dealAbilityDamage: (target, damage) => {
@@ -114,7 +115,8 @@ function fireAbilityOn(
       counts,
       summon,
       summonedIndex,
-      1
+      1,
+      faintedIndex
     );
   }
 }
@@ -150,7 +152,15 @@ function fireFriendSummoned(
   }
 }
 
-type PendingSummon = { pet: PetInstance; afterIndex: number };
+type SummonRequest = {
+  pet: PetInstance;
+  afterIndex: number;
+  options?: SummonOptions;
+};
+type PendingSummon = SummonRequest & {
+  team: PetInstance[];
+  enemyTeam: PetInstance[];
+};
 
 function fireFaintAbility(
   fainted: PetInstance,
@@ -159,7 +169,7 @@ function fireFaintAbility(
   enemyTeam: PetInstance[],
   petRegistry: Record<string, PetType>,
   counts: TriggerState,
-  pendingSummons: PendingSummon[]
+  pendingSummons: SummonRequest[]
 ): void {
   const ability = petRegistry[fainted.type]?.ability;
   if (ability?.trigger !== Trigger.faint) return;
@@ -171,14 +181,17 @@ function fireFaintAbility(
     enemyTeam,
     petRegistry,
     counts,
-    (pet, afterIndex) => pendingSummons.push({ pet, afterIndex })
+    (pet, afterIndex, options) => pendingSummons.push({ pet, afterIndex, options }),
+    undefined,
+    undefined,
+    faintedIndex
   );
 }
 
 function queueFaintPerkSummon(
   fainted: PetInstance,
   faintedIndex: number,
-  pendingSummons: PendingSummon[]
+  pendingSummons: SummonRequest[]
 ): void {
   if (!isTriggerPerk(fainted.perk) || fainted.perk.trigger !== Trigger.faint) return;
   const { summonRequest } = triggerEffect(fainted.perk, { self: fainted });
@@ -186,21 +199,102 @@ function queueFaintPerkSummon(
 }
 
 // Summons with no room left on the team are flung.
+function insertSummonRequests(
+  pendingSummons: PendingSummon[],
+  petRegistry: Record<string, PetType>,
+  counts: TriggerState
+): void {
+  const insertionsAt = new Map<PetInstance[], Map<number, number>>();
+  const deferred: PendingSummon[] = [];
+  for (const request of pendingSummons) {
+    const { pet, afterIndex, team, enemyTeam, options } = request;
+    if (team.length >= MAX_TEAM_SIZE) {
+      if (options?.waitForSpace) deferred.push(request);
+      continue;
+    }
+    let teamInsertions = insertionsAt.get(team);
+    if (!teamInsertions) {
+      teamInsertions = new Map<number, number>();
+      insertionsAt.set(team, teamInsertions);
+    }
+    const offset = teamInsertions.get(afterIndex) ?? 0;
+    const insertAt = options?.side === "enemy"
+      ? Math.min(offset, team.length)
+      : Math.min(afterIndex + offset, team.length);
+    teamInsertions.set(afterIndex, offset + 1);
+    team.splice(insertAt, 0, pet);
+    if (options?.triggerFriendSummoned !== false) {
+      fireFriendSummoned(team, insertAt, enemyTeam, petRegistry, counts);
+    }
+  }
+  counts.pendingSummons.push(...deferred);
+}
+
 function insertSummons(
   team: PetInstance[],
-  pendingSummons: PendingSummon[],
+  pendingSummons: SummonRequest[],
   enemyTeam: PetInstance[],
   petRegistry: Record<string, PetType>,
   counts: TriggerState
 ): void {
-  const insertionsAt = new Map<number, number>();
-  for (const { pet, afterIndex } of pendingSummons) {
-    if (team.length >= MAX_TEAM_SIZE) break;
-    const offset = insertionsAt.get(afterIndex) ?? 0;
-    const insertAt = Math.min(afterIndex + offset, team.length);
-    insertionsAt.set(afterIndex, offset + 1);
-    team.splice(insertAt, 0, pet);
-    fireFriendSummoned(team, insertAt, enemyTeam, petRegistry, counts);
+  insertSummonRequests(
+    pendingSummons.map((request) => ({
+      ...request,
+      team: request.options?.side === "enemy" ? enemyTeam : team,
+      enemyTeam: request.options?.side === "enemy" ? team : enemyTeam,
+    })),
+    petRegistry,
+    counts
+  );
+}
+
+function flushDeferredSummons(
+  counts: TriggerState,
+  petRegistry: Record<string, PetType>
+): void {
+  if (counts.pendingSummons.length === 0) return;
+  const pending = counts.pendingSummons.splice(0);
+  insertSummonRequests(pending, petRegistry, counts);
+}
+
+function fireFriendFaints(
+  fainted: PetInstance,
+  faintedIndex: number,
+  team: PetInstance[],
+  enemyTeam: PetInstance[],
+  petRegistry: Record<string, PetType>,
+  counts: TriggerState
+): void {
+  if (petRegistry[fainted.type]?.ignoreFriendFaints) return;
+  const candidates = team.flatMap((pet) => {
+    if (pet === fainted || pet.health <= 0) return [];
+    const ability = petRegistry[pet.type]?.ability;
+    return ability?.trigger === Trigger.friend_faints ? [{ pet, ability }] : [];
+  });
+
+  for (const { pet, ability } of byCurrentAttack(candidates, (candidate) => candidate.pet.attack)) {
+    const index = team.indexOf(pet);
+    if (index === -1) continue;
+    fireAbilityOn(
+      ability,
+      pet,
+      index,
+      team,
+      enemyTeam,
+      petRegistry,
+      counts,
+      (summonedPet, afterIndex, options) =>
+        counts.pendingSummons.push({
+          pet: summonedPet,
+          afterIndex,
+          team,
+          enemyTeam,
+          options: { ...options, waitForSpace: true },
+        }),
+      undefined,
+      undefined,
+      faintedIndex
+    );
   }
 }
 
@@ -234,12 +328,14 @@ function handleFaint(
   counts: TriggerState
 ): void {
   const fainted = team[faintedIndex];
-  const pendingSummons: PendingSummon[] = [];
+  const pendingSummons: SummonRequest[] = [];
   fireFaintAbility(fainted, faintedIndex, team, enemyTeam, petRegistry, counts, pendingSummons);
   queueFaintPerkSummon(fainted, faintedIndex, pendingSummons);
   fireFriendAheadFaints(faintedIndex, team, enemyTeam, petRegistry, counts);
+  fireFriendFaints(fainted, faintedIndex, team, enemyTeam, petRegistry, counts);
   team.splice(faintedIndex, 1);
   insertSummons(team, pendingSummons, enemyTeam, petRegistry, counts);
+  flushDeferredSummons(counts, petRegistry);
 }
 
 // Routes deaths through handleFaint (not a bare splice) so faint abilities
@@ -313,13 +409,8 @@ function fireStartOfBattlePhase(
   )) {
     const index = team.indexOf(pet);
     if (index === -1) continue;
-    const summon = (p: PetInstance, afterIndex: number) => {
-      if (team.length < MAX_TEAM_SIZE) {
-        const insertAt = Math.min(afterIndex, team.length);
-        team.splice(insertAt, 0, p);
-        fireFriendSummoned(team, insertAt, enemyTeam, petRegistry, counts);
-      }
-    };
+    const summon = (p: PetInstance, afterIndex: number, options?: SummonOptions) =>
+      insertSummons(team, [{ pet: p, afterIndex, options }], enemyTeam, petRegistry, counts);
     fireAbilityOn(
       ability,
       pet,
@@ -468,8 +559,8 @@ function fireFriendAheadAttacks(
 }
 
 export function simulateBattle(
-  playerTeam: (PetInstance | null)[],
-  opponentTeam: (PetInstance | null)[],
+  playerTeam: Board,
+  opponentTeam: Board,
   petRegistry: Record<string, PetType> = {}
 ): BattleSimulationResult {
   const attacker: PetInstance[] = compactTeam(playerTeam);
@@ -478,6 +569,7 @@ export function simulateBattle(
   const triggerCounts: TriggerState = {
     counts: new WeakMap<PetInstance, number>(),
     pendingHurt: [],
+    pendingSummons: [],
   };
 
   steps.push({

@@ -215,7 +215,7 @@ export function fireShopFaint(
   const selfIndex = compacted.indexOf(pet);
 
   newBoard[boardPosition] = null;
-  const summonRequests: PetInstance[] = [];
+  const summonRequests: { pet: PetInstance; triggerFriendSummoned: boolean }[] = [];
 
   const context = (self: PetInstance): BattleAbilityContext => ({
     self,
@@ -223,7 +223,13 @@ export function fireShopFaint(
     team: compacted,
     enemyTeam: [],
     level: self.level,
-    summon: (newPet) => summonRequests.push(newPet),
+    summon: (newPet, _afterIndex, options) => {
+      if (options?.side === "enemy") return;
+      summonRequests.push({
+        pet: newPet,
+        triggerFriendSummoned: options?.triggerFriendSummoned !== false,
+      });
+    },
     triggerCount: 1,
     petRegistry,
     friendAteFood: (fedPet) =>
@@ -238,7 +244,9 @@ export function fireShopFaint(
 
   if (isTriggerPerk(pet.perk) && pet.perk.trigger === Trigger.faint) {
     const summonRequest = triggerEffect(pet.perk, { self: pet }).summonRequest;
-    if (summonRequest) summonRequests.push(summonRequest);
+    if (summonRequest) {
+      summonRequests.push({ pet: summonRequest, triggerFriendSummoned: true });
+    }
   }
 
   const behind = compacted[selfIndex + 1];
@@ -246,10 +254,12 @@ export function fireShopFaint(
   if (friendAheadFaints) friendAheadFaints(context(behind));
 
   // Pill frees one slot, so any later summon requests are flung.
-  for (const summon of summonRequests) {
+  for (const { pet: summon, triggerFriendSummoned } of summonRequests) {
     if (newBoard[boardPosition] !== null) break;
     newBoard[boardPosition] = summon;
-    newBoard = fireShopFriendSummoned(newBoard, boardPosition, petRegistry);
+    if (triggerFriendSummoned) {
+      newBoard = fireShopFriendSummoned(newBoard, boardPosition, petRegistry);
+    }
   }
 
   return newBoard;

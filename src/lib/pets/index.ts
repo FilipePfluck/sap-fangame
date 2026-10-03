@@ -59,6 +59,10 @@ export { Spider } from "./spider";
 export { Cow } from "./cow";
 export { Gorilla } from "./gorilla";
 export { Seagull } from "./seagull";
+export { Rat } from "./rat";
+export { DirtyRat } from "./dirty-rat";
+export { Fly } from "./fly";
+export { ZombieFly } from "./zombie-fly";
 
 import { Sloth } from "./sloth";
 import { Duck } from "./duck";
@@ -121,6 +125,10 @@ import { Spider } from "./spider";
 import { Cow } from "./cow";
 import { Gorilla } from "./gorilla";
 import { Seagull } from "./seagull";
+import { Rat } from "./rat";
+import { DirtyRat } from "./dirty-rat";
+import { Fly } from "./fly";
+import { ZombieFly } from "./zombie-fly";
 import type { PetType } from "@/lib/types";
 
 export const TURTLE_PACK_PETS: PetType[] = [
@@ -184,6 +192,10 @@ export const TURTLE_PACK_PETS: PetType[] = [
   Cow,
   Gorilla,
   Seagull,
+  Rat,
+  Fly,
+  DirtyRat,
+  ZombieFly,
 ];
 
 export const PET_REGISTRY: Record<string, PetType> = Object.fromEntries([
