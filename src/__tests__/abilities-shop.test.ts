@@ -663,13 +663,39 @@ describe("Penguin — start-of-turn", () => {
 
 describe("Giraffe — start-of-turn", () => {
   it.each([
-    { level: 1, expected: 2 },
-    { level: 2, expected: 3 },
-    { level: 3, expected: 4 },
+    {
+      level: 1,
+      expected: [
+        { attack: 1, health: 1 },
+        { attack: 1, health: 1 },
+        { attack: 2, health: 2 },
+      ],
+    },
+    {
+      level: 2,
+      expected: [
+        { attack: 1, health: 1 },
+        { attack: 2, health: 2 },
+        { attack: 2, health: 2 },
+      ],
+    },
+    {
+      level: 3,
+      expected: [
+        { attack: 2, health: 2 },
+        { attack: 2, health: 2 },
+        { attack: 2, health: 2 },
+      ],
+    },
   ])(
     "gives the nearest friend ahead +$level/+$level at level $level",
     ({ level, expected }) => {
-      const board = makeBoard([makePet("Sloth"), makePet("Giraffe", level)]);
+      const board = makeBoard([
+        makePet("Sloth"),
+        makePet("Sloth"),
+        makePet("Sloth"),
+        makePet("Giraffe", level),
+      ]);
       const { board: result } = fireBoardShopAbility(
         Trigger.start_of_turn,
         board,
@@ -677,26 +703,11 @@ describe("Giraffe — start-of-turn", () => {
         PET_REGISTRY
       );
 
-      expect(result[0]).toMatchObject({ attack: expected, health: expected });
+      expect(result[0]).toMatchObject(expected[0]);
+      expect(result[1]).toMatchObject(expected[1]);
+      expect(result[2]).toMatchObject(expected[2]);
     }
   );
-
-  it("buffs only the nearest friend ahead", () => {
-    const board = makeBoard([
-      makePet("Sloth", 2),
-      makePet("Sloth", 1),
-      makePet("Giraffe", 3),
-    ]);
-    const { board: result } = fireBoardShopAbility(
-      Trigger.start_of_turn,
-      board,
-      makeShop(),
-      PET_REGISTRY
-    );
-
-    expect(result[1]).toMatchObject({ attack: 4, health: 4 });
-    expect(result[0]).toMatchObject({ attack: 1, health: 1 });
-  });
 
   it("does not buff a friend behind", () => {
     const board = makeBoard([makePet("Giraffe"), makePet("Sloth")]);
