@@ -16,19 +16,7 @@ import { BreadPerk } from "@/lib/perks/bread";
 import { GarlicPerk } from "@/lib/perks/garlic";
 import { HoneyPerk } from "@/lib/perks/honey";
 import { Ox } from "@/lib/pets/turtle/tier 3/ox";
-import { abilityPet, registryWith } from "./helpers";
-import { Board } from "@/lib/game/board";
-
-function makePet(type: string, level = 1): PetData {
-  return {
-    type,
-    attack: 1,
-    health: 1,
-    perk: null,
-    xp: level === 3 ? 5 : level === 2 ? 2 : 0,
-    level,
-  };
-}
+import { abilityPet, pet, registryWith } from "./helpers";
 
 function makeShop(
   StaticPets: string[] = [],
@@ -58,8 +46,8 @@ describe("Ability-granted experience", () => {
       },
     });
     const board = makeBoard([
-      makePet("Experience Giver"),
-      { ...makePet("Sloth", 3), attack: 2, health: 2 },
+      pet({ type: "Experience Giver" }),
+      pet({ attack: 2, health: 2, xp: 5, level: 3 }),
     ]);
     const result = fireShopAbility(
       Trigger.buy,
@@ -83,7 +71,7 @@ describe("Duck — sell", () => {
   it.each([{ level: 1 }, { level: 2 }, { level: 3 }])(
     "increments shop health for all current shop pets by $level at level $level",
     ({ level }) => {
-      const duck = makePet("Duck", level);
+      const duck = pet({ type: "Duck",  level });
       const shop = makeShop(["Sloth", "Ant", "Beaver", "Badger", "Bison"]);
       const board = makeBoard([duck]);
 
@@ -103,7 +91,7 @@ describe("Duck — sell", () => {
   );
 
   it("stacks tempHealthBonus additively", () => {
-    const duck = makePet("Duck");
+    const duck = pet({ type: "Duck" });
     const shop: ShopState = {
       shopPets: [{ type: "Sloth", frozen: false, tempHealthBonus: 2 }],
       shopFoods: [],
@@ -122,7 +110,7 @@ describe("Duck — sell", () => {
   });
 
   it("does not modify original shop", () => {
-    const duck = makePet("Duck");
+    const duck = pet({ type: "Duck" });
     const shop = makeShop(["Sloth"]);
     const board = makeBoard([duck]);
 
@@ -140,13 +128,13 @@ describe("Beaver — sell", () => {
   ])(
     "gives $level attack to 2 random friends at level $level",
     ({ level, expectedAtkDifference }) => {
-      const beaver = makePet("Beaver", level);
+      const beaver = pet({ type: "Beaver",  level });
       const board = makeBoard([
         beaver,
-        makePet("Sloth"),
-        makePet("Sloth"),
-        makePet("Sloth"),
-        makePet("Sloth"),
+        pet(),
+        pet(),
+        pet(),
+        pet(),
       ]);
 
       const initialAttack = board
@@ -171,8 +159,8 @@ describe("Beaver — sell", () => {
   );
 
   it("buffs only available friend when only one exists", () => {
-    const beaver = makePet("Beaver");
-    const sloth = makePet("Sloth");
+    const beaver = pet({ type: "Beaver" });
+    const sloth = pet();
     const board = makeBoard([beaver, sloth]);
 
     const { board: result } = fireShopAbility(
@@ -187,7 +175,7 @@ describe("Beaver — sell", () => {
   });
 
   it("no-op when no friends on board", () => {
-    const beaver = makePet("Beaver");
+    const beaver = pet({ type: "Beaver" });
     const board = makeBoard([beaver]);
 
     const { board: result } = fireShopAbility(
@@ -206,7 +194,7 @@ describe("Pigeon — sell", () => {
   it.each([{ level: 1 }, { level: 2 }, { level: 3 }])(
     "adds $level Bread Crumbs to shop at level $level",
     ({ level }) => {
-      const pigeon = makePet("Pigeon", level);
+      const pigeon = pet({ type: "Pigeon",  level });
       const board = makeBoard([pigeon]);
       const { shop } = fireShopAbility(
         Trigger.sell,
@@ -235,13 +223,13 @@ describe("Otter — buy", () => {
   ])(
     "gives +1 health to $level random friend at level $level",
     ({ level, expectedHpDifference }) => {
-      const otter = makePet("Otter", level);
+      const otter = pet({ type: "Otter",  level });
       const board: ApiBoard = [
         otter,
-        makePet("Sloth"),
-        makePet("Sloth"),
-        makePet("Sloth"),
-        makePet("Sloth"),
+        pet(),
+        pet(),
+        pet(),
+        pet(),
       ];
 
       const initialTotalHealth = board
@@ -266,7 +254,7 @@ describe("Otter — buy", () => {
   );
 
   it("no-op when no friends on board", () => {
-    const otter = makePet("Otter");
+    const otter = pet({ type: "Otter" });
     const board = makeBoard([otter]);
 
     const { board: result } = fireShopAbility(
@@ -288,7 +276,7 @@ describe("Shop capacity — stocking into a full shop evicts unfrozen items", ()
   it("stocking food deletes pets from the rightmost pet, keeping existing foods", () => {
     // 8 pets + 1 food = 9. Level-3 Pigeon stocks 3 Bread Crumbs: the first
     // fits, the next two each delete the rightmost pet.
-    const pigeon = makePet("Pigeon", 3);
+    const pigeon = pet({ type: "Pigeon",  level: 3 });
     const shop: ShopState = {
       shopPets: petsNamed(["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8"]),
       shopFoods: [{ type: "Garlic", frozen: false }],
@@ -318,7 +306,7 @@ describe("Shop capacity — stocking into a full shop evicts unfrozen items", ()
   });
 
   it("deletes the rightmost pet to stock food into a completely full shop", () => {
-    const pigeon = makePet("Pigeon", 1);
+    const pigeon = pet({ type: "Pigeon",  level: 1 });
     const shop: ShopState = {
       shopPets: petsNamed([
         "P1",
@@ -348,7 +336,7 @@ describe("Shop capacity — stocking into a full shop evicts unfrozen items", ()
   });
 
   it("frozen pets are never deleted and win over new food", () => {
-    const pigeon = makePet("Pigeon", 1);
+    const pigeon = pet({ type: "Pigeon",  level: 1 });
     const shop: ShopState = {
       shopPets: Array(10)
         .fill(null)
@@ -368,7 +356,7 @@ describe("Shop capacity — stocking into a full shop evicts unfrozen items", ()
   });
 
   it("skips frozen pets and deletes the rightmost unfrozen one", () => {
-    const pigeon = makePet("Pigeon", 1);
+    const pigeon = pet({ type: "Pigeon",  level: 1 });
     const shop: ShopState = {
       shopPets: [
         { type: "Ant", frozen: false },
@@ -393,7 +381,7 @@ describe("Shop capacity — stocking into a full shop evicts unfrozen items", ()
   });
 
   it("frozen pets block stocking even when unfrozen foods exist", () => {
-    const pigeon = makePet("Pigeon", 1);
+    const pigeon = pet({ type: "Pigeon",  level: 1 });
     const shop: ShopState = {
       shopPets: Array(8)
         .fill(null)
@@ -424,7 +412,7 @@ describe("Pig — sell", () => {
   it.each([{ level: 1 }, { level: 2 }, { level: 3 }])(
     "level $level gives +$level gold",
     ({ level }) => {
-      const pig = makePet("Pig", level);
+      const pig = pet({ type: "Pig",  level });
       const board = makeBoard([pig]);
 
       const { goldDelta } = fireShopAbility(
@@ -443,9 +431,9 @@ describe("Pig — sell", () => {
 describe("Fish — level-up", () => {
   it("level-up from lvl1 gives 2 friends +1/+1", () => {
     // Pass pet at OLD level (1) to simulate Fish leveling up from 1
-    const fish = makePet("Fish", 1);
-    const sloth1 = makePet("Sloth");
-    const sloth2 = makePet("Sloth");
+    const fish = pet({ type: "Fish",  level: 1 });
+    const sloth1 = pet();
+    const sloth2 = pet();
     const board = makeBoard([sloth1, fish, sloth2]);
 
     const { board: result } = fireShopAbility(
@@ -463,9 +451,9 @@ describe("Fish — level-up", () => {
   });
 
   it("level-up from lvl2 gives 2 friends +2/+2", () => {
-    const fish = makePet("Fish", 2);
-    const sloth1 = makePet("Sloth");
-    const sloth2 = makePet("Sloth");
+    const fish = pet({ type: "Fish",  level: 2 });
+    const sloth1 = pet();
+    const sloth2 = pet();
     const board = makeBoard([sloth1, fish, sloth2]);
 
     const { board: result } = fireShopAbility(
@@ -483,7 +471,7 @@ describe("Fish — level-up", () => {
   });
 
   it("no-op when no friends on board", () => {
-    const fish = makePet("Fish", 1);
+    const fish = pet({ type: "Fish",  level: 1 });
     const board = makeBoard([fish]);
     const { board: result } = fireShopAbility(
       Trigger.level_up,
@@ -501,7 +489,7 @@ describe("Swan — start-of-turn", () => {
   it.each([{ level: 1 }, { level: 2 }, { level: 3 }])(
     "gives +$level gold at level $level",
     ({ level }) => {
-      const swan = makePet("Swan", level);
+      const swan = pet({ type: "Swan",  level });
       const board = makeBoard([swan]);
 
       const { goldDelta } = fireBoardShopAbility(
@@ -519,7 +507,7 @@ describe("Squirrel — start-of-turn", () => {
   it.each([{ level: 1 }, { level: 2 }, { level: 3 }])(
     "discounts all shop food by $level gold at level $level",
     ({ level }) => {
-      const board = makeBoard([makePet("Squirrel", level)]);
+      const board = makeBoard([pet({ type: "Squirrel",  level })]);
       const shop = makeShop([], ["Apple", "Pear"]);
       const { shop: result } = fireBoardShopAbility(
         Trigger.start_of_turn,
@@ -534,7 +522,7 @@ describe("Squirrel — start-of-turn", () => {
   );
 
   it("does not discount shop pets", () => {
-    const board = makeBoard([makePet("Squirrel")]);
+    const board = makeBoard([pet({ type: "Squirrel" })]);
     const shop = makeShop(["Ant"]);
     const { shop: result } = fireBoardShopAbility(
       Trigger.start_of_turn,
@@ -546,7 +534,7 @@ describe("Squirrel — start-of-turn", () => {
   });
 
   it("stacks with a second Squirrel", () => {
-    const board = makeBoard([makePet("Squirrel"), makePet("Squirrel")]);
+    const board = makeBoard([pet({ type: "Squirrel" }), pet({ type: "Squirrel" })]);
     const { shop: result } = fireBoardShopAbility(
       Trigger.start_of_turn,
       board,
@@ -557,7 +545,7 @@ describe("Squirrel — start-of-turn", () => {
   });
 
   it("does not make food cheaper than 0", () => {
-    const board = makeBoard([makePet("Squirrel", 2)]);
+    const board = makeBoard([pet({ type: "Squirrel",  level: 2 })]);
     const { shop } = fireBoardShopAbility(
       Trigger.start_of_turn,
       board,
@@ -573,7 +561,7 @@ describe("Squirrel — start-of-turn", () => {
     const shop = makeShop([], ["Apple"]);
     fireBoardShopAbility(
       Trigger.start_of_turn,
-      makeBoard([makePet("Squirrel")]),
+      makeBoard([pet({ type: "Squirrel" })]),
       shop,
       PET_REGISTRY
     );
@@ -581,7 +569,7 @@ describe("Squirrel — start-of-turn", () => {
   });
 
   it("has no effect when there is no Squirrel", () => {
-    const board = makeBoard([makePet("Swan")]);
+    const board = makeBoard([pet({ type: "Swan" })]);
     const { shop } = fireBoardShopAbility(
       Trigger.start_of_turn,
       board,
@@ -601,9 +589,9 @@ describe("Penguin — start-of-turn", () => {
     "buffs two level 2+ friends by +$level/+$level at level $level",
     ({ level, expected }) => {
       const board = makeBoard([
-        makePet("Penguin", level),
-        makePet("Sloth", 2),
-        makePet("Sloth", 3),
+        pet({ type: "Penguin",  level }),
+        pet({ level: 2 }),
+        pet({ level: 3 }),
       ]);
       const { board: result } = fireBoardShopAbility(
         Trigger.start_of_turn,
@@ -619,10 +607,10 @@ describe("Penguin — start-of-turn", () => {
 
   it("buffs at most two eligible friends", () => {
     const board = makeBoard([
-      makePet("Penguin"),
-      makePet("Sloth", 2),
-      makePet("Sloth", 2),
-      makePet("Sloth", 2),
+      pet({ type: "Penguin" }),
+      pet({ level: 2 }),
+      pet({ level: 2 }),
+      pet({ level: 2 }),
     ]);
     const { board: result } = fireBoardShopAbility(
       Trigger.start_of_turn,
@@ -637,7 +625,7 @@ describe("Penguin — start-of-turn", () => {
   });
 
   it("never buffs level 1 friends", () => {
-    const board = makeBoard([makePet("Penguin"), makePet("Sloth", 1)]);
+    const board = makeBoard([pet({ type: "Penguin" }), pet({ level: 1 })]);
     const { board: result } = fireBoardShopAbility(
       Trigger.start_of_turn,
       board,
@@ -649,7 +637,7 @@ describe("Penguin — start-of-turn", () => {
   });
 
   it("never buffs itself", () => {
-    const board = makeBoard([makePet("Penguin", 2)]);
+    const board = makeBoard([pet({ type: "Penguin",  level: 2 })]);
     const { board: result } = fireBoardShopAbility(
       Trigger.start_of_turn,
       board,
@@ -691,10 +679,10 @@ describe("Giraffe — start-of-turn", () => {
     "gives the nearest friend ahead +$level/+$level at level $level",
     ({ level, expected }) => {
       const board = makeBoard([
-        makePet("Sloth"),
-        makePet("Sloth"),
-        makePet("Sloth"),
-        makePet("Giraffe", level),
+        pet(),
+        pet(),
+        pet(),
+        pet({ type: "Giraffe",  level }),
       ]);
       const { board: result } = fireBoardShopAbility(
         Trigger.start_of_turn,
@@ -710,7 +698,7 @@ describe("Giraffe — start-of-turn", () => {
   );
 
   it("does not buff a friend behind", () => {
-    const board = makeBoard([makePet("Giraffe"), makePet("Sloth")]);
+    const board = makeBoard([pet({ type: "Giraffe" }), pet()]);
     const { board: result } = fireBoardShopAbility(
       Trigger.start_of_turn,
       board,
@@ -724,7 +712,7 @@ describe("Giraffe — start-of-turn", () => {
 
 describe("Dog — friend summoned", () => {
   it("gains temporary attack and health until the next turn", () => {
-    const board = makeBoard([makePet("Dog", 2), makePet("Sloth")]);
+    const board = makeBoard([pet({ type: "Dog",  level: 2 }), pet()]);
     const summoned = fireShopFriendSummoned(board, 1, PET_REGISTRY);
 
     expect(summoned[0]).toMatchObject({
@@ -748,7 +736,7 @@ describe("Dog — friend summoned", () => {
 
 describe("Turkey — friend summoned", () => {
   it("permanently buffs the summoned pet in the shop", () => {
-    const board = makeBoard([makePet("Turkey", 2), makePet("Sloth")]);
+    const board = makeBoard([pet({ type: "Turkey",  level: 2 }), pet()]);
     const summoned = fireShopFriendSummoned(board, 1, PET_REGISTRY);
     const nextTurn = fireBoardShopAbility(
       Trigger.start_of_turn,
@@ -771,7 +759,7 @@ describe("Monkey — end turn", () => {
   ])(
     "gives the front-most pet, including itself, +$buff/+$buff at level $level",
     ({ level, expected }) => {
-      const board = makeBoard([makePet("Monkey", level), makePet("Sloth")]);
+      const board = makeBoard([pet({ type: "Monkey",  level }), pet()]);
       const { board: result } = fireBoardShopAbility(
         Trigger.end_turn,
         board,
@@ -791,7 +779,7 @@ describe("Dragon — Tier 1 friend bought", () => {
     { level: 2, expected: 3 },
     { level: 3, expected: 4 },
   ])("gives friends +$level/+$level at level $level", ({ level, expected }) => {
-    const board = makeBoard([makePet("Dragon", level), makePet("Sloth")]);
+    const board = makeBoard([pet({ type: "Dragon",  level }), pet()]);
     const { board: result } = fireShopFriendBought(
       PET_REGISTRY.Sloth,
       board,
@@ -805,7 +793,7 @@ describe("Dragon — Tier 1 friend bought", () => {
 
   it("works at most four times per turn", () => {
     const shop = makeShop();
-    let board = makeBoard([makePet("Dragon"), makePet("Sloth")]);
+    let board = makeBoard([pet({ type: "Dragon" }), pet()]);
     for (let i = 0; i < 4; i++) {
       board = fireShopFriendBought(
         PET_REGISTRY.Sloth,
@@ -826,7 +814,7 @@ describe("Dragon — Tier 1 friend bought", () => {
   });
 
   it("no-ops for buying non-tier 1 pets", () => {
-    const board = makeBoard([makePet("Dragon"), makePet("Sloth")]);
+    const board = makeBoard([pet({ type: "Dragon" }), pet()]);
     expect(board[1]).toMatchObject({ attack: 1, health: 1 });
 
     const { board: result } = fireShopFriendBought(
@@ -840,7 +828,7 @@ describe("Dragon — Tier 1 friend bought", () => {
 
   it("resets the four-per-turn limit at start of turn", () => {
     const shop = makeShop();
-    let board = makeBoard([makePet("Dragon"), makePet("Sloth")]);
+    let board = makeBoard([pet({ type: "Dragon" }), pet()]);
     for (let i = 0; i < 4; i++) {
       board = fireShopFriendBought(
         PET_REGISTRY.Sloth,
@@ -869,7 +857,7 @@ describe("Dragon — Tier 1 friend bought", () => {
 
 describe("Rabbit — friend ate food", () => {
   it("gives the fed friend health, including when Rabbit eats", () => {
-    const board: ApiBoard = [makePet("Rabbit"), makePet("Ant")];
+    const board: ApiBoard = [pet({ type: "Rabbit" }), pet({ type: "Ant" })];
     const fedAnt = applyFoodEffect(Apple, board, 1, PET_REGISTRY);
     const fedRabbit = applyFoodEffect(Apple, board, 0, PET_REGISTRY);
 
@@ -878,7 +866,7 @@ describe("Rabbit — friend ate food", () => {
   });
 
   it("triggers at most three times per turn and resets at turn start", () => {
-    let board: ApiBoard = [makePet("Rabbit"), makePet("Ant")];
+    let board: ApiBoard = [pet({ type: "Rabbit" }), pet({ type: "Ant" })];
     for (let i = 0; i < 4; i++) {
       board = applyFoodEffect(Apple, board, 1, PET_REGISTRY);
     }
@@ -895,7 +883,7 @@ describe("Rabbit — friend ate food", () => {
   });
 
   it("keeps its permanent health bonus when Cupcake expires", () => {
-    const board: ApiBoard = [makePet("Rabbit"), makePet("Ant")];
+    const board: ApiBoard = [pet({ type: "Rabbit" }), pet({ type: "Ant" })];
     const fed = applyFoodEffect(Cupcake, board, 1, PET_REGISTRY);
     const nextTurn = fireBoardShopAbility(
       Trigger.start_of_turn,
@@ -909,9 +897,9 @@ describe("Rabbit — friend ate food", () => {
 
   it("does not trigger from Pill because its target faints", () => {
     const board: ApiBoard = [
-      makePet("Rabbit"),
-      makePet("Sloth"),
-      makePet("Fish"),
+      pet({ type: "Rabbit" }),
+      pet(),
+      pet({ type: "Fish" }),
     ];
     const result = applyFoodEffect(Pill, board, 1, PET_REGISTRY);
 
@@ -925,8 +913,8 @@ describe("Rabbit — friend ate food", () => {
 
   it("does not trigger while it is a pending faint", () => {
     const board: ApiBoard = [
-      { ...makePet("Rabbit"), health: 0 },
-      makePet("Sloth"),
+      pet({ type: "Rabbit", health: 0 }),
+      pet(),
     ];
     const result = applyFoodEffect(Apple, board, 1, PET_REGISTRY);
 
@@ -937,7 +925,7 @@ describe("Rabbit — friend ate food", () => {
 
 describe("Seal — eats food", () => {
   it("buffs friends when Seal eats food", () => {
-    const board: ApiBoard = [makePet("Seal"), makePet("Ant"), makePet("Fish")];
+    const board: ApiBoard = [pet({ type: "Seal" }), pet({ type: "Ant" }), pet({ type: "Fish" })];
     const result = applyFoodEffect(Apple, board, 0, PET_REGISTRY);
 
     expect(result[1]?.attack).toBe(2);
@@ -945,7 +933,7 @@ describe("Seal — eats food", () => {
   });
 
   it("does not buff friends when a friend eats food", () => {
-    const board: ApiBoard = [makePet("Seal"), makePet("Ant"), makePet("Fish")];
+    const board: ApiBoard = [pet({ type: "Seal" }), pet({ type: "Ant" }), pet({ type: "Fish" })];
     const result = applyFoodEffect(Apple, board, 1, PET_REGISTRY);
 
     expect(result[2]?.attack).toBe(1);
@@ -967,8 +955,8 @@ describe("Pending faints", () => {
       fn: ({ self }) => fired.push(self.health),
     });
     const board = makeBoard([
-      { ...makePet("Killer"), attack: 9 },
-      makePet("Listener"),
+      pet({ type: "Killer", attack: 9}),
+      pet({ type: "Listener" }),
     ]);
 
     fireBoardShopAbility(
@@ -992,8 +980,8 @@ describe("Ability order", () => {
       });
     const registry = registryWith(listener("Low"), listener("High"));
     const board = makeBoard([
-      { ...makePet("Low"), attack: 1 },
-      { ...makePet("High"), attack: 9 },
+      pet({ type: "Low", attack: 1 }),
+      pet({ type: "High", attack: 9 }),
     ]);
 
     fireBoardShopAbility(Trigger.end_turn, board, makeShop(), registry);
@@ -1016,8 +1004,8 @@ describe("Ability order", () => {
     const high = listener("High Dragon");
     const registry = registryWith(low, high);
     const board = makeBoard([
-      { ...makePet(low.name), attack: 1 },
-      { ...makePet(high.name), attack: 9 },
+      pet({ type: "Low Dragon", attack: 1 }),
+      pet({ type: "High Dragon", attack: 9 })
     ]);
 
     fireShopFriendBought(PET_REGISTRY.Sloth, board, makeShop(), registry);
@@ -1034,9 +1022,9 @@ describe("Ability order", () => {
       });
     const registry = registryWith(listener("Low"), listener("High"));
     const board: ApiBoard = [
-      { ...makePet("Low"), attack: 1 },
-      { ...makePet("High"), attack: 9 },
-      makePet("Sloth"),
+      pet({ type: "Low", attack: 1 }),
+      pet({ type: "High", attack: 9 }),
+      pet(),
     ];
 
     applyFoodEffect(Apple, board, 2, registry);
@@ -1053,8 +1041,8 @@ describe("Bison — end-turn", () => {
   ])(
     "gains $ability at level $level when it has a level-3 friend",
     ({ level, expected }) => {
-      const bison = makePet("Bison", level);
-      const levelThreeFriend = makePet("Sloth", 3);
+      const bison = pet({ type: "Bison",  level });
+      const levelThreeFriend = pet({ level: 3 });
       const board = makeBoard([bison, levelThreeFriend]);
       const { board: result } = fireBoardShopAbility(
         Trigger.end_turn,
@@ -1070,8 +1058,8 @@ describe("Bison — end-turn", () => {
   );
 
   it("no-op without a level-3 friend", () => {
-    const bison = makePet("Bison");
-    const friend = makePet("Sloth", 1);
+    const bison = pet({ type: "Bison" });
+    const friend = pet({ level: 1 });
     const board = makeBoard([bison, friend]);
     const { board: result } = fireBoardShopAbility(
       Trigger.end_turn,
@@ -1085,7 +1073,7 @@ describe("Bison — end-turn", () => {
   });
 
   it("no-op if it is the level-3 friend", () => {
-    const bison = makePet("Bison", 3);
+    const bison = pet({ type: "Bison",  level: 3 });
     const board = makeBoard([bison]);
     const { board: result } = fireBoardShopAbility(
       Trigger.end_turn,
@@ -1100,9 +1088,9 @@ describe("Bison — end-turn", () => {
   });
 
   it("only the first Bison on the board applies the buff", () => {
-    const bison1 = makePet("Bison");
-    const bison2 = makePet("Bison");
-    const levelThreeFriend = makePet("Sloth", 3);
+    const bison1 = pet({ type: "Bison" });
+    const bison2 = pet({ type: "Bison" });
+    const levelThreeFriend = pet({ level: 3 });
     const board = makeBoard([bison1, bison2, levelThreeFriend]);
     const { board: result } = fireBoardShopAbility(
       Trigger.end_turn,
@@ -1125,12 +1113,12 @@ describe("Snail — end-turn", () => {
     "gives 3 nearest friends ahead +$level attack at level $level after a loss",
     ({ level, expected }) => {
       const friends = [
-        makePet("Sloth"),
-        makePet("Sloth"),
-        makePet("Sloth"),
-        makePet("Sloth"),
+        pet(),
+        pet(),
+        pet(),
+        pet(),
       ];
-      const snail = makePet("Snail", level);
+      const snail = pet({ type: "Snail",  level });
       const board = makeBoard([...friends, snail]);
       const { board: result } = fireBoardShopAbility(
         Trigger.end_turn,
@@ -1148,8 +1136,8 @@ describe("Snail — end-turn", () => {
   );
 
   it("no-op when the last battle was not a loss", () => {
-    const friend = makePet("Sloth");
-    const snail = makePet("Snail");
+    const friend = pet();
+    const snail = pet({ type: "Snail" });
     const board = makeBoard([friend, snail]);
     const { board: result } = fireBoardShopAbility(
       Trigger.end_turn,
@@ -1162,8 +1150,8 @@ describe("Snail — end-turn", () => {
   });
 
   it("buffs only the friends that exist when fewer than 3 are ahead", () => {
-    const friend = makePet("Sloth");
-    const snail = makePet("Snail");
+    const friend = pet();
+    const snail = pet({ type: "Snail" });
     const board = makeBoard([friend, snail]);
     const { board: result } = fireBoardShopAbility(
       Trigger.end_turn,
@@ -1261,14 +1249,14 @@ describe("Bread perk — end-turn / start-of-turn", () => {
 
 describe("fireShopFaint — Pill", () => {
   it("fires the target's faint ability, landing any summon in the same slot", () => {
-    const cricket = makePet("Cricket");
+    const cricket = pet({ type: "Cricket" });
     const board = makeBoard([cricket]);
     const result = fireShopFaint(board, 0, PET_REGISTRY);
     expect(result[0]?.type).toBe("Zombie Cricket");
   });
 
   it("flings later summons when the Pill opens only one slot", () => {
-    const cricket = { ...makePet("Cricket"), perk: { ...HoneyPerk } };
+    const cricket = pet({ type: "Cricket", perk: HoneyPerk });
     const board = makeBoard([cricket]);
     const result = fireShopFaint(board, 0, PET_REGISTRY);
 
@@ -1278,11 +1266,11 @@ describe("fireShopFaint — Pill", () => {
 
   it("flings the second Ram when Sheep faints in a full shop board", () => {
     const board = makeBoard([
-      makePet("Sheep"),
-      makePet("Sloth"),
-      makePet("Sloth"),
-      makePet("Sloth"),
-      makePet("Sloth"),
+      pet({ type: "Sheep" }),
+      pet(),
+      pet(),
+      pet(),
+      pet(),
     ]);
     const result = fireShopFaint(board, 0, PET_REGISTRY);
 
@@ -1290,7 +1278,7 @@ describe("fireShopFaint — Pill", () => {
   });
 
   it("fires Friend ahead faints for the pet behind", () => {
-    const board = makeBoard([makePet("Sloth"), makePet("Ox")]);
+    const board = makeBoard([pet(), pet({ type: "Ox" })]);
     const result = fireShopFaint(board, 0, registryWith(Ox));
 
     expect(result[1]).toMatchObject({ attack: 2, health: 1 });
@@ -1299,9 +1287,9 @@ describe("fireShopFaint — Pill", () => {
 
   it("fires Friend ahead faints once per turn", () => {
     const board = makeBoard([
-      makePet("Sloth"),
-      makePet("Sloth"),
-      makePet("Ox"),
+      pet(),
+      pet(),
+      pet({ type: "Ox" }),
     ]);
     const afterFirst = fireShopFaint(board, 1, registryWith(Ox));
     const afterSecond = fireShopFaint(afterFirst, 0, registryWith(Ox));
@@ -1311,8 +1299,8 @@ describe("fireShopFaint — Pill", () => {
 
   it("refreshes Friend ahead faints at start of turn", () => {
     const board = makeBoard([
-      makePet("Sloth"),
-      { ...makePet("Ox"), triggers: 1 },
+      pet(),
+      pet({ type: "Ox", triggers: 1 })
     ]);
     const nextTurn = fireBoardShopAbility(
       Trigger.start_of_turn,
@@ -1326,21 +1314,21 @@ describe("fireShopFaint — Pill", () => {
   });
 
   it("summons a Bee when a Honey pet is pilled", () => {
-    const honeySloth = { ...makePet("Sloth"), perk: { ...HoneyPerk } };
+    const honeySloth = pet({ perk: HoneyPerk });
     const result = fireShopFaint(makeBoard([honeySloth]), 0, PET_REGISTRY);
 
     expect(result[0]?.type).toBe("Bee");
   });
 
   it("just removes a pet with no faint ability", () => {
-    const sloth = makePet("Sloth");
+    const sloth = pet();
     const board = makeBoard([sloth]);
     const result = fireShopFaint(board, 0, PET_REGISTRY);
     expect(result[0]).toBeNull();
   });
 
   it("splashes compacted neighbors for a pet like Badger", () => {
-    const sloth1 = makePet("Sloth");
+    const sloth1 = pet();
     const badger: PetData = {
       type: "Badger",
       attack: 6,
@@ -1349,7 +1337,7 @@ describe("fireShopFaint — Pill", () => {
       xp: 1,
       level: 1,
     };
-    const sloth2 = makePet("Sloth");
+    const sloth2 = pet();
     const board = makeBoard([sloth1, badger, sloth2]);
     const result = fireShopFaint(board, 1, PET_REGISTRY);
     // Badger's faint deals 50% of its attack (3) to both compacted neighbors.
@@ -1367,8 +1355,8 @@ describe("fireShopFriendSummoned — Horse", () => {
   ])(
     "gives newly summoned pets from the shop +$level attack at level $level",
     ({ level, expected }) => {
-      const horse = makePet("Horse", level);
-      const sloth = makePet("Sloth");
+      const horse = pet({ type: "Horse",  level });
+      const sloth = pet();
       const board = makeBoard([horse, sloth]);
       const result = fireShopFriendSummoned(board, 1, PET_REGISTRY);
 
@@ -1377,7 +1365,7 @@ describe("fireShopFriendSummoned — Horse", () => {
   );
 
   it("does not fire on itself when bought", () => {
-    const horse = makePet("Horse", 1);
+    const horse = pet({ type: "Horse",  level: 1 });
     const board = makeBoard([horse]);
     const result = fireShopFriendSummoned(board, 0, PET_REGISTRY);
 
@@ -1386,8 +1374,8 @@ describe("fireShopFriendSummoned — Horse", () => {
 
   // TODO - Should NOT be under "Horse" if this does not use "Horse."  Test seems valuable for confirming this function works w/o a summon friend
   it("no-op when no pet has a friend-summoned ability", () => {
-    const sloth1 = makePet("Sloth");
-    const sloth2 = makePet("Sloth");
+    const sloth1 = pet();
+    const sloth2 = pet();
     const board = makeBoard([sloth1, sloth2]);
     const result = fireShopFriendSummoned(board, 1, PET_REGISTRY);
 
@@ -1398,8 +1386,8 @@ describe("fireShopFriendSummoned — Horse", () => {
 // TODO - This should likely just be in the same description as Horse.  Descriptions can be nested if desired.
 describe("Temporary stats — Horse in the shop", () => {
   it("records Horse's shop buff as temporary attack", () => {
-    const horse = makePet("Horse", 2);
-    const sloth = makePet("Sloth");
+    const horse = pet({ type: "Horse",  level: 2 });
+    const sloth = pet();
     const result = fireShopFriendSummoned(
       makeBoard([horse, sloth]),
       1,
@@ -1411,7 +1399,7 @@ describe("Temporary stats — Horse in the shop", () => {
 
   it("removes temp attack at start-of-turn even with no Horse left on the board", () => {
     const buffed: PetData = {
-      ...makePet("Sloth"),
+      ...pet(),
       attack: 3,
       tempAttack: 2,
     };
@@ -1426,11 +1414,7 @@ describe("Temporary stats — Horse in the shop", () => {
   });
 
   it("keeps temp attack through end-turn (it lasts into the battle)", () => {
-    const buffed: PetData = {
-      ...makePet("Sloth"),
-      attack: 3,
-      tempAttack: 2,
-    };
+    const buffed: PetData = pet({ attack: 3, tempAttack: 2 });
     const { board } = fireBoardShopAbility(
       Trigger.end_turn,
       makeBoard([buffed]),

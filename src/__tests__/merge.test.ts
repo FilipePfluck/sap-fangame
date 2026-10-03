@@ -3,6 +3,7 @@ import { mergePets, mergeError, computeLevel } from "@/lib/game/merge";
 import { createPet } from "@/lib/game/pet";
 import { PET_REGISTRY } from "@/lib/pets";
 import type { PetData } from "@/lib/types";
+import { pet } from "@/__tests__/helpers";
 
 const sloth = (xp: number): PetData => ({
   type: "Sloth",
@@ -33,50 +34,50 @@ describe("computeLevel", () => {
 
 describe("mergePets", () => {
   it("adds one XP when merging two fresh pets", () => {
-    const result = mergePets(sloth(0), sloth(0));
+    const result = mergePets(pet({ xp: 0 }), pet({ xp: 0 }));
     expect(result.xp).toBe(1);
     expect(result.level).toBe(1);
   });
 
   it("accumulates xp correctly after a second merge", () => {
-    const afterFirstMerge = mergePets(sloth(0), sloth(0));
+    const afterFirstMerge = mergePets(pet({ xp: 0 }), pet({ xp: 0 }));
     expect(afterFirstMerge.xp).toBe(1);
     expect(afterFirstMerge.level).toBe(1);
 
-    const afterSecondMerge = mergePets(afterFirstMerge, sloth(0));
+    const afterSecondMerge = mergePets(afterFirstMerge, pet({ xp: 0 }));
     expect(afterSecondMerge.xp).toBe(2);
     expect(afterSecondMerge.level).toBe(2);
   });
 
   it("board merge: accumulated pet into fresh pet gains correct xp", () => {
-    const accumulated = sloth(1);
-    const fresh = sloth(0);
+    const accumulated = pet({ xp: 1 });
+    const fresh = pet({ xp: 0 });
     const result = mergePets(fresh, accumulated);
     expect(result.xp).toBe(2);
     expect(result.level).toBe(2);
   });
 
   it("board merge: fresh pet into accumulated pet gains correct xp", () => {
-    const accumulated = sloth(1);
-    const fresh = sloth(0);
+    const accumulated = pet({ xp: 1 });
+    const fresh = pet({ xp: 0 });
     const result = mergePets(accumulated, fresh);
     expect(result.xp).toBe(2);
     expect(result.level).toBe(2);
   });
 
   it("caps merged XP at 5", () => {
-    expect(mergePets(sloth(4), sloth(4)).xp).toBe(5);
+    expect(mergePets(pet({ xp: 4 }), pet({ xp: 4 })).xp).toBe(5);
   });
 
   it("refuses to merge a pet at max XP", () => {
-    expect(mergeError(sloth(5), sloth(0))).toBe("Pet has reached max experience");
-    expect(mergeError(sloth(0), sloth(5))).toBe("Pet has reached max experience");
+    expect(mergeError(pet({ xp: 5 }), pet({ xp: 0 }))).toBe("Pet has reached max experience");
+    expect(mergeError(pet({ xp: 0 }), pet({ xp: 5 }))).toBe("Pet has reached max experience");
     expect(() => mergePets(sloth(5), sloth(0))).toThrow("Pet has reached max experience");
   });
 
   it("boosts attack and health by 1 over the max of both", () => {
-    const a: PetData = { type: "Sloth", attack: 3, health: 2, perk: null, xp: 0, level: 1 };
-    const b: PetData = { type: "Sloth", attack: 1, health: 4, perk: null, xp: 0, level: 1 };
+    const a = pet({ attack: 3, health: 2 })
+    const b = pet({ attack: 1, health: 4 })
     const result = mergePets(a, b);
     expect(result.attack).toBe(4); // max(3,1)+1
     expect(result.health).toBe(5); // max(2,4)+1
@@ -85,14 +86,14 @@ describe("mergePets", () => {
 
 describe("mergePets — temporary stats", () => {
   it("keeps temp attack on the merged pet so it is still removed next turn", () => {
-    const buffed: PetData = { ...sloth(0), attack: 3, tempAttack: 2 };
-    const merged = mergePets(buffed, sloth(0));
+    const buffed: PetData = pet({ xp: 0, attack: 3, tempAttack: 2 });
+    const merged = mergePets(buffed, pet({ xp: 0 }));
     expect(merged.attack).toBe(4);
     expect(merged.tempAttack).toBe(2);
   });
 
   it("adds no temp fields when neither pet had any", () => {
-    const merged = mergePets(sloth(0), sloth(0));
+    const merged = mergePets(pet({ xp: 0 }), pet({ xp: 0 }));
     expect(merged.tempAttack).toBeUndefined();
     expect(merged.tempHealth).toBeUndefined();
   });

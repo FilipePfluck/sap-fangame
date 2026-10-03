@@ -2,11 +2,9 @@ import { describe, it, expect } from "vitest";
 import { addLevelUpReward, getRewardTier, MAX_SHOP_SLOTS } from "@/lib/game/shop";
 import { levelUpRewardEarned } from "@/lib/game/merge";
 import { SHOP_PET_POOL } from "@/lib/pets";
-import type { PetData, ShopState } from "@/lib/types";
+import type { ShopState } from "@/lib/types";
+import { pet } from "@/__tests__/helpers";
 
-const pet = (xp: number, level: number): PetData => ({
-  type: "Cricket", attack: 1, health: 1, perk: null, xp, level,
-});
 const emptyShop: ShopState = { shopPets: [], shopFoods: [] };
 
 describe("getRewardTier", () => {
@@ -100,17 +98,17 @@ describe("addLevelUpReward", () => {
 
 describe("levelUpRewardEarned", () => {
   it("a merge that reaches 2 XP earns a reward", () => {
-    expect(levelUpRewardEarned(pet(1, 1), pet(0, 1))).toBe(true);
+    expect(levelUpRewardEarned(pet({ xp: 1, level: 1 }), pet({ xp: 0, level: 1 }))).toBe(true);
   });
   it("merging two level-2 pets does not, regardless of xp", () => {
-    expect(levelUpRewardEarned(pet(2, 2), pet(2, 2))).toBe(false);
-    expect(levelUpRewardEarned(pet(4, 2), pet(4, 2))).toBe(false);
+    expect(levelUpRewardEarned(pet({ xp: 2, level: 2 }), pet({ xp: 2, level: 2 }))).toBe(false);
+    expect(levelUpRewardEarned(pet({ xp: 4, level: 2 }), pet({ xp: 4, level: 2 }))).toBe(false);
   });
   it("level 2 + level 1 reaching 5 XP earns a reward", () => {
-    expect(levelUpRewardEarned(pet(4, 2), pet(0, 1))).toBe(true);
+    expect(levelUpRewardEarned(pet({ xp: 4, level: 2 }), pet({ xp: 0, level: 1 }))).toBe(true);
   });
   it("no reward when the merge does not level up", () => {
-    expect(levelUpRewardEarned(pet(0, 1), pet(0, 1))).toBe(false);
-    expect(levelUpRewardEarned(pet(2, 2), pet(0, 1))).toBe(false);
+    expect(levelUpRewardEarned(pet({ xp: 0, level: 1 }), pet({ xp: 0, level: 1 }))).toBe(false);
+    expect(levelUpRewardEarned(pet({ xp: 2, level: 2 }), pet({ xp: 0, level: 1 }))).toBe(false);
   });
 });
