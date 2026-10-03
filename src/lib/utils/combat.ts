@@ -83,10 +83,15 @@ export function dealAbilityDamage(
 }
 
 
-// Skunk-style effects remove a flat percentage of a pet's *current* health
-// directly, rather than dealing damage — so unlike dealAbilityDamage, this
-// never checks Garlic/Melon/Peanut. It always leaves at least 1 health.
-export function removeHealth(target: PetInstance, fraction: number): void {
-  const reduced = target.health - Math.ceil(target.health * fraction);
+export type HealthRemoval = { amount: number } | { fraction: number };
+
+// Health removal bypasses damage mitigation and always leaves a living pet at
+// 1 health or more. Percentage effects round up, while flat effects are used as-is.
+export function removeHealth(target: PetInstance, removal: HealthRemoval): void {
+  if (target.health <= 0) return;
+  const amount = "fraction" in removal
+    ? Math.ceil(target.health * removal.fraction)
+    : Math.max(0, Math.floor(removal.amount));
+  const reduced = target.health - amount;
   target.health = Math.max(1, reduced);
 }

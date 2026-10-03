@@ -8,6 +8,7 @@ import {
 import { clonePetInstance } from "@/lib/utils/clone";
 import { orderByAttack, pickN } from "@/lib/utils/random";
 import { grantExperience } from "@/lib/game/merge";
+import { getPetAbility } from "@/lib/game/pet";
 import { MAX_PET_EXPERIENCE } from "@/lib/game/rules";
 
 // Whether the player has to pick a pet to feed this food to.
@@ -79,10 +80,8 @@ export function triggerFriendAteFood(
     (pet): pet is PetInstance => pet !== null && pet.health > 0
   );
   const listeners = friends.flatMap((pet) => {
-    const ability = petRegistry[pet.type]?.ability;
-    return ability?.trigger === Trigger.friend_ate_food
-      ? [{ pet, ability }]
-      : [];
+    const ability = getPetAbility(petRegistry[pet.type], Trigger.friend_ate_food);
+    return ability ? [{ pet, ability }] : [];
   });
   for (const { pet, ability } of orderByAttack(listeners, (job) => job.pet.attack)) {
     ability.fn({

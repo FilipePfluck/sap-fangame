@@ -1158,6 +1158,31 @@ describe("fireShopFaint — Pill", () => {
   });
 });
 
+describe("fireShopFriendSummoned — Alpaca", () => {
+  it.each([
+    { level: 1, expectedCount: 1 },
+    { level: 2, expectedCount: 2 },
+    { level: 3, expectedCount: 3 },
+  ])("grants +1 experience up to $expectedCount times at level $level", ({ level, expectedCount }) => {
+    const alpaca = makePet("Alpaca", level);
+    let board = makeBoard([
+      alpaca,
+      makePet("Sloth"),
+      makePet("Sloth"),
+      makePet("Sloth"),
+    ]);
+
+    for (let summonedIndex = 1; summonedIndex <= 3; summonedIndex++) {
+      board = fireShopFriendSummoned(board, summonedIndex, PET_REGISTRY);
+    }
+
+    const summoned = board.slice(1).filter((friend): friend is PetInstance => friend !== null);
+    expect(summoned.filter((friend) => friend.xp === 1)).toHaveLength(expectedCount);
+    expect(summoned.filter((friend) => friend.xp === 0)).toHaveLength(3 - expectedCount);
+    expect(alpaca.friendSummonsThisTurn).toBe(expectedCount);
+  });
+});
+
 describe("fireShopFriendSummoned — Horse", () => {
   it.each([
     { level: 1, expected: 2 },

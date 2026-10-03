@@ -10,8 +10,9 @@ import type {
   PetInstance,
   TriggerPerk,
 } from "@/lib/types";
-import { Trigger } from "@/lib/types";
+import { CounterTrigger, Trigger } from "@/lib/types";
 import { grantExperience } from "@/lib/game/merge";
+import { createBattleAbilityContext } from "@/lib/game/battle-ability-context";
 import { GarlicPerk } from "@/lib/perks/garlic";
 import { MelonPerk } from "@/lib/perks/melon";
 import { CoconutPerk } from "@/lib/perks/coconut";
@@ -23,7 +24,7 @@ import { structuredClone } from "next/dist/compiled/@edge-runtime/primitives";
 import { SteakPerk } from "@/lib/perks/steak";
 import { ChiliPerk } from "@/lib/perks/chili";
 import { Ox } from "@/lib/pets/ox";
-import { abilityPet, registryWith } from "./helpers";
+import { abilityPet, registryWith, testAbilityStates } from "./helpers";
 import { dealAbilityDamage, dealDirectDamage } from "@/lib/utils/combat";
 import { fireShopFriendSummoned } from "@/lib/game/shop-ability";
 
@@ -40,12 +41,14 @@ function battleContext(
   team: PetInstance[],
   enemyTeam: PetInstance[]
 ): BattleAbilityContext {
-  return {
+  return createBattleAbilityContext({
     self,
     selfIndex: team.indexOf(self),
     team,
     enemyTeam,
     level: self.level,
+    mode: "battle",
+    state: testAbilityStates.forPet(self),
     summon: () => {},
     triggerCount: 1,
     petRegistry: PET_REGISTRY,
@@ -56,7 +59,7 @@ function battleContext(
     },
     grantExperience,
     friendAteFood: () => {},
-  };
+  });
 }
 
 describe("Pet Abilities", () => {
@@ -174,6 +177,58 @@ describe("Pet Abilities", () => {
 
       expect(steps[1].attackerTeam[0].type).toBe("Zombie Cricket");
       expect(steps[1].attackerTeam[0].perk).toBeNull();
+    });
+  });
+
+  describe("Alpaca — friend summoned", () => {
+    it.each([
+      { level: 1, expectedCount: 1 },
+      { level: 2, expectedCount: 2 },
+      { level: 3, expectedCount: 3 },
+    ])("grants 3 experience to up to $expectedCount friends in battle", ({ level, expectedCount }) => {
+      const summoner = abilityPet("Alpaca Test Summoner", {
+        trigger: Trigger.start_of_battle,
+        fn: (ctx) => {
+          for (let i = 0; i < 3; i++) {
+            ctx.summon(pet("Sloth", 1, 1), ctx.selfIndex);
+          }
+        },
+      });
+      const { steps } = simulateBattle(
+        [pet(summoner.name, 100, 100), petLevel("Alpaca", 3, 7, level)],
+        [pet("Sloth", 0, 1000)],
+        registryWith(summoner)
+      );
+      const summoned = steps[1].attackerTeam.filter((friend) => friend.type === "Sloth");
+
+      expect(summoned.filter((friend) => friend.xp === 3)).toHaveLength(expectedCount);
+      expect(summoned.filter((friend) => friend.xp === 0)).toHaveLength(3 - expectedCount);
+    });
+
+    it("carries its shop trigger use into battle", () => {
+      const shopTeam = fireShopFriendSummoned(
+        [pet("Sloth", 1, 1), petLevel("Alpaca", 3, 7, 2)],
+        0,
+        PET_REGISTRY
+      );
+      const alpaca = shopTeam[1] as PetInstance;
+      const summoner = abilityPet("Alpaca Carryover Summoner", {
+        trigger: Trigger.start_of_battle,
+        fn: (ctx) => {
+          for (let i = 0; i < 2; i++) {
+            ctx.summon(pet("Sloth", 1, 1), ctx.selfIndex);
+          }
+        },
+      });
+      const { steps } = simulateBattle(
+        [pet(summoner.name, 100, 100), alpaca],
+        [pet("Sloth", 0, 1000)],
+        registryWith(summoner)
+      );
+      const summoned = steps[1].attackerTeam.filter((friend) => friend.type === "Sloth");
+
+      expect(summoned.filter((friend) => friend.xp === 3)).toHaveLength(1);
+      expect(summoned.filter((friend) => friend.xp === 0)).toHaveLength(1);
     });
   });
 
@@ -838,6 +893,37 @@ describe("Pet Abilities", () => {
         Array(count).fill("Dirty Rat")
       );
       expect(opposingTeam[count]).toMatchObject({ type: "Horse", attack: 2 });
+    });
+  });
+
+  describe("Whale — start of battle and faint", () => {
+    it.each([
+      { level: 1, xp: 0 },
+      { level: 2, xp: 2 },
+      { level: 3, xp: 5 },
+    ])("releases the nearest friend at Whale level $level without its perk", ({ level, xp }) => {
+      let faintTriggers = 0;
+      const swallowedType = abilityPet("Swallow Target", {
+        trigger: Trigger.faint,
+        fn: () => faintTriggers++,
+      });
+      const swallowed = petLevel("Swallow Target", 9, 1000, 3);
+      swallowed.perk = { ...MelonPerk };
+      const { steps } = simulateBattle(
+        [pet("Sloth", 1, 1), swallowed, petLevel("Whale", 3, 7, level)],
+        [pet("Sloth", 10, 1000)],
+        registryWith(swallowedType)
+      );
+
+      expect(steps[2].attackerTeam[0]).toMatchObject({
+        type: "Swallow Target",
+        attack: 9,
+        health: 1000,
+        perk: null,
+        level,
+        xp,
+      });
+      expect(faintTriggers).toBe(0);
     });
   });
 
@@ -1701,6 +1787,80 @@ describe("Engine Behavior", () => {
       );
 
       expect(healthWhenHurt[0]).toBe(9);
+    });
+
+    it("fires a counter ability every N friend-hurt events", () => {
+      const counterActivations: number[] = [];
+      const damageFriend = abilityPet("Damage Friend", {
+        trigger: Trigger.start_of_battle,
+        fn: (ctx) => {
+          const target = ctx.team.find((friend) => friend.type === "Target");
+          if (!target) return;
+          for (let i = 0; i < 4; i++) ctx.dealAbilityDamage(target, 1);
+        },
+      });
+      const counterListener = abilityPet("Counter Listener", {
+        trigger: Trigger.counter,
+        counter: { trigger: CounterTrigger.friend_hurt, every: 2 },
+        fn: (ctx) => {
+          counterActivations.push(ctx.triggerCount);
+          ctx.dealAbilityDamage(ctx.enemyTeam[0], 1);
+        },
+      });
+
+      const { result } = simulateBattle(
+        [pet(damageFriend.name, 1, 20), pet("Target", 1, 10), pet(counterListener.name, 1, 20)],
+        [pet("Sloth", 1, 1)],
+        registryWith(damageFriend, counterListener)
+      );
+
+      expect(counterActivations).toHaveLength(2);
+      expect(result).toBe("WIN");
+    });
+  });
+
+  describe("Wolverine — counter friend hurt", () => {
+    it.each([
+      { level: 1, removal: 3 },
+      { level: 2, removal: 6 },
+      { level: 3, removal: 9 },
+    ])("removes $removal health from every enemy after four friend hurts", ({ level, removal }) => {
+      const damageFriend = abilityPet("Wolverine Test Hurter", {
+        trigger: Trigger.start_of_battle,
+        fn: (ctx) => {
+          const target = ctx.team.find((friend) => friend.type === "Target");
+          if (!target) return;
+          for (let i = 0; i < 4; i++) ctx.dealAbilityDamage(target, 1);
+        },
+      });
+      const { steps } = simulateBattle(
+        [pet(damageFriend.name, 0, 100), pet("Target", 1, 100), petLevel("Wolverine", 5, 7, level)],
+        [pet("Sloth", 0, 100), pet("Sloth", 0, 100)],
+        registryWith(damageFriend)
+      );
+
+      expect(steps[1].defenderTeam.map((enemy) => enemy.health)).toEqual([
+        100 - removal,
+        100 - removal,
+      ]);
+    });
+
+    it("does not consume defensive perks", () => {
+      const wolverine = petLevel("Wolverine", 5, 7, 1);
+      const enemy = pet("Sloth", 0, 100, MelonPerk);
+      const ability = PET_REGISTRY.Wolverine.ability;
+      if (ability?.trigger !== Trigger.counter) throw new Error("Expected counter ability");
+
+      ability.fn({
+        ...battleContext(wolverine, [wolverine], [enemy]),
+        level: 1,
+      });
+
+      expect(enemy.health).toBe(97);
+      expect(enemy.perk).toMatchObject({
+        name: "Melon",
+        usesRemaining: 1,
+      });
     });
   });
 
