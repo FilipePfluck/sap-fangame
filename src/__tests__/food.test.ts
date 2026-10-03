@@ -4,14 +4,14 @@ import { PET_REGISTRY } from "@/lib/pets";
 import { Apple, Honey, Pill, Sushi } from "@/lib/foods";
 import { Chocolate } from "@/lib/foods/chocolate";
 import { Cupcake } from "@/lib/foods/cupcake";
-import { ApiBoard, FoodType, PetInstance } from "@/lib/types";
+import { ApiBoard, FoodType, PetData } from "@/lib/types";
 import { MeatBone } from "@/lib/foods/meat-bone";
 import { MeatBonePerk } from "@/lib/perks/meat-bone";
 import { HoneyPerk } from "@/lib/perks/honey";
 import { fireBoardShopAbility } from "@/lib/game/shop-ability";
 import { Trigger } from "@/lib/types";
 
-function pet(type: string, attack = 2, health = 2): PetInstance {
+function pet(type: string, attack = 2, health = 2): PetData {
   return { type, attack, health, perk: null, xp: 0, level: 1 };
 }
 

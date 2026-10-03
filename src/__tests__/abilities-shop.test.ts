@@ -11,7 +11,7 @@ import { Apple, FOOD_REGISTRY, Pill } from "@/lib/foods";
 import { getFoodCost } from "@/lib/game/costs";
 import { applyFoodEffect } from "@/lib/game/food";
 import { Cupcake } from "@/lib/foods/cupcake";
-import { ApiBoard, PetInstance, ShopState, Trigger } from "@/lib/types";
+import { ApiBoard, PetData, ShopState, Trigger } from "@/lib/types";
 import { BreadPerk } from "@/lib/perks/bread";
 import { GarlicPerk } from "@/lib/perks/garlic";
 import { HoneyPerk } from "@/lib/perks/honey";
@@ -19,7 +19,7 @@ import { Ox } from "@/lib/pets/turtle/tier 3/ox";
 import { abilityPet, registryWith } from "./helpers";
 import { Board } from "@/lib/game/board";
 
-function makePet(type: string, level = 1): PetInstance {
+function makePet(type: string, level = 1): PetData {
   return {
     type,
     attack: 1,
@@ -40,7 +40,7 @@ function makeShop(
   };
 }
 
-function makeBoard(pets: (PetInstance | null)[]): ApiBoard {
+function makeBoard(pets: (PetData | null)[]): ApiBoard {
   const board: ApiBoard = [null, null, null, null, null];
   pets.forEach((p, i) => {
     board[i] = p;
@@ -183,7 +183,7 @@ describe("Beaver — sell", () => {
       makeShop(),
       PET_REGISTRY
     );
-    expect((result[1] as PetInstance).attack).toBe(2);
+    expect((result[1] as PetData).attack).toBe(2);
   });
 
   it("no-op when no friends on board", () => {
@@ -277,7 +277,7 @@ describe("Otter — buy", () => {
       makeShop(),
       PET_REGISTRY
     );
-    expect((result[0] as PetInstance).health).toBe(1); // Otter unchanged
+    expect((result[0] as PetData).health).toBe(1); // Otter unchanged
   });
 });
 
@@ -456,10 +456,10 @@ describe("Fish — level-up", () => {
       makeShop(),
       PET_REGISTRY
     );
-    expect((result[0] as PetInstance).attack).toBe(2);
-    expect((result[0] as PetInstance).health).toBe(2);
-    expect((result[2] as PetInstance).attack).toBe(2);
-    expect((result[2] as PetInstance).health).toBe(2);
+    expect((result[0] as PetData).attack).toBe(2);
+    expect((result[0] as PetData).health).toBe(2);
+    expect((result[2] as PetData).attack).toBe(2);
+    expect((result[2] as PetData).health).toBe(2);
   });
 
   it("level-up from lvl2 gives 2 friends +2/+2", () => {
@@ -476,10 +476,10 @@ describe("Fish — level-up", () => {
       makeShop(),
       PET_REGISTRY
     );
-    expect((result[0] as PetInstance).attack).toBe(3);
-    expect((result[0] as PetInstance).health).toBe(3);
-    expect((result[2] as PetInstance).attack).toBe(3);
-    expect((result[2] as PetInstance).health).toBe(3);
+    expect((result[0] as PetData).attack).toBe(3);
+    expect((result[0] as PetData).health).toBe(3);
+    expect((result[2] as PetData).attack).toBe(3);
+    expect((result[2] as PetData).health).toBe(3);
   });
 
   it("no-op when no friends on board", () => {
@@ -631,7 +631,7 @@ describe("Penguin — start-of-turn", () => {
       PET_REGISTRY
     );
 
-    const friends = result.slice(1, 4) as PetInstance[];
+    const friends = result.slice(1, 4) as PetData[];
     expect(friends.reduce((sum, friend) => sum + friend.attack, 0)).toBe(5);
     expect(friends.reduce((sum, friend) => sum + friend.health, 0)).toBe(5);
   });
@@ -1053,8 +1053,8 @@ describe("Bison — end-turn", () => {
         "WIN"
       );
 
-      expect((result[0] as PetInstance).attack).toBe(expected);
-      expect((result[0] as PetInstance).health).toBe(expected);
+      expect((result[0] as PetData).attack).toBe(expected);
+      expect((result[0] as PetData).health).toBe(expected);
     }
   );
 
@@ -1069,8 +1069,8 @@ describe("Bison — end-turn", () => {
       PET_REGISTRY,
       "WIN"
     );
-    expect((result[0] as PetInstance).attack).toBe(1);
-    expect((result[0] as PetInstance).health).toBe(1);
+    expect((result[0] as PetData).attack).toBe(1);
+    expect((result[0] as PetData).health).toBe(1);
   });
 
   it("no-op if it is the level-3 friend", () => {
@@ -1100,8 +1100,8 @@ describe("Bison — end-turn", () => {
       PET_REGISTRY,
       "WIN"
     );
-    expect((result[0] as PetInstance).attack).toBe(3);
-    expect((result[1] as PetInstance).attack).toBe(1); // second Bison unaffected
+    expect((result[0] as PetData).attack).toBe(3);
+    expect((result[1] as PetData).attack).toBe(1); // second Bison unaffected
   });
 });
 
@@ -1129,10 +1129,10 @@ describe("Snail — end-turn", () => {
         "LOSS"
       );
 
-      expect((result[0] as PetInstance).attack).toBe(1);
-      expect((result[1] as PetInstance).attack).toBe(expected);
-      expect((result[2] as PetInstance).attack).toBe(expected);
-      expect((result[3] as PetInstance).attack).toBe(expected);
+      expect((result[0] as PetData).attack).toBe(1);
+      expect((result[1] as PetData).attack).toBe(expected);
+      expect((result[2] as PetData).attack).toBe(expected);
+      expect((result[3] as PetData).attack).toBe(expected);
     }
   );
 
@@ -1147,7 +1147,7 @@ describe("Snail — end-turn", () => {
       PET_REGISTRY,
       "WIN"
     );
-    expect((result[0] as PetInstance).attack).toBe(1);
+    expect((result[0] as PetData).attack).toBe(1);
   });
 
   it("buffs only the friends that exist when fewer than 3 are ahead", () => {
@@ -1161,13 +1161,13 @@ describe("Snail — end-turn", () => {
       PET_REGISTRY,
       "LOSS"
     );
-    expect((result[0] as PetInstance).attack).toBe(2);
+    expect((result[0] as PetData).attack).toBe(2);
   });
 });
 
 describe("Bread perk — end-turn / start-of-turn", () => {
   it("grants +7 health at end-turn, recorded as temporary", () => {
-    const breadPet: PetInstance = {
+    const breadPet: PetData = {
       type: "Sloth",
       attack: 1,
       health: 5,
@@ -1182,12 +1182,12 @@ describe("Bread perk — end-turn / start-of-turn", () => {
       makeShop(),
       PET_REGISTRY
     );
-    expect((result[0] as PetInstance).health).toBe(12);
-    expect((result[0] as PetInstance).tempHealth).toBe(7);
+    expect((result[0] as PetData).health).toBe(12);
+    expect((result[0] as PetData).tempHealth).toBe(7);
   });
 
   it("removes the +7 at start-of-turn", () => {
-    const breadPet: PetInstance = {
+    const breadPet: PetData = {
       type: "Sloth",
       attack: 1,
       health: 12,
@@ -1203,12 +1203,12 @@ describe("Bread perk — end-turn / start-of-turn", () => {
       makeShop(),
       PET_REGISTRY
     );
-    expect((result[0] as PetInstance).health).toBe(5);
-    expect((result[0] as PetInstance).tempHealth).toBeUndefined();
+    expect((result[0] as PetData).health).toBe(5);
+    expect((result[0] as PetData).tempHealth).toBeUndefined();
   });
 
   it("temporary health does not exceed stat caps", () => {
-    const breadPet: PetInstance = {
+    const breadPet: PetData = {
       type: "Sloth",
       attack: 1,
       health: 50,
@@ -1223,12 +1223,12 @@ describe("Bread perk — end-turn / start-of-turn", () => {
       makeShop(),
       PET_REGISTRY
     );
-    expect((result[0] as PetInstance).health).toBe(50);
-    expect((result[0] as PetInstance).tempHealth).toBe(0);
+    expect((result[0] as PetData).health).toBe(50);
+    expect((result[0] as PetData).tempHealth).toBe(0);
   });
 
   it("still removes the +7 at start-of-turn after the perk was replaced", () => {
-    const garlicPet: PetInstance = {
+    const garlicPet: PetData = {
       type: "Sloth",
       attack: 1,
       health: 12,
@@ -1244,7 +1244,7 @@ describe("Bread perk — end-turn / start-of-turn", () => {
       makeShop(),
       PET_REGISTRY
     );
-    expect((result[0] as PetInstance).health).toBe(5);
+    expect((result[0] as PetData).health).toBe(5);
   });
 });
 
@@ -1330,7 +1330,7 @@ describe("fireShopFaint — Pill", () => {
 
   it("splashes compacted neighbors for a pet like Badger", () => {
     const sloth1 = makePet("Sloth");
-    const badger: PetInstance = {
+    const badger: PetData = {
       type: "Badger",
       attack: 6,
       health: 3,
@@ -1342,8 +1342,8 @@ describe("fireShopFaint — Pill", () => {
     const board = makeBoard([sloth1, badger, sloth2]);
     const result = fireShopFaint(board, 1, PET_REGISTRY);
     // Badger's faint deals 50% of its attack (3) to both compacted neighbors.
-    expect((result[0] as PetInstance).health).toBe(-2); // 1 - 3
-    expect((result[2] as PetInstance).health).toBe(-2);
+    expect((result[0] as PetData).health).toBe(-2); // 1 - 3
+    expect((result[2] as PetData).health).toBe(-2);
     expect(result[1]).toBeNull();
   });
 });
@@ -1361,7 +1361,7 @@ describe("fireShopFriendSummoned — Horse", () => {
       const board = makeBoard([horse, sloth]);
       const result = fireShopFriendSummoned(board, 1, PET_REGISTRY);
 
-      expect((result[1] as PetInstance).attack).toBe(expected);
+      expect((result[1] as PetData).attack).toBe(expected);
     }
   );
 
@@ -1370,7 +1370,7 @@ describe("fireShopFriendSummoned — Horse", () => {
     const board = makeBoard([horse]);
     const result = fireShopFriendSummoned(board, 0, PET_REGISTRY);
 
-    expect((result[0] as PetInstance).attack).toBe(1);
+    expect((result[0] as PetData).attack).toBe(1);
   });
 
   // TODO - Should NOT be under "Horse" if this does not use "Horse."  Test seems valuable for confirming this function works w/o a summon friend
@@ -1380,7 +1380,7 @@ describe("fireShopFriendSummoned — Horse", () => {
     const board = makeBoard([sloth1, sloth2]);
     const result = fireShopFriendSummoned(board, 1, PET_REGISTRY);
 
-    expect((result[0] as PetInstance).attack).toBe(1);
+    expect((result[0] as PetData).attack).toBe(1);
   });
 });
 
@@ -1394,12 +1394,12 @@ describe("Temporary stats — Horse in the shop", () => {
       1,
       PET_REGISTRY
     );
-    expect((result[1] as PetInstance).attack).toBe(3);
-    expect((result[1] as PetInstance).tempAttack).toBe(2);
+    expect((result[1] as PetData).attack).toBe(3);
+    expect((result[1] as PetData).tempAttack).toBe(2);
   });
 
   it("removes temp attack at start-of-turn even with no Horse left on the board", () => {
-    const buffed: PetInstance = {
+    const buffed: PetData = {
       ...makePet("Sloth"),
       attack: 3,
       tempAttack: 2,
@@ -1410,12 +1410,12 @@ describe("Temporary stats — Horse in the shop", () => {
       makeShop(),
       PET_REGISTRY
     );
-    expect((board[0] as PetInstance).attack).toBe(1);
-    expect((board[0] as PetInstance).tempAttack).toBeUndefined();
+    expect((board[0] as PetData).attack).toBe(1);
+    expect((board[0] as PetData).tempAttack).toBeUndefined();
   });
 
   it("keeps temp attack through end-turn (it lasts into the battle)", () => {
-    const buffed: PetInstance = {
+    const buffed: PetData = {
       ...makePet("Sloth"),
       attack: 3,
       tempAttack: 2,
@@ -1426,7 +1426,7 @@ describe("Temporary stats — Horse in the shop", () => {
       makeShop(),
       PET_REGISTRY
     );
-    expect((board[0] as PetInstance).attack).toBe(3);
-    expect((board[0] as PetInstance).tempAttack).toBe(2);
+    expect((board[0] as PetData).attack).toBe(3);
+    expect((board[0] as PetData).tempAttack).toBe(2);
   });
 });

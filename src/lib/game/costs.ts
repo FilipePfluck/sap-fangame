@@ -1,4 +1,4 @@
-import type { FoodType, PetInstance, ShopFood, ShopPet } from "@/lib/types";
+import type { FoodType, PetData, ShopFood, ShopPet } from "@/lib/types";
 
 // Base gold price of a shop pet, and of any food that doesn't set its own
 // `cost`.
@@ -25,6 +25,6 @@ export function getFoodCost(item: ShopFood, def: FoodType): number {
 
 // Gold gained for selling a board pet. Same idea as the prices above: the
 // sell route and the client's display/optimistic update both read it here.
-export function getSellValue(pet: PetInstance): number {
+export function getSellValue(pet: PetData): number {
   return pet.level;
 }

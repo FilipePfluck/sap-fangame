@@ -1,4 +1,4 @@
-import { PetInstance, StaticPet, Trigger } from "@/lib/types";
+import { PetData, StaticPet, Trigger } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 
 export const Fish: StaticPet = {
@@ -14,7 +14,7 @@ export const Fish: StaticPet = {
     // lvl1 fish levels up → ctx.level=1 → +1/+1 to 2 friends
     // lvl2 fish levels up → ctx.level=2 → +2/+2 to 2 friends
     fn: (ctx) => {
-      const friends: { pet: PetInstance; idx: number }[] = [];
+      const friends: { pet: PetData; idx: number }[] = [];
       for (let i = 0; i < ctx.board.length; i++) {
         const p = ctx.board[i];
         if (p !== null && i !== ctx.selfIndex) {

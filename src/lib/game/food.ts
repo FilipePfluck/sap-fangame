@@ -1,7 +1,7 @@
 import {
   Trigger,
   type FoodType,
-  type PetInstance,
+  type PetData,
   type StaticPet,
   ApiBoard,
 } from "@/lib/types";
@@ -15,7 +15,7 @@ export function needsTarget(food: FoodType): boolean {
   return !food.targeting;
 }
 
-function isMaxedExperienceTarget(food: FoodType, pet: PetInstance): boolean {
+function isMaxedExperienceTarget(food: FoodType, pet: PetData): boolean {
   return "experience" in food.effect && pet.xp >= MAX_PET_EXPERIENCE;
 }
 
@@ -38,10 +38,10 @@ export function feedError(
 }
 
 // TODO - Give food effects defaults (e.g. attack = 0) instead of handling undefined here
-function applyStandardEffect(food: FoodType, pet: PetInstance): PetInstance {
+function applyStandardEffect(food: FoodType, pet: PetData): PetData {
   const attackBonus = food.effect.attack ?? 0;
   const healthBonus = food.effect.health ?? 0;
-  const updatedPet: PetInstance = {
+  const updatedPet: PetData = {
     ...pet,
     attack: pet.attack + attackBonus,
     health: pet.health + healthBonus,
@@ -65,13 +65,13 @@ function pickTargets(food: FoodType, board: Board, boardPosition: number | undef
 
 export function triggerFriendAteFood(
   board: ApiBoard,
-  fedPet: PetInstance,
+  fedPet: PetData,
   petRegistry: Record<string, StaticPet>
 ): void {
   if (fedPet.health <= 0) return;
   // TODO - Wrap board in a class with board.friends() / board.friendly() helpers
   const friends = board.filter(
-    (pet): pet is PetInstance => pet !== null && pet.health > 0
+    (pet): pet is PetData => pet !== null && pet.health > 0
   );
   const listeners = friends.flatMap((pet) => {
     const ability = petRegistry[pet.type]?.ability;

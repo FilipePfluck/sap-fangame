@@ -7,7 +7,7 @@ import type {
   BattleAbilityContext,
   DefensivePerk,
   OffensivePerk,
-  PetInstance,
+  PetData,
   TriggerPerk,
 } from "@/lib/types";
 import { Trigger } from "@/lib/types";
@@ -23,18 +23,18 @@ import { SteakPerk } from "@/lib/perks/steak";
 import { Ox } from "@/lib/pets/turtle/tier 3/ox";
 import { abilityPet, registryWith } from "./helpers";
 
-function pet(type: string, attack: number, health: number, perk: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null = null): PetInstance {
+function pet(type: string, attack: number, health: number, perk: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null = null): PetData {
   return { type, attack, health, perk: structuredClone(perk), xp: 0, level: 1 };
 }
 
-function petLevel(type: string, attack: number, health: number, level: number): PetInstance {
+function petLevel(type: string, attack: number, health: number, level: number): PetData {
   return { type, attack, health, perk: null, xp: level === 3 ? 5 : level === 2 ? 2 : 0, level };
 }
 
 function battleContext(
-  self: PetInstance,
-  team: PetInstance[],
-  enemyTeam: PetInstance[]
+  self: PetData,
+  team: PetData[],
+  enemyTeam: PetData[]
 ): BattleAbilityContext {
   return {
     self,
@@ -1176,7 +1176,7 @@ describe("Perks", () => {
     });
 
     it("does not mutate input teams", () => {
-      const honeySloth: PetInstance = pet("Sloth", 1, 1, HoneyPerk);
+      const honeySloth: PetData = pet("Sloth", 1, 1, HoneyPerk);
       const opponent = pet("Sloth", 2, 2);
       simulateBattle([honeySloth], [opponent], PET_REGISTRY);
       expect(honeySloth.health).toBe(1);
@@ -1198,7 +1198,7 @@ describe("Perks", () => {
 
     it("Peanut requires damage to kill", () => {
       const scorpion = pet("Scorpion", 1, 3, PeanutPerk);
-      const melonSloth: PetInstance = pet("Sloth", 1, 3, MelonPerk);
+      const melonSloth: PetData = pet("Sloth", 1, 3, MelonPerk);
       const { steps } = simulateBattle([scorpion], [melonSloth], PET_REGISTRY);
 
       // Scorpion's 1 dmg is fully blocked (min(20,1)=1) — Sloth takes 0, so it
@@ -1250,7 +1250,7 @@ describe("Perks", () => {
   describe("Peanut + Melon interaction", () => {
     it("a fully-blocked hit does not count as a Peanut kill", () => {
       const scorpion = pet("Scorpion", 1, 3, PeanutPerk);
-      const melonSloth: PetInstance = pet("Sloth", 1, 10, MelonPerk);
+      const melonSloth: PetData = pet("Sloth", 1, 10, MelonPerk);
 
       const { steps } = simulateBattle([scorpion], [melonSloth], PET_REGISTRY);
       // Scorpion's 1 dmg is fully blocked (min(20,1)=1) — Sloth takes 0, so it

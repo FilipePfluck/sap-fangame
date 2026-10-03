@@ -2,7 +2,7 @@ import {
   Ability,
   BattleAbilityContext,
   isTriggerPerk,
-  PetInstance,
+  PetData,
   StaticPet,
   ShopAbilityContext,
   ShopState,
@@ -27,7 +27,7 @@ import { Board } from "@/lib/game/board";
 // updates) and remove the per-function orderByAttack sorting below.
 
 export type ShopAbilityResult = {
-  board: (PetInstance | null)[];
+  board: (PetData | null)[];
   shop: ShopState;
   goldDelta: number;
 };
@@ -42,9 +42,9 @@ function cloneShop(shop: ShopState): ShopState {
 }
 
 function createShopContext(
-  self: PetInstance,
+  self: PetData,
   selfIndex: number,
-  board: (PetInstance | null)[],
+  board: (PetData | null)[],
   shop: ShopState,
   gold: { delta: number },
   justStocked: Set<object>,
@@ -67,7 +67,7 @@ function createShopContext(
   };
 }
 
-function clearTempStats(pet: PetInstance): void {
+function clearTempStats(pet: PetData): void {
   if (pet.tempAttack) pet.attack -= pet.tempAttack;
   if (pet.tempHealth) pet.health -= pet.tempHealth;
   delete pet.tempAttack;
@@ -76,9 +76,9 @@ function clearTempStats(pet: PetInstance): void {
 
 export function fireShopAbility(
   trigger: Trigger.sell | Trigger.buy | Trigger.level_up,
-  pet: PetInstance,
+  pet: PetData,
   petIndex: number,
-  board: (PetInstance | null)[],
+  board: (PetData | null)[],
   shop: ShopState,
   petRegistry: Record<string, StaticPet>
 ): ShopAbilityResult {
@@ -101,7 +101,7 @@ export function fireShopAbility(
 // the board, rather than a single acted-on pet.
 export function fireBoardShopAbility(
   trigger: Trigger.start_of_turn | Trigger.end_turn,
-  board: (PetInstance | null)[],
+  board: (PetData | null)[],
   shop: ShopState,
   petRegistry: Record<string, StaticPet>,
   lastBattleResult?: "WIN" | "DRAW" | "LOSS"
@@ -111,9 +111,9 @@ export function fireBoardShopAbility(
   const gold = { delta: 0 };
   const justStocked = new Set<object>();
   type Job = {
-    pet: PetInstance;
+    pet: PetData;
     index: number;
-    perk: Extract<PetInstance["perk"], { trigger: Trigger }> | null;
+    perk: Extract<PetData["perk"], { trigger: Trigger }> | null;
     ability: Extract<Ability, { trigger: Trigger.start_of_turn | Trigger.end_turn }> | null;
   };
   const jobs: Job[] = [];
@@ -164,7 +164,7 @@ export function fireBoardShopAbility(
 
 export function fireShopFriendBought(
   boughtPet: StaticPet,
-  board: (PetInstance | null)[],
+  board: (PetData | null)[],
   shop: ShopState,
   petRegistry: Record<string, StaticPet>
 ): ShopAbilityResult {
@@ -172,7 +172,7 @@ export function fireShopFriendBought(
   const currentShop = cloneShop(shop);
   const gold = { delta: 0 };
   const justStocked = new Set<object>();
-  const listeners: { pet: PetInstance; index: number; ability: FriendBoughtAbility }[] = [];
+  const listeners: { pet: PetData; index: number; ability: FriendBoughtAbility }[] = [];
   for (let i = 0; i < currentBoard.length; i++) {
     const pet = currentBoard[i];
     const ability = pet && petRegistry[pet.type]?.ability;
@@ -205,10 +205,10 @@ export function fireShopFriendBought(
 // compacted just to get correct neighbor/selfIndex math (e.g. Badger's
 // splash) — any summon() lands back in the vacated board slot.
 export function fireShopFaint(
-  board: (PetInstance | null)[],
+  board: (PetData | null)[],
   boardPosition: number,
   petRegistry: Record<string, StaticPet>
-): (PetInstance | null)[] {
+): (PetData | null)[] {
   // Faint abilities can buff other pets in place, so work on copies.
   let newApiBoard = [...board]
   const pet = newApiBoard[boardPosition];
@@ -219,9 +219,9 @@ export function fireShopFaint(
   const selfIndex = compacted.indexOf(pet);
 
   newApiBoard[boardPosition] = null;
-  const summonRequests: PetInstance[] = [];
+  const summonRequests: PetData[] = [];
 
-  const context = (self: PetInstance): BattleAbilityContext => ({
+  const context = (self: PetData): BattleAbilityContext => ({
     self,
     selfIndex: compacted.indexOf(self),
     team: compacted,
@@ -269,10 +269,10 @@ export function fireShopFaint(
 // a new one). Reuses the battle-ability context shape/compaction, matching
 // how fireShopFaint bridges battle-only triggers into the shop.
 export function fireShopFriendSummoned(
-  board: (PetInstance | null)[],
+  board: (PetData | null)[],
   summonedBoardPosition: number,
   petRegistry: Record<string, StaticPet>
-): (PetInstance | null)[] {
+): (PetData | null)[] {
   const newBoard = [...board];
   const summonedPet = newBoard[summonedBoardPosition];
   if (!summonedPet) return newBoard;

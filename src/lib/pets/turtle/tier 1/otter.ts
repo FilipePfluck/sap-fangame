@@ -1,4 +1,4 @@
-import { PetInstance, StaticPet, Trigger } from "@/lib/types";
+import { PetData, StaticPet, Trigger } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 import { numberToText } from "@/lib/utils/flavor-text";
 
@@ -12,7 +12,7 @@ export const Otter: StaticPet = {
   ability: {
     trigger: Trigger.buy,
     fn: (ctx) => {
-      const friends: { pet: PetInstance; idx: number }[] = [];
+      const friends: { pet: PetData; idx: number }[] = [];
       for (let i = 0; i < ctx.board.length; i++) {
         const p = ctx.board[i];
         if (p !== null && i !== ctx.selfIndex) {

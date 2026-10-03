@@ -2,9 +2,9 @@ import { describe, it, expect } from "vitest";
 import { addLevelUpReward, getRewardTier, MAX_SHOP_SLOTS } from "@/lib/game/shop";
 import { levelUpRewardEarned } from "@/lib/game/merge";
 import { SHOP_PET_POOL } from "@/lib/pets";
-import type { PetInstance, ShopState } from "@/lib/types";
+import type { PetData, ShopState } from "@/lib/types";
 
-const pet = (xp: number, level: number): PetInstance => ({
+const pet = (xp: number, level: number): PetData => ({
   type: "Cricket", attack: 1, health: 1, perk: null, xp, level,
 });
 const emptyShop: ShopState = { shopPets: [], shopFoods: [] };

@@ -2,9 +2,9 @@ import { describe, it, expect } from "vitest";
 import { mergePets, mergeError, computeLevel } from "@/lib/game/merge";
 import { createPet } from "@/lib/game/pet";
 import { PET_REGISTRY } from "@/lib/pets";
-import type { PetInstance } from "@/lib/types";
+import type { PetData } from "@/lib/types";
 
-const sloth = (xp: number): PetInstance => ({
+const sloth = (xp: number): PetData => ({
   type: "Sloth",
   attack: 1,
   health: 1,
@@ -75,8 +75,8 @@ describe("mergePets", () => {
   });
 
   it("boosts attack and health by 1 over the max of both", () => {
-    const a: PetInstance = { type: "Sloth", attack: 3, health: 2, perk: null, xp: 0, level: 1 };
-    const b: PetInstance = { type: "Sloth", attack: 1, health: 4, perk: null, xp: 0, level: 1 };
+    const a: PetData = { type: "Sloth", attack: 3, health: 2, perk: null, xp: 0, level: 1 };
+    const b: PetData = { type: "Sloth", attack: 1, health: 4, perk: null, xp: 0, level: 1 };
     const result = mergePets(a, b);
     expect(result.attack).toBe(4); // max(3,1)+1
     expect(result.health).toBe(5); // max(2,4)+1
@@ -85,7 +85,7 @@ describe("mergePets", () => {
 
 describe("mergePets — temporary stats", () => {
   it("keeps temp attack on the merged pet so it is still removed next turn", () => {
-    const buffed: PetInstance = { ...sloth(0), attack: 3, tempAttack: 2 };
+    const buffed: PetData = { ...sloth(0), attack: 3, tempAttack: 2 };
     const merged = mergePets(buffed, sloth(0));
     expect(merged.attack).toBe(4);
     expect(merged.tempAttack).toBe(2);

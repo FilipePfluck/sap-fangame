@@ -1,4 +1,4 @@
-import { PetInstance, TriggerPerk } from "@/lib/types";
+import { PetData, TriggerPerk } from "@/lib/types";
 import { mushroomEffect } from "@/lib/perks/mushroom";
 import { honeyEffect } from "@/lib/perks/honey";
 import { breadEffect } from "@/lib/perks/bread";
@@ -10,7 +10,7 @@ export function triggerEffect(
   perk: TriggerPerk,
   { ...args }
 ): {
-  summonRequest?: PetInstance;
+  summonRequest?: PetData;
 } {
   switch (perk.name) {
     case "Bread":

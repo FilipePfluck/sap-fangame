@@ -13,7 +13,7 @@ import {
 import { getPetCost } from "@/lib/game/costs";
 import { createPet } from "@/lib/game/pet";
 import { z } from "zod";
-import { ApiBoard, PetInstance, ShopState, Trigger } from "@/lib/types";
+import { ApiBoard, PetData, ShopState, Trigger } from "@/lib/types";
 import { Board } from "@/lib/game/board";
 
 const BuyPetSchema = z.object({

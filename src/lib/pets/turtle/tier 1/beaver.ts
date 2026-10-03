@@ -1,4 +1,4 @@
-import { PetInstance, StaticPet, Trigger } from "@/lib/types";
+import { PetData, StaticPet, Trigger } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 
 export const Beaver: StaticPet = {
@@ -11,7 +11,7 @@ export const Beaver: StaticPet = {
   ability: {
     trigger: Trigger.sell,
     fn: (ctx) => {
-      const friends: { pet: PetInstance; idx: number }[] = [];
+      const friends: { pet: PetData; idx: number }[] = [];
       for (let i = 0; i < ctx.board.length; i++) {
         const p = ctx.board[i];
         if (p !== null && i !== ctx.selfIndex) {

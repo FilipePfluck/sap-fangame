@@ -1,4 +1,4 @@
-export type PetInstance = {
+export type PetData = {
   type: string;
   attack: number;
   health: number;
@@ -41,7 +41,7 @@ export type BuyResponse = {
   error?: Error;
 }
 
-export type ApiBoard = (PetInstance | null)[]
+export type ApiBoard = (PetData | null)[]
 
 export type ShopState = {
   shopPets: ShopPet[];
@@ -49,43 +49,43 @@ export type ShopState = {
 };
 
 export type BattleStep = {
-  attackerTeam: PetInstance[];
-  defenderTeam: PetInstance[];
+  attackerTeam: PetData[];
+  defenderTeam: PetData[];
   description: string;
 };
 
 export type BattleAbilityContext = {
-  self: PetInstance;
+  self: PetData;
   selfIndex: number;
-  team: PetInstance[];
-  enemyTeam: PetInstance[];
+  team: PetData[];
+  enemyTeam: PetData[];
   level: number;
-  summon: (pet: PetInstance, afterIndex: number) => void;
+  summon: (pet: PetData, afterIndex: number) => void;
   summonedIndex?: number;
   triggerCount: number;
   petRegistry: Record<string, StaticPet>;
-  dealAbilityDamage: (target: PetInstance, damage: number) => number;
-  grantExperience: (target: PetInstance, amount: number) => void;
-  friendAteFood: (fedPet: PetInstance) => void;
+  dealAbilityDamage: (target: PetData, damage: number) => number;
+  grantExperience: (target: PetData, amount: number) => void;
+  friendAteFood: (fedPet: PetData) => void;
   inShop?: boolean;
 };
 
 export type FoodAbilityContext = {
-  self: PetInstance;
-  fedPet: PetInstance;
-  friends: PetInstance[];
+  self: PetData;
+  fedPet: PetData;
+  friends: PetData[];
   level: number;
 };
 
 export type ShopAbilityContext = {
-  self: PetInstance;
+  self: PetData;
   selfIndex: number;
-  board: (PetInstance | null)[];
+  board: (PetData | null)[];
   shop: ShopState;
   level: number;
   goldGain: (amount: number) => void;
   addShopFood: (foodName: string) => void;
-  grantExperience: (target: PetInstance, amount: number) => void;
+  grantExperience: (target: PetData, amount: number) => void;
   lastBattleResult?: "WIN" | "DRAW" | "LOSS";
   boughtPet?: StaticPet;
 };

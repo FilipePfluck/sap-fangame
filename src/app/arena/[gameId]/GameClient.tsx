@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShopState, PetInstance, ApiBoard } from "@/lib/types";
+import { ShopState, PetData, ApiBoard } from "@/lib/types";
 import { PET_REGISTRY, getShopPetTooltipText } from "@/lib/pets";
 import { FOOD_REGISTRY } from "@/lib/foods";
 import { mergePets, mergeError } from "@/lib/game/merge";
@@ -36,12 +36,12 @@ const PET_MAP = PET_REGISTRY;
 const FOOD_MAP = FOOD_REGISTRY;
 
 type BattleData = {
-  opponentTeam: PetInstance[];
+  opponentTeam: PetData[];
   opponentName: string | null;
   result: "WIN" | "DRAW" | "LOSS";
   steps: Array<{
-    attackerTeam: PetInstance[];
-    defenderTeam: PetInstance[];
+    attackerTeam: PetData[];
+    defenderTeam: PetData[];
     description: string;
   }>;
 };

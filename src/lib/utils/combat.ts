@@ -2,10 +2,10 @@ import {
   DOES_NOT_DECAY,
   isDefensivePerk,
   isOffensivePerk,
-  PetInstance,
+  PetData,
 } from "@/lib/types";
 
-export function livingPets(pets: readonly PetInstance[]): PetInstance[] {
+export function livingPets(pets: readonly PetData[]): PetData[] {
   return pets.filter((pet) => pet.health > 0);
 }
 
@@ -19,8 +19,8 @@ export function livingPets(pets: readonly PetInstance[]): PetInstance[] {
 // lethal, not ability damage, so battle.ts applies that check itself around
 // its own two dealAbilityDamage calls.
 export function dealDirectDamage(
-  source: PetInstance,
-  target: PetInstance
+  source: PetData,
+  target: PetData
 ): number {
   let damage = source.attack;
 
@@ -56,7 +56,7 @@ export function dealDirectDamage(
 }
 
 export function dealAbilityDamage(
-  target: PetInstance,
+  target: PetData,
   damage: number
 ): number {
   if (isDefensivePerk(target.perk) && target.perk.blocksAbilityDamage) {
@@ -82,7 +82,7 @@ export function dealAbilityDamage(
 // Skunk-style effects remove a flat percentage of a pet's *current* health
 // directly, rather than dealing damage — so unlike dealAbilityDamage, this
 // never checks Garlic/Melon/Peanut. It always leaves at least 1 health.
-export function removeHealth(target: PetInstance, fraction: number): void {
+export function removeHealth(target: PetData, fraction: number): void {
   const reduced = target.health - Math.ceil(target.health * fraction);
   target.health = Math.max(1, reduced);
 }

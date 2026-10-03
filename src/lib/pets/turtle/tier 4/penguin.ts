@@ -1,4 +1,4 @@
-import { PetInstance, StaticPet, Trigger } from "@/lib/types";
+import { PetData, StaticPet, Trigger } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 
 export const Penguin: StaticPet = {
@@ -12,7 +12,7 @@ export const Penguin: StaticPet = {
     trigger: Trigger.start_of_turn,
     fn: (ctx) => {
       const eligibleFriends = ctx.board.filter(
-        (friend): friend is PetInstance =>
+        (friend): friend is PetData =>
           friend !== null &&
           friend !== ctx.self &&
           friend.health > 0 &&

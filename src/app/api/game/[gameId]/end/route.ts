@@ -11,11 +11,11 @@ import { pickRandom } from "@/lib/utils/random";
 import { createPet } from "@/lib/game/pet";
 import { TURN_GOLD, TROPHIES_TO_WIN } from "@/lib/game/rules";
 import { z } from "zod";
-import { PetInstance, Trigger } from "@/lib/types";
+import { PetData, Trigger } from "@/lib/types";
 
 const EndTurnSchema = z.object(FrozenPositionsShape);
 
-function buildGhostTeam(turn: number): PetInstance[] {
+function buildGhostTeam(turn: number): PetData[] {
   const count = turn >= 2 ? 5 : 3;
   const unlockedTiers = getUnlockedTiers(turn);
   const pool = SHOP_PET_POOL.filter((p) => unlockedTiers.includes(p.tier));
@@ -85,7 +85,7 @@ export async function POST(
   });
 
   const [matchedSubmission = null] = await prisma.$queryRaw<
-    { playerName: string; team: PetInstance[] }[]
+    { playerName: string; team: PetData[] }[]
   >`
     SELECT "playerName", "team" FROM "SubmittedTeam"
     WHERE "playerId" != ${session.user.id} AND "turnNumber" = ${turnNumber}
@@ -96,7 +96,7 @@ export async function POST(
   `;
 
   const opponentTeam = matchedSubmission
-    ? (matchedSubmission.team as PetInstance[])
+    ? (matchedSubmission.team as PetData[])
     : buildGhostTeam(turnNumber);
   const opponentName = matchedSubmission?.playerName ?? null;
 
