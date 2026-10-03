@@ -50,7 +50,7 @@ export async function POST(
   }
 
   const baseGoldGain = getSellValue(pet);
-  const newBoard: Board = [...state.board];
+  const newBoard = [...state.board];
   newBoard[boardPosition] = null;
 
   const { board, shop, goldDelta } = fireShopAbility(
