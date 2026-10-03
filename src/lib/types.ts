@@ -33,7 +33,15 @@ export type ShopFood = {
   discount?: number;
 };
 
-export type Board = (PetInstance | null)[];
+export type BuyResponse = {
+  success: boolean;
+  wasSummoned: boolean;
+  levelUpReward: boolean;
+  newLevel?: number;
+  error?: Error;
+}
+
+export type ApiBoard = (PetInstance | null)[]
 
 export type ShopState = {
   shopPets: ShopPet[];
@@ -55,7 +63,7 @@ export type BattleAbilityContext = {
   summon: (pet: PetInstance, afterIndex: number) => void;
   summonedIndex?: number;
   triggerCount: number;
-  petRegistry: Record<string, PetType>;
+  petRegistry: Record<string, StaticPet>;
   dealAbilityDamage: (target: PetInstance, damage: number) => number;
   grantExperience: (target: PetInstance, amount: number) => void;
   friendAteFood: (fedPet: PetInstance) => void;
@@ -79,7 +87,7 @@ export type ShopAbilityContext = {
   addShopFood: (foodName: string) => void;
   grantExperience: (target: PetInstance, amount: number) => void;
   lastBattleResult?: "WIN" | "DRAW" | "LOSS";
-  boughtPet?: PetType;
+  boughtPet?: StaticPet;
 };
 
 export enum Trigger {
@@ -119,7 +127,7 @@ export type Ability =
   | { trigger: Trigger.friend_bought; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.knock_out; fn: (ctx: BattleAbilityContext) => void };
 
-export type PetType = {
+export type StaticPet = {
   name: string;
   sprite: string;
   tier: number;
@@ -132,9 +140,9 @@ export type PetType = {
 };
 
 export type FoodApplyContext = {
-  board: Board;
+  board: ApiBoard;
   boardPosition: number;
-  petRegistry: Record<string, PetType>;
+  petRegistry: Record<string, StaticPet>;
 };
 
 export type FoodType = {
@@ -158,7 +166,7 @@ export type FoodType = {
   // Overrides the standard "apply effect/perk to the targeted pet" behavior
   // for foods that don't fit it (e.g. Pill). Returns a new board and
   // must not mutate the one it's given.
-  applyEffect?: (ctx: FoodApplyContext) => Board;
+  applyEffect?: (ctx: FoodApplyContext) => ApiBoard;
   description: string;
 };
 

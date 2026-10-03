@@ -1,13 +1,14 @@
 import {
   Trigger,
-  type Board,
   type FoodType,
   type PetInstance,
-  type PetType,
+  type StaticPet,
+  ApiBoard,
 } from "@/lib/types";
 import { orderByAttack, pickN } from "@/lib/utils/random";
 import { grantExperience } from "@/lib/game/merge";
 import { MAX_PET_EXPERIENCE } from "@/lib/game/rules";
+import { Board } from "@/lib/game/board";
 
 // Whether the player has to pick a pet to feed this food to.
 export function needsTarget(food: FoodType): boolean {
@@ -22,7 +23,7 @@ function isMaxedExperienceTarget(food: FoodType, pet: PetInstance): boolean {
 // route and the client so the two can't disagree.
 export function feedError(
   food: FoodType,
-  board: Board,
+  board: ApiBoard,
   boardPosition: number | undefined
 ): string | null {
   if (needsTarget(food)) {
@@ -54,22 +55,18 @@ function applyStandardEffect(food: FoodType, pet: PetInstance): PetInstance {
   return updatedPet;
 }
 
-function cloneBoard(board: Board): Board {
-  return board.map((pet) => (pet ? { ...pet } : null));
-}
-
 // Board positions the food acts on: the chosen one, or a random selection of
 // occupied positions (all of them if there are fewer than asked for).
 function pickTargets(food: FoodType, board: Board, boardPosition: number | undefined): number[] {
   if (!food.targeting) return boardPosition === undefined ? [] : [boardPosition];
-  const occupied = board.flatMap((pet, i) => (pet ? [i] : []));
+  const occupied = board.pets.flatMap((pet, i) => (pet ? [i] : []));
   return pickN(occupied, food.targeting.random);
 }
 
 export function triggerFriendAteFood(
-  board: Board,
+  board: ApiBoard,
   fedPet: PetInstance,
-  petRegistry: Record<string, PetType>
+  petRegistry: Record<string, StaticPet>
 ): void {
   if (fedPet.health <= 0) return;
   // TODO - Wrap board in a class with board.friends() / board.friendly() helpers
@@ -97,13 +94,14 @@ export function triggerFriendAteFood(
 // attack/health bonus and, if it's a perk, the perk.
 export function applyFoodEffect(
   food: FoodType,
-  board: Board,
+  board: ApiBoard,
   boardPosition: number | undefined,
-  petRegistry: Record<string, PetType>
-): Board {
+  petRegistry: Record<string, StaticPet>
+): ApiBoard {
+  const newBoard = new Board(board).clone().pets;
   if (food.applyEffect) {
-    if (boardPosition === undefined) return [...board];
-    const newBoard = cloneBoard(board);
+    if (boardPosition === undefined) return newBoard;
+
     const fedPet = newBoard[boardPosition];
     if (fedPet && !food.skipsFriendAteFood) {
       triggerFriendAteFood(newBoard, fedPet, petRegistry);
@@ -111,8 +109,7 @@ export function applyFoodEffect(
     return food.applyEffect({ board: newBoard, boardPosition, petRegistry });
   }
 
-  const newBoard = cloneBoard(board);
-  for (const i of pickTargets(food, board, boardPosition)) {
+  for (const i of pickTargets(food, new Board(newBoard), boardPosition)) {
     const pet = newBoard[i];
     if (pet) {
       if (isMaxedExperienceTarget(food, pet)) continue;
@@ -123,5 +120,6 @@ export function applyFoodEffect(
       }
     }
   }
+
   return newBoard;
 }

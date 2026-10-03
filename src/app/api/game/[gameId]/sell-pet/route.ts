@@ -7,7 +7,8 @@ import { fireShopAbility } from "@/lib/game/shop-ability";
 import { applyFrozenFlags } from "@/lib/game/shop";
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import { z } from "zod";
-import { Board, Trigger } from "@/lib/types";
+import { Trigger } from "@/lib/types";
+import { Board } from "@/lib/game/board";
 
 const SellPetSchema = z.object({
   boardPosition: z.number().int().min(0).max(4),

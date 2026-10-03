@@ -1,0 +1,12 @@
+import { StaticPet } from "@/lib/types";
+
+export const Chick: StaticPet = {
+  name: "Chick",
+  sprite: "/sap/Chick.webp",
+  tier: 5,
+  baseAttack: 1,
+  baseHealth: 1,
+  isToken: true,
+  ability: null,
+  description: "No ability.",
+};

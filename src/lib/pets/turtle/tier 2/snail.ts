@@ -1,0 +1,26 @@
+import { StaticPet, Trigger } from "@/lib/types";
+
+export const Snail: StaticPet = {
+  name: "Snail",
+  sprite: "/sap/snail.webp",
+  tier: 2,
+  baseAttack: 2,
+  baseHealth: 3,
+  isToken: false,
+  ability: {
+    trigger: Trigger.end_turn,
+    fn: (ctx) => {
+      if (ctx.lastBattleResult !== "LOSS") return;
+      let buffed = 0;
+      for (let i = ctx.selfIndex - 1; i >= 0 && buffed < 3; i--) {
+        const friend = ctx.board[i];
+        if (friend) {
+          friend.attack += ctx.level;
+          buffed++;
+        }
+      }
+    },
+  },
+  description: (level: number) =>
+    `End turn: If you lost last battle, give the three nearest friends ahead +${level} attack.`,
+};
