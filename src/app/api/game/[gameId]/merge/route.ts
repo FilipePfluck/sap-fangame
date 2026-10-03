@@ -7,7 +7,8 @@ import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
 import { fireShopAbility } from "@/lib/game/shop-ability";
 import { z } from "zod";
-import { Board, ShopState, Trigger } from "@/lib/types";
+import { ShopState, Trigger } from "@/lib/types";
+import { Board } from "@/lib/game/board";
 
 const MergeSchema = z.object({
   from: z.number().int().min(0).max(4),

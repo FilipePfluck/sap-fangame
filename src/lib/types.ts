@@ -33,7 +33,15 @@ export type ShopFood = {
   discount?: number;
 };
 
-export type Board = (PetInstance | null)[];
+export type BuyResponse = {
+  success: boolean;
+  wasSummoned: boolean;
+  levelUpReward: boolean;
+  newLevel?: number;
+  error?: Error;
+}
+
+export type ApiBoard = (PetInstance | null)[]
 
 export type ShopState = {
   shopPets: ShopPet[];
@@ -132,7 +140,7 @@ export type StaticPet = {
 };
 
 export type FoodApplyContext = {
-  board: Board;
+  board: ApiBoard;
   boardPosition: number;
   petRegistry: Record<string, StaticPet>;
 };
@@ -158,7 +166,7 @@ export type FoodType = {
   // Overrides the standard "apply effect/perk to the targeted pet" behavior
   // for foods that don't fit it (e.g. Pill). Returns a new board and
   // must not mutate the one it's given.
-  applyEffect?: (ctx: FoodApplyContext) => Board;
+  applyEffect?: (ctx: FoodApplyContext) => ApiBoard;
   description: string;
 };
 

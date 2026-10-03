@@ -1,10 +1,11 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
-import { applyReorder } from "@/lib/game/merge";
 import { applyFrozenFlags } from "@/lib/game/shop";
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import { z } from "zod";
+
+import { Board } from "@/lib/game/board";
 
 const ReorderSchema = z.object({
   from: z.number().int().min(0).max(4),
@@ -50,13 +51,14 @@ export async function POST(
     return Response.json({ error: "No pet at source position" }, { status: 400 });
   }
 
-  const newBoard = applyReorder(state.board, from, to);
+  const newBoard = new Board(state.board)
+  newBoard.swap(from, to);
 
   const boardState = await prisma.boardState.create({
     data: {
       gameId,
       turnId: state.turnId,
-      boardState: newBoard,
+      boardState: newBoard.pets,
       shopState: applyFrozenFlags(state.shop, frozenPetPositions, frozenFoodPositions),
       goldRemaining: state.goldRemaining,
     },

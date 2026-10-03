@@ -9,7 +9,11 @@ import {
 } from "@/lib/types";
 import { byCurrentAttack } from "@/lib/utils/random";
 import { dealAbilityDamage, dealDirectDamage } from "@/lib/utils/combat";
-import { compactBoard, grantExperience } from "@/lib/game/merge";
+import {
+  compactApiBoard,
+  compactBoard,
+  grantExperience,
+} from "@/lib/game/merge";
 import { friendSummonedCandidates } from "@/lib/game/friend-summoned";
 import { friendAheadAbility } from "@/lib/game/pet";
 import { triggerEffect } from "@/lib/perks/trigger-functions";
@@ -30,7 +34,7 @@ function clonePet(p: PetInstance): PetInstance {
 }
 
 function compactTeam(team: (PetInstance | null)[]): PetInstance[] {
-  return compactBoard(team).map(clonePet);
+  return compactApiBoard(team).map(clonePet);
 }
 
 function nextTriggerCount(
