@@ -1,4 +1,5 @@
 import { PET_REGISTRY } from "@/lib/pets";
+import { AbilityStateStore } from "@/lib/game/battle-ability-context";
 import type { Ability, PetType } from "@/lib/types";
 
 export function abilityPet(name: string, ability: Ability, tier = 1): PetType {
@@ -17,3 +18,5 @@ export function abilityPet(name: string, ability: Ability, tier = 1): PetType {
 export function registryWith(...pets: PetType[]): Record<string, PetType> {
   return { ...PET_REGISTRY, ...Object.fromEntries(pets.map((p) => [p.name, p])) };
 }
+
+export const testAbilityStates = new AbilityStateStore();

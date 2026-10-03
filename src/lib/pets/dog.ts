@@ -10,14 +10,10 @@ export const Dog: PetType = {
   ability: {
     trigger: Trigger.friend_summoned,
     fn: (ctx) => {
-      const attack = 2 * ctx.level;
-      const health = ctx.level;
-      ctx.self.attack += attack;
-      ctx.self.health += health;
-      if (ctx.inShop) {
-        ctx.self.tempAttack = (ctx.self.tempAttack ?? 0) + attack;
-        ctx.self.tempHealth = (ctx.self.tempHealth ?? 0) + health;
-      }
+      ctx.modifyStats(ctx.self, {
+        attack: 2 * ctx.level,
+        health: ctx.level,
+      });
     },
   },
   description: (level: number) =>

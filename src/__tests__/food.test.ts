@@ -26,7 +26,8 @@ describe("applyFoodEffect", () => {
   it("sets the perk for perk foods", () => {
     const board: Board = [pet("Ant"), null, null, null, null];
     const result = applyFoodEffect(Honey, board, 0, PET_REGISTRY);
-    expect(result[0]?.perk).toBe(HoneyPerk);
+    expect(result[0]?.perk).toEqual(HoneyPerk);
+    expect(result[0]?.perk).not.toBe(HoneyPerk);
   });
 
   it("does not mutate the input board for standard foods", () => {
@@ -119,7 +120,7 @@ describe("applyFoodEffect", () => {
     const perkFood: FoodType = { ...MeatBone, targeting: { random: 2 } };
     const board: Board = [pet("Ant"), pet("Fish"), pet("Pig"), null, null];
     const result = applyFoodEffect(perkFood, board, 0, PET_REGISTRY);
-    expect(result.filter((p) => p?.perk === MeatBonePerk)).toHaveLength(2);
+    expect(result.filter((p) => p?.perk?.name === MeatBonePerk.name)).toHaveLength(2);
   });
 
   it("leaves the input board's pets untouched for random-target foods", () => {

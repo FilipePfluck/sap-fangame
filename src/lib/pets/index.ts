@@ -15,6 +15,7 @@ export { Snail } from "./snail";
 export { Crab } from "./crab";
 export { Swan } from "./swan";
 export { Dodo } from "./dodo";
+export { Ox } from "./ox";
 export { Badger } from "./badger";
 export { Dolphin } from "./dolphin";
 export { Skunk } from "./skunk";
@@ -50,6 +51,21 @@ export { Chick } from "./chick";
 export { Dragon } from "./dragon";
 export { Mammoth } from "./mammoth";
 export { Snake } from "./snake";
+export { Jerboa } from "./jerboa";
+export { Worm } from "./worm";
+export { Bus } from "./bus";
+export { Deer } from "./deer";
+export { Spider } from "./spider";
+export { Cow } from "./cow";
+export { Gorilla } from "./gorilla";
+export { Seagull } from "./seagull";
+export { Rat } from "./rat";
+export { DirtyRat } from "./dirty-rat";
+export { Fly } from "./fly";
+export { ZombieFly } from "./zombie-fly";
+export { Whale } from "./whale";
+export { Alpaca } from "./alpaca";
+export { Wolverine } from "./wolverine";
 
 import { Sloth } from "./sloth";
 import { Duck } from "./duck";
@@ -68,6 +84,7 @@ import { Snail } from "./snail";
 import { Crab } from "./crab";
 import { Swan } from "./swan";
 import { Dodo } from "./dodo";
+import { Ox } from "./ox";
 import { Badger } from "./badger";
 import { Dolphin } from "./dolphin";
 import { Skunk } from "./skunk";
@@ -103,6 +120,21 @@ import { Chick } from "./chick";
 import { Dragon } from "./dragon";
 import { Mammoth } from "./mammoth";
 import { Snake } from "./snake";
+import { Jerboa } from "./jerboa";
+import { Worm } from "./worm";
+import { Bus } from "./bus";
+import { Deer } from "./deer";
+import { Spider } from "./spider";
+import { Cow } from "./cow";
+import { Gorilla } from "./gorilla";
+import { Seagull } from "./seagull";
+import { Rat } from "./rat";
+import { DirtyRat } from "./dirty-rat";
+import { Fly } from "./fly";
+import { ZombieFly } from "./zombie-fly";
+import { Whale } from "./whale";
+import { Alpaca } from "./alpaca";
+import { Wolverine } from "./wolverine";
 import type { PetType } from "@/lib/types";
 
 export const TURTLE_PACK_PETS: PetType[] = [
@@ -121,7 +153,10 @@ export const TURTLE_PACK_PETS: PetType[] = [
   Snail,
   Crab,
   Swan,
+  Worm,
+  Spider,
   Dodo,
+  Ox,
   Badger,
   Dolphin,
   Skunk,
@@ -138,6 +173,7 @@ export const TURTLE_PACK_PETS: PetType[] = [
   Kangaroo,
   Elephant,
   Rabbit,
+  Jerboa,
   Penguin,
   Armadillo,
   Hedgehog,
@@ -157,6 +193,18 @@ export const TURTLE_PACK_PETS: PetType[] = [
   Dragon,
   Mammoth,
   Snake,
+  Bus,
+  Deer,
+  Cow,
+  Gorilla,
+  Seagull,
+  Rat,
+  Fly,
+  DirtyRat,
+  ZombieFly,
+  Whale,
+  Alpaca,
+  Wolverine,
 ];
 
 export const PET_REGISTRY: Record<string, PetType> = Object.fromEntries([

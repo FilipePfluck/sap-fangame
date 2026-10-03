@@ -17,7 +17,7 @@ export const Skunk: PetType = {
       const target = enemies.reduce((highest, p) =>
         p.health > highest.health ? p : highest
       );
-      removeHealth(target, 0.33 * ctx.level);
+      removeHealth(target, { fraction: 0.33 * ctx.level });
     },
   },
   description:

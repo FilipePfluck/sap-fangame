@@ -150,10 +150,15 @@ export function freeShopSlots(
 
 // Stocks one food, evicting an unfrozen item if the shop is full. `justStocked`
 // tracks items added by the same ability so a batch never evicts itself.
-export function stockFood(shop: ShopState, type: string, justStocked: Set<object>): void {
+export function stockFood(
+  shop: ShopState,
+  type: string,
+  justStocked: Set<object>,
+  discount = 0
+): void {
   freeShopSlots(shop, 1, "food", justStocked);
   if (totalSlots(shop) >= MAX_SHOP_SLOTS) return;
-  const item: ShopFood = { type, frozen: false };
+  const item: ShopFood = { type, frozen: false, ...(discount ? { discount } : {}) };
   shop.shopFoods.push(item);
   justStocked.add(item);
 }
