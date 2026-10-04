@@ -629,55 +629,45 @@ describe("Turkey — friend summoned", () => {
 });
 
 describe("Seagull — friend summoned", () => {
-  function melonSeagull(level = 1): PetInstance {
-    return { ...makePet("Seagull", level), perk: { ...MelonPerk } };
-  }
-
-  function summonFriends(board: Board): Board {
-    let result = board;
-    for (let index = 1; index < board.length; index++) {
-      if (board[index]) result = fireShopFriendSummoned(result, index, PET_REGISTRY);
+  // Board is a Melon Seagull followed by Sloths, summoned front to back.
+  function summonSloths(seagullLevel: number, sloths: PetInstance[]): Board {
+    const seagull = { ...makePet("Seagull", seagullLevel), perk: { ...MelonPerk } };
+    let board = makeBoard([seagull, ...sloths]);
+    for (let position = 1; position <= sloths.length; position++) {
+      board = fireShopFriendSummoned(board, position, PET_REGISTRY);
     }
-    return result;
+    return board;
   }
 
-  function perkNames(board: Board) {
-    return board.map((pet) => pet?.perk?.name ?? null);
+  function slothPerks(board: Board) {
+    return board.slice(1).filter((sloth) => sloth !== null).map((sloth) => sloth.perk?.name);
   }
 
   it.each([
-    { level: 1, perks: ["Melon", "Melon", null, null, null] },
-    { level: 2, perks: ["Melon", "Melon", "Melon", null, null] },
-    { level: 3, perks: ["Melon", "Melon", "Melon", "Melon", null] },
-  ])("copies its perk to only the first $level summons at level $level", ({ level, perks }) => {
-    const board = summonFriends(makeBoard([
-      melonSeagull(level),
+    { level: 1, perks: ["Melon", undefined, undefined, undefined] },
+    { level: 2, perks: ["Melon", "Melon", undefined, undefined] },
+    { level: 3, perks: ["Melon", "Melon", "Melon", undefined] },
+  ])("gives Melon to only the first $level of four summoned friends at level $level", ({ level, perks }) => {
+    const board = summonSloths(level, [
       makePet("Sloth"),
       makePet("Sloth"),
       makePet("Sloth"),
       makePet("Sloth"),
-    ]));
+    ]);
 
-    expect(perkNames(board)).toEqual(perks);
+    expect(slothPerks(board)).toEqual(perks);
   });
 
-  it("does not use a copy on a summon that already has its perk", () => {
-    const board = summonFriends(makeBoard([
-      melonSeagull(),
-      { ...makePet("Sloth"), perk: { ...MelonPerk } },
-      makePet("Sloth"),
-    ]));
+  it("does not count a summoned friend that already has Melon", () => {
+    const slothWithMelon = { ...makePet("Sloth"), perk: { ...MelonPerk } };
+    const board = summonSloths(1, [slothWithMelon, makePet("Sloth")]);
 
-    expect(perkNames(board)).toEqual(["Melon", "Melon", "Melon", null, null]);
+    expect(slothPerks(board)).toEqual(["Melon", "Melon"]);
   });
 
-  it("can copy its perk again on the next turn", () => {
-    const board = summonFriends(makeBoard([
-      melonSeagull(),
-      makePet("Sloth"),
-      makePet("Sloth"),
-    ]));
-    expect(perkNames(board)).toEqual(["Melon", "Melon", null, null, null]);
+  it("gives Melon again after the next start of turn", () => {
+    const board = summonSloths(1, [makePet("Sloth"), makePet("Sloth")]);
+    expect(slothPerks(board)).toEqual(["Melon", undefined]);
 
     const nextTurn = fireBoardShopAbility(
       Trigger.start_of_turn,
@@ -687,7 +677,7 @@ describe("Seagull — friend summoned", () => {
     ).board;
     const result = fireShopFriendSummoned(nextTurn, 2, PET_REGISTRY);
 
-    expect(perkNames(result)).toEqual(["Melon", "Melon", "Melon", null, null]);
+    expect(slothPerks(result)).toEqual(["Melon", "Melon"]);
   });
 });
 
