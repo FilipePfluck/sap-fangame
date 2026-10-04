@@ -84,15 +84,15 @@ export class Board {
       const error = this.mergeError(occupant, newPet);
       if (error) {
         response.error = new Error(error);
-        throw Error(error);
+        return response;
       }
+      response.success = true;
 
       const initialLevel = occupant.level;
       const merged = this.mergePets(occupant, newPet);
       this.pets[i] = merged;
 
       if (merged.level > initialLevel) response.levelUpReward = true;
-      response.newLevel = merged.level;
       return response;
     }
 
@@ -101,7 +101,6 @@ export class Board {
       this.pets[i] = newPet;
       response.success = true;
       response.wasSummoned = true;
-      return response;
     } else {
       response.error = new Error("Board is full");
     }

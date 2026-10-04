@@ -37,7 +37,6 @@ export type BuyResponse = {
   success: boolean;
   wasSummoned: boolean;
   levelUpReward: boolean;
-  newLevel?: number;
   error?: Error;
 }
 
