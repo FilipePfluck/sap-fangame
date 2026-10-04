@@ -1,4 +1,4 @@
-export { Sloth } from "./turtle/tier 1/sloth";
+export { Sloth } from "./turtle/token/sloth";
 export { Duck } from "./turtle/tier 1/duck";
 export { Beaver } from "./turtle/tier 1/beaver";
 export { Pigeon } from "./turtle/tier 1/pigeon";
@@ -51,7 +51,7 @@ export { Dragon } from "./turtle/tier 6/dragon";
 export { Mammoth } from "./turtle/tier 6/mammoth";
 export { Snake } from "./turtle/tier 6/snake";
 
-import { Sloth } from "./turtle/tier 1/sloth";
+import { Sloth } from "./turtle/token/sloth";
 import { Duck } from "./turtle/tier 1/duck";
 import { Beaver } from "./turtle/tier 1/beaver";
 import { Pigeon } from "./turtle/tier 1/pigeon";
