@@ -1,6 +1,6 @@
 import { PetInstance, StaticPet, Trigger } from "@/lib/types";
 
-export const Giraffe: StaticPet = {
+export const Giraffe: Readonly<StaticPet> = {
   name: "Giraffe",
   sprite: "/sap/Giraffe.webp",
   tier: 3,

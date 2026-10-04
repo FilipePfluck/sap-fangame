@@ -1,7 +1,7 @@
 import type { StaticPet } from "@/lib/types";
 import { PeanutPerk } from "@/lib/perks/peanut";
 
-export const Scorpion: StaticPet = {
+export const Scorpion: Readonly<StaticPet> = {
   name: "Scorpion",
   sprite: "/sap/scorpion.webp",
   tier: 5,

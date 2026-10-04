@@ -1,6 +1,6 @@
 import { StaticPet, Trigger } from "@/lib/types";
 
-export const Squirrel: StaticPet = {
+export const Squirrel: Readonly<StaticPet> = {
   name: "Squirrel",
   sprite: "/sap/squirrel.webp",
   tier: 4,

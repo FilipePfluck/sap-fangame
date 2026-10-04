@@ -1,6 +1,6 @@
 import type { StaticPet } from "@/lib/types";
 
-export const ZombieCricket: StaticPet = {
+export const ZombieCricket: Readonly<StaticPet> = {
   name: "Zombie Cricket",
   sprite: "/sap/zombie-cricket.webp",
   tier: 1,

@@ -1,7 +1,7 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { MelonPerk } from "@/lib/perks/melon";
 
-export const Turtle: StaticPet = {
+export const Turtle: Readonly<StaticPet> = {
   name: "Turtle",
   sprite: "/sap/Turtle.webp",
   tier: 4,

@@ -3,7 +3,7 @@ import { MelonPerk } from "@/lib/perks/melon";
 
 const TRIGGER_LIMIT = 1;
 
-export const Ox: StaticPet = {
+export const Ox: Readonly<StaticPet> = {
   name: "Ox",
   sprite: "/sap/Ox.webp",
   tier: 3,

@@ -2,7 +2,7 @@ import { PetInstance, StaticPet, Trigger } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 import { numberToText } from "@/lib/utils/flavor-text";
 
-export const Otter: StaticPet = {
+export const Otter: Readonly<StaticPet> = {
   name: "Otter",
   sprite: "/sap/otter.webp",
   tier: 1,

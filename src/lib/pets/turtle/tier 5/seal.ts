@@ -1,7 +1,7 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 
-export const Seal: StaticPet = {
+export const Seal: Readonly<StaticPet> = {
   name: "Seal",
   sprite: "/sap/Seal.webp",
   tier: 5,

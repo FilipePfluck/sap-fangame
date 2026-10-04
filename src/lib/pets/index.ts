@@ -105,7 +105,7 @@ import { Mammoth } from "./turtle/tier 6/mammoth";
 import { Snake } from "./turtle/tier 6/snake";
 import type { StaticPet } from "@/lib/types";
 
-export const TURTLE_PACK_PETS: StaticPet[] = [
+export const TURTLE_PACK_PETS = [
   Duck,
   Beaver,
   Pigeon,
@@ -157,7 +157,7 @@ export const TURTLE_PACK_PETS: StaticPet[] = [
   Dragon,
   Mammoth,
   Snake,
-];
+]
 
 export const PET_REGISTRY: Record<string, StaticPet> = Object.fromEntries([
   ...TURTLE_PACK_PETS.map((p) => [p.name, p]),

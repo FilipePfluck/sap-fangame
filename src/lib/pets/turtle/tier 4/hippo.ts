@@ -1,6 +1,6 @@
 import { StaticPet, Trigger } from "@/lib/types";
 
-export const Hippo: StaticPet = {
+export const Hippo: Readonly<StaticPet> = {
   name: "Hippo",
   sprite: "/sap/hippo.webp",
   tier: 4,

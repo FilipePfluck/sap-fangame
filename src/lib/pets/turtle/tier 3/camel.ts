@@ -1,6 +1,6 @@
 import { StaticPet, Trigger } from "@/lib/types";
 
-export const Camel: StaticPet = {
+export const Camel: Readonly<StaticPet> = {
   name: "Camel",
   sprite: "/sap/Camel.webp",
   tier: 3,

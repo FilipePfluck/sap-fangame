@@ -1,6 +1,6 @@
 import { StaticPet } from "@/lib/types";
 
-export const Ram: StaticPet = {
+export const Ram: Readonly<StaticPet> = {
   name: "Ram",
   sprite: "/sap/Ram.png",
   tier: 3,

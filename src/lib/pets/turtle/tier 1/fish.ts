@@ -1,7 +1,7 @@
 import { PetInstance, StaticPet, Trigger } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 
-export const Fish: StaticPet = {
+export const Fish: Readonly<StaticPet> = {
   name: "Fish",
   sprite: "/sap/fish.webp",
   tier: 1,

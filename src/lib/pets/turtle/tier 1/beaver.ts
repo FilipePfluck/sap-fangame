@@ -1,7 +1,7 @@
 import { PetInstance, StaticPet, Trigger } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 
-export const Beaver: StaticPet = {
+export const Beaver: Readonly<StaticPet> = {
   name: "Beaver",
   sprite: "/sap/beaver.webp",
   tier: 1,

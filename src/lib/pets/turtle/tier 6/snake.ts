@@ -2,7 +2,7 @@ import { StaticPet, Trigger } from "@/lib/types";
 import { pickRandom } from "@/lib/utils/random";
 import { livingPets } from "@/lib/utils/combat";
 
-export const Snake: StaticPet = {
+export const Snake: Readonly<StaticPet> = {
   name: "Snake",
   sprite: "/sap/Snake.webp",
   tier: 6,
