@@ -1,9 +1,7 @@
 import { getSellValue } from "@/lib/game/costs";
-import { computeLevel } from "@/lib/game/merge";
 import { MAX_PET_EXPERIENCE } from "@/lib/game/rules";
-import { ApiBoard, BuyResponse, PetInstance } from "@/lib/types";
+import { ApiBoard, BuyResponse, PetInstance, ShopState } from "@/lib/types";
 import { prisma } from "@/lib/prisma";
-import { ShopState } from "@/lib/types";
 
 export type ResolvedBoardState = {
   id: string;
@@ -46,7 +44,6 @@ export async function getLastBoardState(
     },
   };
 }
-
 
 export class Board {
   pets: ApiBoard;
@@ -207,4 +204,10 @@ export class Board {
     }
     return null;
   }
+}
+
+export function computeLevel(xp: number): 1 | 2 | 3 {
+  if (xp >= MAX_PET_EXPERIENCE) return 3;
+  if (xp >= 2) return 2;
+  return 1;
 }
