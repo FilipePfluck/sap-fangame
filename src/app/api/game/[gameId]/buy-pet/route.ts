@@ -2,7 +2,6 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
-import { mergePets, mergeError, levelUpRewardEarned } from "@/lib/game/merge";
 import { addLevelUpReward, applyFrozenFlags } from "@/lib/game/shop";
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import {
@@ -13,7 +12,7 @@ import {
 import { getPetCost } from "@/lib/game/costs";
 import { createPet } from "@/lib/game/pet";
 import { z } from "zod";
-import { ApiBoard, PetInstance, ShopState, Trigger } from "@/lib/types";
+import { ApiBoard, ShopState, Trigger } from "@/lib/types";
 import { Board } from "@/lib/game/board";
 
 const BuyPetSchema = z.object({
