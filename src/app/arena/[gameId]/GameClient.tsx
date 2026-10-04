@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Board, ShopState, PetInstance } from "@/lib/types";
-import { PET_REGISTRY, getPetDescription, getShopPetTooltipText } from "@/lib/pets";
+import { ShopState, PetInstance, ApiBoard } from "@/lib/types";
+import { PET_REGISTRY, getShopPetTooltipText } from "@/lib/pets";
 import { FOOD_REGISTRY } from "@/lib/foods";
-import { mergePets, mergeError, openSlot, applyReorder } from "@/lib/game/merge";
+import { mergePets, mergeError } from "@/lib/game/merge";
 import { applyFoodEffect, feedError, needsTarget } from "@/lib/game/food";
 import { getPetCost, getFoodCost, getSellValue, ROLL_COST } from "@/lib/game/costs";
 import { createPet } from "@/lib/game/pet";
@@ -14,6 +14,7 @@ import { PET_SPRITES, FOOD_SPRITES } from "@/lib/sprites";
 import ShopItem from "./ShopItem";
 import BoardSlot from "./BoardSlot";
 import BattleView from "./BattleView";
+import { Board } from "@/lib/game/board";
 
 function frozenFromShop(shop: ShopState) {
   return {
@@ -46,7 +47,7 @@ type BattleData = {
 };
 
 type NextState = {
-  board: Board;
+  board: ApiBoard;
   shop: ShopState;
   gold: number;
   lives: number;
@@ -56,7 +57,7 @@ type NextState = {
 
 type GameClientProps = {
   gameId: string;
-  initialBoard: Board;
+  initialBoard: ApiBoard;
   initialShop: ShopState;
   initialGold: number;
   initialLives: number;
@@ -76,7 +77,7 @@ export default function GameClient({
   const router = useRouter();
 
   const [phase, setPhase] = useState<"shop" | "battle">("shop");
-  const [board, setBoard] = useState<Board>(initialBoard);
+  const [apiBoard, setApiBoard] = useState<ApiBoard>(initialBoard);
   const [shop, setShop] = useState<ShopState>(initialShop);
   const [gold, setGold] = useState(initialGold);
   const [lives, setLives] = useState(initialLives);
@@ -161,13 +162,18 @@ export default function GameClient({
         await handleBuyFood(selectedItem.index, boardPosition);
       }
     } else {
-      const pet = board[boardPosition];
+      const pet = apiBoard[boardPosition];
       if (!pet) return;
       setSelectedBoardIndex((prev) => (prev === boardPosition ? null : boardPosition));
     }
   }
 
   async function handleBuyPet(shopPosition: number, boardPosition: number) {
+    const prevBoard = new Board(apiBoard);
+    const prevShop = shop;
+    const prevGold = gold;
+    const prevFrozen = frozenPets;
+
     const shopPet = shop.shopPets[shopPosition];
     if (!shopPet) return;
     const petDef = PET_MAP[shopPet.type];
@@ -177,20 +183,23 @@ export default function GameClient({
     if (gold < cost) { setError("Not enough gold"); return; }
 
     const freshPet = createPet(petDef, shopPet.tempHealthBonus);
+    
+    const occupant = apiBoard[boardPosition];
 
-    const occupant = board[boardPosition];
-    let optimisticBoard: Board = [...board];
+    const updatedBoard = prevBoard.clone();
+    
     if (occupant === null) {
-      optimisticBoard[boardPosition] = freshPet;
+      updatedBoard.pets[boardPosition] = freshPet;
+    
     } else if (occupant.type === shopPet.type) {
       const error = mergeError(occupant, freshPet);
       if (error) { setError(error); return; }
-      optimisticBoard[boardPosition] = mergePets(occupant, freshPet);
+      updatedBoard.pets[boardPosition] = mergePets(occupant, freshPet);
+      
     } else {
-      const shifted = openSlot(board, boardPosition);
+      const shifted = updatedBoard.openSlot(boardPosition);
       if (!shifted) { setError("Board is full"); return; }
-      optimisticBoard = shifted;
-      optimisticBoard[boardPosition] = freshPet;
+      updatedBoard.pets[boardPosition] = freshPet;
     }
 
     // Buying one half of a chained level-up reward removes the other half.
@@ -200,8 +209,7 @@ export default function GameClient({
     const newShopPets = shop.shopPets.filter((_, i) => !removedPetIdx.includes(i));
     const optimisticShop: ShopState = { shopPets: newShopPets, shopFoods: shop.shopFoods };
 
-    const prevBoard = board, prevShop = shop, prevGold = gold, prevFrozen = frozenPets;
-    setBoard(optimisticBoard);
+    setApiBoard(updatedBoard.pets);
     setShop(optimisticShop);
     setFrozenPets(removeFrozenIndices(frozenPets, removedPetIdx));
     setGold(gold - cost);
@@ -220,18 +228,20 @@ export default function GameClient({
       });
       const data = await res.json();
       if (!res.ok) {
-        setBoard(prevBoard); setShop(prevShop); setGold(prevGold); setFrozenPets(prevFrozen);
+        setApiBoard(prevBoard.pets); setShop(prevShop); setGold(prevGold); setFrozenPets(prevFrozen);
         setError(data.error ?? "Something went wrong");
         return;
       }
-      setBoard(data.board as Board);
+      setApiBoard(data.board as ApiBoard);
       setShop(data.shop as ShopState);
       setGold(data.gold);
       const synced = frozenFromShop(data.shop as ShopState);
       setFrozenPets(synced.pets);
       setFrozenFoods(synced.foods);
+
     } catch {
-      setBoard(prevBoard); setShop(prevShop); setGold(prevGold); setFrozenPets(prevFrozen);
+      setApiBoard(prevBoard.pets); setShop(prevShop); setGold(prevGold); setFrozenPets(prevFrozen);
+
     } finally {
       setLoading(false);
     }
@@ -244,23 +254,35 @@ export default function GameClient({
     if (!foodDef) return;
 
     const cost = getFoodCost(shopFood, foodDef);
-    if (gold < cost) { setError("Not enough gold"); return; }
+    if (gold < cost) {
+      setError("Not enough gold");
+      return;
+    }
 
-    const feedProblem = feedError(foodDef, board, boardPosition);
-    if (feedProblem) { setError(feedProblem); return; }
+    const feedProblem = feedError(foodDef, apiBoard, boardPosition);
+    if (feedProblem) {
+      setError(feedProblem);
+      return;
+    }
 
     // Random-target foods leave the board alone until the server picks the
     // pets, so the preview never shows the wrong ones.
     const optimisticBoard = needsTarget(foodDef)
-      ? applyFoodEffect(foodDef, board, boardPosition, PET_MAP)
-      : board;
+      ? applyFoodEffect(foodDef, apiBoard, boardPosition, PET_MAP)
+      : apiBoard;
 
     const newShopFoods = [...shop.shopFoods];
     newShopFoods.splice(shopPosition, 1);
-    const optimisticShop: ShopState = { shopPets: shop.shopPets, shopFoods: newShopFoods };
+    const optimisticShop: ShopState = {
+      shopPets: shop.shopPets,
+      shopFoods: newShopFoods,
+    };
 
-    const prevBoard = board, prevShop = shop, prevGold = gold, prevFrozen = frozenFoods;
-    setBoard(optimisticBoard);
+    const prevBoard = apiBoard,
+      prevShop = shop,
+      prevGold = gold,
+      prevFrozen = frozenFoods;
+    setApiBoard(optimisticBoard);
     setShop(optimisticShop);
     setFrozenFoods(removeFrozenIndices(frozenFoods, [shopPosition]));
     setGold(gold - cost);
@@ -275,18 +297,24 @@ export default function GameClient({
       });
       const data = await res.json();
       if (!res.ok) {
-        setBoard(prevBoard); setShop(prevShop); setGold(prevGold); setFrozenFoods(prevFrozen);
+        setApiBoard(prevBoard);
+        setShop(prevShop);
+        setGold(prevGold);
+        setFrozenFoods(prevFrozen);
         setError(data.error ?? "Something went wrong");
         return;
       }
-      setBoard(data.board as Board);
+      setApiBoard(data.board as ApiBoard);
       setShop(data.shop as ShopState);
       setGold(data.gold);
       const synced = frozenFromShop(data.shop as ShopState);
       setFrozenPets(synced.pets);
       setFrozenFoods(synced.foods);
     } catch {
-      setBoard(prevBoard); setShop(prevShop); setGold(prevGold); setFrozenFoods(prevFrozen);
+      setApiBoard(prevBoard);
+      setShop(prevShop);
+      setGold(prevGold);
+      setFrozenFoods(prevFrozen);
     } finally {
       setLoading(false);
     }
@@ -295,9 +323,11 @@ export default function GameClient({
   async function handleMove(targetPosition: number) {
     if (selectedBoardIndex === null) return;
 
-    const optimisticBoard = applyReorder(board, selectedBoardIndex, targetPosition);
-    const prevBoard = board;
-    setBoard(optimisticBoard);
+    const prevBoard = new Board(apiBoard);
+    const board = prevBoard.clone();
+    board.swap(selectedBoardIndex, targetPosition);
+
+    setApiBoard(board.pets);
     setSelectedBoardIndex(null);
     setLoading(true);
 
@@ -312,18 +342,22 @@ export default function GameClient({
         }),
       });
       const data = await res.json();
+
       if (!res.ok) {
-        setBoard(prevBoard);
+        setApiBoard(prevBoard.pets);
         setError(data.error ?? "Something went wrong");
         return;
       }
-      setBoard(data.board as Board);
+
+      setApiBoard(data.board);
       setShop(data.shop as ShopState);
       const synced = frozenFromShop(data.shop as ShopState);
       setFrozenPets(synced.pets);
       setFrozenFoods(synced.foods);
+
     } catch {
-      setBoard(prevBoard);
+      setApiBoard(prevBoard.pets);
+
     } finally {
       setLoading(false);
     }
@@ -332,19 +366,12 @@ export default function GameClient({
   async function handleMerge(targetPosition: number) {
     if (selectedBoardIndex === null) return;
 
-    const petFrom = board[selectedBoardIndex];
-    const petTo = board[targetPosition];
-    if (!petFrom || !petTo) return;
-    const error = mergeError(petFrom, petTo);
-    if (error) { setError(error); return; }
+    const board = new Board(apiBoard);
+    const updatedBoard = board.clone();
 
-    const merged = mergePets(petFrom, petTo);
-    const optimisticBoard: Board = [...board];
-    optimisticBoard[targetPosition] = merged;
-    optimisticBoard[selectedBoardIndex] = null;
+    updatedBoard.merge(selectedBoardIndex, targetPosition);
 
-    const prevBoard = board;
-    setBoard(optimisticBoard);
+    setApiBoard(updatedBoard.pets);
     setSelectedBoardIndex(null);
     setLoading(true);
 
@@ -356,18 +383,18 @@ export default function GameClient({
       });
       const data = await res.json();
       if (!res.ok) {
-        setBoard(prevBoard);
+        setApiBoard(board.pets);
         setError(data.error ?? "Something went wrong");
         return;
       }
-      setBoard(data.board as Board);
+      setApiBoard(data.board);
       setShop(data.shop as ShopState);
       setGold(data.gold);
       const synced = frozenFromShop(data.shop as ShopState);
       setFrozenPets(synced.pets);
       setFrozenFoods(synced.foods);
     } catch {
-      setBoard(prevBoard);
+      setApiBoard(board.pets);
     } finally {
       setLoading(false);
     }
@@ -376,16 +403,13 @@ export default function GameClient({
   async function handleSellPet() {
     if (selectedBoardIndex === null) return;
 
-    const pet = board[selectedBoardIndex];
-    if (!pet) return;
+    const board = new Board(apiBoard);
+    const updatedBoard = board.clone();
+    const initialGold = gold;
+    const sellValue = updatedBoard.sell(selectedBoardIndex);
 
-    const goldGain = getSellValue(pet);
-    const optimisticBoard: Board = [...board];
-    optimisticBoard[selectedBoardIndex] = null;
-
-    const prevBoard = board, prevGold = gold;
-    setBoard(optimisticBoard);
-    setGold(gold + goldGain);
+    setApiBoard(updatedBoard.pets);
+    setGold(gold + sellValue);
     setSelectedBoardIndex(null);
     setLoading(true);
 
@@ -400,20 +424,25 @@ export default function GameClient({
       });
       const data = await res.json();
       if (!res.ok) {
-        setBoard(prevBoard); setGold(prevGold);
+        setApiBoard(board.pets);
+        setGold(initialGold);
         setError(data.error ?? "Something went wrong");
         return;
       }
-      setBoard(data.board as Board);
+      setApiBoard(data.board);
       setShop(data.shop as ShopState);
       setGold(data.gold);
       const synced = frozenFromShop(data.shop as ShopState);
       setFrozenPets(synced.pets);
       setFrozenFoods(synced.foods);
+
     } catch {
-      setBoard(prevBoard); setGold(prevGold);
+      setApiBoard(board.pets);
+      setGold(initialGold);
+
     } finally {
       setLoading(false);
+
     }
   }
 
@@ -444,6 +473,7 @@ export default function GameClient({
 
   async function handleEndTurn() {
     setLoading(true);
+
     try {
       const endRes = await fetch(`/api/game/${gameId}/end`, {
         method: "POST",
@@ -452,6 +482,7 @@ export default function GameClient({
           ...frozenBody,
         }),
       });
+
       const endData = await endRes.json();
       if (!endRes.ok) {
         setError(endData.error ?? "Something went wrong");
@@ -466,14 +497,16 @@ export default function GameClient({
       setNextState(endData.nextState ?? null);
       setGameWon(endData.gameStatus === "WON");
       setPhase("battle");
+
     } finally {
       setLoading(false);
+
     }
   }
 
   function handleBackToShop() {
     if (nextState && nextState.lives > 0) {
-      setBoard(nextState.board as Board);
+      setApiBoard(nextState.board);
       setShop(nextState.shop as ShopState);
       setGold(nextState.gold);
       setLives(nextState.lives);
@@ -538,12 +571,12 @@ export default function GameClient({
               <div className="flex gap-2 justify-center">
                 {Array.from({ length: 5 }, (_, displayIdx) => {
                   const i = 4 - displayIdx;
-                  const pet = board[i];
+                  const pet = apiBoard[i];
                   const isOtherSlot = hasBoardSelection && i !== selectedBoardIndex;
                   const canMerge =
                     isOtherSlot &&
                     pet !== null &&
-                    mergeError(pet, board[selectedBoardIndex!]!) === null;
+                    mergeError(pet, apiBoard[selectedBoardIndex!]!) === null;
                   return (
                     <div key={i} className="flex flex-col items-center gap-1">
                       <BoardSlot
@@ -585,14 +618,14 @@ export default function GameClient({
                   );
                 })}
               </div>
-              {selectedBoardIndex !== null && board[selectedBoardIndex] && (
+              {selectedBoardIndex !== null && apiBoard[selectedBoardIndex] && (
                 <div className="flex justify-center mt-3">
                   <button
                     onClick={handleSellPet}
                     disabled={loading}
                     className="px-4 py-1.5 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700 disabled:opacity-40 transition-colors"
                   >
-                    Sell (+{getSellValue(board[selectedBoardIndex]!)}g)
+                    Sell (+{getSellValue(apiBoard[selectedBoardIndex]!)}g)
                   </button>
                 </div>
               )}

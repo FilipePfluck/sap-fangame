@@ -3,19 +3,25 @@ import {
   BattleAbilityContext,
   isTriggerPerk,
   PetInstance,
-  PetType,
+  StaticPet,
   ShopAbilityContext,
   ShopState,
   Trigger,
+
 } from "@/lib/types";
 import { orderByAttack } from "@/lib/utils/random";
 import { stockFood } from "@/lib/game/shop";
-import { compactBoard, grantExperience } from "@/lib/game/merge";
+import {
+  compactApiBoard,
+  compactBoard,
+  grantExperience,
+} from "@/lib/game/merge";
 import { friendSummonedCandidates } from "@/lib/game/friend-summoned";
 import { friendAheadAbility } from "@/lib/game/pet";
 import { triggerEffect } from "@/lib/perks/trigger-functions";
 import { dealAbilityDamage } from "@/lib/utils/combat";
 import { triggerFriendAteFood } from "@/lib/game/food";
+import { Board } from "@/lib/game/board";
 
 // TODO - Order shop abilities through a shared queue manager (supporting dynamic
 // updates) and remove the per-function orderByAttack sorting below.
@@ -43,7 +49,7 @@ function createShopContext(
   gold: { delta: number },
   justStocked: Set<object>,
   lastBattleResult?: "WIN" | "DRAW" | "LOSS",
-  boughtPet?: PetType
+  boughtPet?: StaticPet
 ): ShopAbilityContext {
   return {
     self,
@@ -74,7 +80,7 @@ export function fireShopAbility(
   petIndex: number,
   board: (PetInstance | null)[],
   shop: ShopState,
-  petRegistry: Record<string, PetType>
+  petRegistry: Record<string, StaticPet>
 ): ShopAbilityResult {
   const def = petRegistry[pet.type];
   if (!def?.ability || def.ability.trigger !== trigger) {
@@ -97,7 +103,7 @@ export function fireBoardShopAbility(
   trigger: Trigger.start_of_turn | Trigger.end_turn,
   board: (PetInstance | null)[],
   shop: ShopState,
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   lastBattleResult?: "WIN" | "DRAW" | "LOSS"
 ): ShopAbilityResult {
   const currentBoard = [...board];
@@ -157,10 +163,10 @@ export function fireBoardShopAbility(
 }
 
 export function fireShopFriendBought(
-  boughtPet: PetType,
+  boughtPet: StaticPet,
   board: (PetInstance | null)[],
   shop: ShopState,
-  petRegistry: Record<string, PetType>
+  petRegistry: Record<string, StaticPet>
 ): ShopAbilityResult {
   const currentBoard = [...board];
   const currentShop = cloneShop(shop);
@@ -201,18 +207,18 @@ export function fireShopFriendBought(
 export function fireShopFaint(
   board: (PetInstance | null)[],
   boardPosition: number,
-  petRegistry: Record<string, PetType>
+  petRegistry: Record<string, StaticPet>
 ): (PetInstance | null)[] {
   // Faint abilities can buff other pets in place, so work on copies.
-  let newBoard = board.map((p) => (p ? { ...p } : null));
-  const pet = newBoard[boardPosition];
-  if (!pet) return newBoard;
+  let newApiBoard = [...board]
+  const pet = newApiBoard[boardPosition];
+  if (!pet) return newApiBoard;
 
   const def = petRegistry[pet.type];
-  const compacted = compactBoard(newBoard);
+  const compacted = compactApiBoard(newApiBoard);
   const selfIndex = compacted.indexOf(pet);
 
-  newBoard[boardPosition] = null;
+  newApiBoard[boardPosition] = null;
   const summonRequests: PetInstance[] = [];
 
   const context = (self: PetInstance): BattleAbilityContext => ({
@@ -245,12 +251,16 @@ export function fireShopFaint(
 
   // Pill frees one slot, so any later summon requests are flung.
   for (const summon of summonRequests) {
-    if (newBoard[boardPosition] !== null) break;
-    newBoard[boardPosition] = summon;
-    newBoard = fireShopFriendSummoned(newBoard, boardPosition, petRegistry);
+    if (newApiBoard[boardPosition] !== null) break;
+    newApiBoard[boardPosition] = summon;
+    newApiBoard = fireShopFriendSummoned(
+      newApiBoard,
+      boardPosition,
+      petRegistry
+    );
   }
 
-  return newBoard;
+  return newApiBoard;
 }
 
 // Fires "friend-summoned" for every other pet on the board when a pet is
@@ -261,13 +271,13 @@ export function fireShopFaint(
 export function fireShopFriendSummoned(
   board: (PetInstance | null)[],
   summonedBoardPosition: number,
-  petRegistry: Record<string, PetType>
+  petRegistry: Record<string, StaticPet>
 ): (PetInstance | null)[] {
   const newBoard = [...board];
   const summonedPet = newBoard[summonedBoardPosition];
   if (!summonedPet) return newBoard;
 
-  const compacted = compactBoard(newBoard);
+  const compacted = compactApiBoard(newBoard);
   const summonedIndex = compacted.indexOf(summonedPet);
   const candidates = friendSummonedCandidates(
     compacted,

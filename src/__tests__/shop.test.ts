@@ -2,11 +2,11 @@ import { describe, it, expect } from "vitest";
 import { generateShop, clearDiscount } from "@/lib/game/shop";
 import { SHOP_PET_POOL, getShopPetTooltipText } from "@/lib/pets";
 import { SHOP_FOOD_POOL } from "@/lib/foods";
-import type { PetType, FoodType } from "@/lib/types";
+import type { StaticPet, FoodType } from "@/lib/types";
 
 // Minimal multi-tier pack for tier-unlock tests
-const TIER1_PET: PetType = { name: "Sloth", sprite: "", tier: 1, baseAttack: 1, baseHealth: 1, isToken: false, ability: null, description: "" };
-const TIER2_PET: PetType = { name: "Tiger", sprite: "", tier: 2, baseAttack: 4, baseHealth: 3, isToken: false, ability: null, description: "" };
+const TIER1_PET: StaticPet = { name: "Sloth", sprite: "", tier: 1, baseAttack: 1, baseHealth: 1, isToken: false, ability: null, description: "" };
+const TIER2_PET: StaticPet = { name: "Tiger", sprite: "", tier: 2, baseAttack: 4, baseHealth: 3, isToken: false, ability: null, description: "" };
 const TIER1_FOOD: FoodType = { name: "Apple", sprite: "", tier: 1, isToken: false, effect: { attack: 1, health: 1 }, description: "" };
 const TIER2_FOOD: FoodType = { name: "Salad", sprite: "", tier: 2, isToken: false, effect: { health: 2 }, description: "" };
 const MULTI_TIER_PETS = [TIER1_PET, TIER2_PET];

@@ -1,4 +1,4 @@
-import { Ability, PetInstance, PetType, Trigger } from "@/lib/types";
+import { Ability, PetInstance, StaticPet, Trigger } from "@/lib/types";
 
 export type FriendSummonedAbility = Extract<
   Ability,
@@ -10,7 +10,7 @@ export type FriendSummonedAbility = Extract<
 export function friendSummonedCandidates(
   team: PetInstance[],
   summonedIndex: number,
-  petRegistry: Record<string, PetType>
+  petRegistry: Record<string, StaticPet>
 ): { pet: PetInstance; ability: FriendSummonedAbility }[] {
   const candidates: { pet: PetInstance; ability: FriendSummonedAbility }[] = [];
   team.forEach((pet, i) => {
