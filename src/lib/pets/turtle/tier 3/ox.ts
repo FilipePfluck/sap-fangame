@@ -1,5 +1,5 @@
 import { StaticPet, Trigger } from "@/lib/types";
-import { MelonPerk } from "@/lib/perks/melon";
+import { MelonPerk } from "@/lib/perks/turtle/melon";
 
 const TRIGGER_LIMIT = 1;
 

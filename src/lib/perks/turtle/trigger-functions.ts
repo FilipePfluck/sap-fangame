@@ -1,8 +1,8 @@
 import { PetInstance, TriggerPerk } from "@/lib/types";
-import { mushroomEffect } from "@/lib/perks/mushroom";
-import { honeyEffect } from "@/lib/perks/honey";
-import { breadEffect } from "@/lib/perks/bread";
-import { cakeEffect } from "@/lib/perks/cake";
+import { mushroomEffect } from "@/lib/perks/turtle/mushroom";
+import { honeyEffect } from "@/lib/perks/turtle/honey";
+import { breadEffect } from "@/lib/perks/turtle/bread";
+import { cakeEffect } from "@/lib/perks/turtle/cake";
 
 // Used for routing perk calls to their triggers.  Cannot be placed directly on the perk data itself, as it
 // functions present on the perk directly causes issues with serialization.
