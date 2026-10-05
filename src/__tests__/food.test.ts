@@ -2,12 +2,12 @@ import { describe, it, expect } from "vitest";
 import { applyFoodEffect, feedError, needsTarget } from "@/lib/game/food";
 import { PET_REGISTRY } from "@/lib/pets";
 import { Apple, Honey, Pill, Sushi } from "@/lib/foods";
-import { Chocolate } from "@/lib/foods/turtle/chocolate";
-import { Cupcake } from "@/lib/foods/turtle/cupcake";
+import { Chocolate } from "@/lib/foods/chocolate";
+import { Cupcake } from "@/lib/foods/cupcake";
 import { ApiBoard, FoodType, PetInstance } from "@/lib/types";
-import { MeatBone } from "@/lib/foods/turtle/meat-bone";
-import { MeatBonePerk } from "@/lib/perks/turtle/meat-bone";
-import { HoneyPerk } from "@/lib/perks/turtle/honey";
+import { MeatBone } from "@/lib/foods/meat-bone";
+import { MeatBonePerk } from "@/lib/perks/meat-bone";
+import { HoneyPerk } from "@/lib/perks/honey";
 import { fireBoardShopAbility } from "@/lib/game/shop-ability";
 import { Trigger } from "@/lib/types";
 
@@ -26,8 +26,7 @@ describe("applyFoodEffect", () => {
   it("sets the perk for perk foods", () => {
     const board: ApiBoard = [pet("Ant"), null, null, null, null];
     const result = applyFoodEffect(Honey, board, 0, PET_REGISTRY);
-    expect(result[0]?.perk).toEqual(HoneyPerk);
-    expect(result[0]?.perk).not.toBe(HoneyPerk);
+    expect(result[0]?.perk).toBe(HoneyPerk);
   });
 
   it("does not mutate the input board for standard foods", () => {
@@ -120,7 +119,7 @@ describe("applyFoodEffect", () => {
     const perkFood: FoodType = { ...MeatBone, targeting: { random: 2 } };
     const board: ApiBoard = [pet("Ant"), pet("Fish"), pet("Pig"), null, null];
     const result = applyFoodEffect(perkFood, board, 0, PET_REGISTRY);
-    expect(result.filter((p) => p?.perk?.name === MeatBonePerk.name)).toHaveLength(2);
+    expect(result.filter((p) => p?.perk === MeatBonePerk)).toHaveLength(2);
   });
 
   it("leaves the input board's pets untouched for random-target foods", () => {

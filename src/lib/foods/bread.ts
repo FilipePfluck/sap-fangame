@@ -1,5 +1,5 @@
 import type { FoodType } from "@/lib/types";
-import { BreadPerk } from "@/lib/perks/turtle/bread";
+import { BreadPerk } from "@/lib/perks/bread";
 
 export const Bread: FoodType = {
   name: "Bread",

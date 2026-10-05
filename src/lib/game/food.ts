@@ -7,7 +7,6 @@ import {
 } from "@/lib/types";
 import { orderByAttack, pickN } from "@/lib/utils/random";
 import { grantExperience } from "@/lib/game/merge";
-import { getPetAbility } from "@/lib/game/pet";
 import { MAX_PET_EXPERIENCE } from "@/lib/game/rules";
 import { Board } from "@/lib/game/board";
 
@@ -46,7 +45,7 @@ function applyStandardEffect(food: FoodType, pet: PetInstance): PetInstance {
     ...pet,
     attack: pet.attack + attackBonus,
     health: pet.health + healthBonus,
-    perk: food.perk ? { ...food.perk } : pet.perk,
+    perk: food.perk ? food.perk : pet.perk,
   };
   if (food.effect.temporary) {
     if (attackBonus) updatedPet.tempAttack = (pet.tempAttack ?? 0) + attackBonus;
@@ -67,8 +66,7 @@ function pickTargets(food: FoodType, board: Board, boardPosition: number | undef
 export function triggerFriendAteFood(
   board: ApiBoard,
   fedPet: PetInstance,
-  petRegistry: Record<string, StaticPet>,
-  foodGroup?: FoodType["foodGroup"]
+  petRegistry: Record<string, StaticPet>
 ): void {
   if (fedPet.health <= 0) return;
   // TODO - Wrap board in a class with board.friends() / board.friendly() helpers
@@ -76,8 +74,10 @@ export function triggerFriendAteFood(
     (pet): pet is PetInstance => pet !== null && pet.health > 0
   );
   const listeners = friends.flatMap((pet) => {
-    const ability = getPetAbility(petRegistry[pet.type], Trigger.friend_ate_food);
-    return ability ? [{ pet, ability }] : [];
+    const ability = petRegistry[pet.type]?.ability;
+    return ability?.trigger === Trigger.friend_ate_food
+      ? [{ pet, ability }]
+      : [];
   });
   for (const { pet, ability } of orderByAttack(listeners, (job) => job.pet.attack)) {
     ability.fn({
@@ -85,7 +85,6 @@ export function triggerFriendAteFood(
       fedPet,
       friends,
       level: pet.level,
-      foodGroup,
     });
   }
 }
@@ -105,7 +104,7 @@ export function applyFoodEffect(
 
     const fedPet = newBoard[boardPosition];
     if (fedPet && !food.skipsFriendAteFood) {
-      triggerFriendAteFood(newBoard, fedPet, petRegistry, food.foodGroup);
+      triggerFriendAteFood(newBoard, fedPet, petRegistry);
     }
     return food.applyEffect({ board: newBoard, boardPosition, petRegistry });
   }
@@ -117,7 +116,7 @@ export function applyFoodEffect(
       const fedPet = applyStandardEffect(food, pet);
       newBoard[i] = fedPet;
       if (!food.skipsFriendAteFood) {
-        triggerFriendAteFood(newBoard, fedPet, petRegistry, food.foodGroup);
+        triggerFriendAteFood(newBoard, fedPet, petRegistry);
       }
     }
   }

@@ -1,5 +1,5 @@
 import type { StaticPet } from "@/lib/types";
-import { PeanutPerk } from "@/lib/perks/turtle/peanut";
+import { PeanutPerk } from "@/lib/perks/peanut";
 
 export const Scorpion: Readonly<StaticPet> = {
   name: "Scorpion",

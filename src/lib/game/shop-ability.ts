@@ -1,6 +1,5 @@
 import {
   Ability,
-  AbilityMode,
   BattleAbilityContext,
   isTriggerPerk,
   PetInstance,
@@ -8,20 +7,21 @@ import {
   ShopAbilityContext,
   ShopState,
   Trigger,
+
 } from "@/lib/types";
-import { clonePetInstance } from "@/lib/utils/clone";
-import { AbilityStateStore, createBattleAbilityContext } from "@/lib/game/battle-ability-context";
 import { orderByAttack } from "@/lib/utils/random";
 import { stockFood } from "@/lib/game/shop";
 import {
   compactApiBoard,
+  compactBoard,
   grantExperience,
 } from "@/lib/game/merge";
 import { friendSummonedCandidates } from "@/lib/game/friend-summoned";
-import { friendAheadAbility, getPetAbility } from "@/lib/game/pet";
-import { triggerEffect } from "@/lib/perks/turtle/trigger-functions";
+import { friendAheadAbility } from "@/lib/game/pet";
+import { triggerEffect } from "@/lib/perks/trigger-functions";
 import { dealAbilityDamage } from "@/lib/utils/combat";
 import { triggerFriendAteFood } from "@/lib/game/food";
+import { Board } from "@/lib/game/board";
 
 // TODO - Order shop abilities through a shared queue manager (supporting dynamic
 // updates) and remove the per-function orderByAttack sorting below.
@@ -33,7 +33,6 @@ export type ShopAbilityResult = {
 };
 
 type FriendBoughtAbility = Extract<Ability, { trigger: Trigger.friend_bought }>;
-const abilityStates = new AbilityStateStore();
 
 function cloneShop(shop: ShopState): ShopState {
   return {
@@ -61,7 +60,7 @@ function createShopContext(
     goldGain: (amount) => {
       gold.delta += amount;
     },
-    addShopFood: (foodName, discount) => stockFood(shop, foodName, justStocked, discount),
+    addShopFood: (foodName) => stockFood(shop, foodName, justStocked),
     grantExperience,
     lastBattleResult,
     boughtPet,
@@ -83,8 +82,8 @@ export function fireShopAbility(
   shop: ShopState,
   petRegistry: Record<string, StaticPet>
 ): ShopAbilityResult {
-  const ability = getPetAbility(petRegistry[pet.type], trigger);
-  if (!ability) {
+  const def = petRegistry[pet.type];
+  if (!def?.ability || def.ability.trigger !== trigger) {
     return { board: [...board], shop, goldDelta: 0 };
   }
 
@@ -92,7 +91,7 @@ export function fireShopAbility(
   const newShop = cloneShop(shop);
   const gold = { delta: 0 };
 
-  ability.fn(
+  def.ability.fn(
     createShopContext(pet, petIndex, newBoard, newShop, gold, new Set())
   );
   return { board: newBoard, shop: newShop, goldDelta: gold.delta };
@@ -128,13 +127,13 @@ export function fireBoardShopAbility(
       delete pet.foodTriggersThisTurn;
       delete pet.friendBuysThisTurn;
       delete pet.friendAheadFaintsThisTurn;
-      delete pet.friendSummonsThisTurn;
     }
 
     const perk = isTriggerPerk(pet.perk) && pet.perk.trigger === trigger
       ? pet.perk
       : null;
-    const petAbility = getPetAbility(petRegistry[pet.type], trigger) ?? null;
+    const ability = petRegistry[pet.type]?.ability;
+    const petAbility = ability?.trigger === trigger ? ability : null;
     if (pet.health > 0 && (perk || petAbility)) {
       jobs.push({ pet, index: i, perk, ability: petAbility });
     }
@@ -176,7 +175,7 @@ export function fireShopFriendBought(
   const listeners: { pet: PetInstance; index: number; ability: FriendBoughtAbility }[] = [];
   for (let i = 0; i < currentBoard.length; i++) {
     const pet = currentBoard[i];
-    const ability = pet && getPetAbility(petRegistry[pet.type], Trigger.friend_bought);
+    const ability = pet && petRegistry[pet.type]?.ability;
     if (!pet || pet.health <= 0 || ability?.trigger !== Trigger.friend_bought) continue;
     listeners.push({ pet, index: i, ability });
   }
@@ -211,32 +210,24 @@ export function fireShopFaint(
   petRegistry: Record<string, StaticPet>
 ): (PetInstance | null)[] {
   // Faint abilities can buff other pets in place, so work on copies.
-  let newBoard = board.map((p) => (p ? clonePetInstance(p) : null));
-  const pet = newBoard[boardPosition];
-  if (!pet) return newBoard;
+  let newApiBoard = [...board]
+  const pet = newApiBoard[boardPosition];
+  if (!pet) return newApiBoard;
 
   const def = petRegistry[pet.type];
-  const compacted = compactApiBoard(newBoard);
+  const compacted = compactApiBoard(newApiBoard);
   const selfIndex = compacted.indexOf(pet);
 
-  newBoard[boardPosition] = null;
-  const summonRequests: { pet: PetInstance; triggerFriendSummoned: boolean }[] = [];
+  newApiBoard[boardPosition] = null;
+  const summonRequests: PetInstance[] = [];
 
-  const context = (self: PetInstance): BattleAbilityContext => createBattleAbilityContext({
+  const context = (self: PetInstance): BattleAbilityContext => ({
     self,
     selfIndex: compacted.indexOf(self),
     team: compacted,
     enemyTeam: [],
     level: self.level,
-    mode: AbilityMode.shop,
-    state: abilityStates.forPet(self),
-    summon: (newPet, _afterIndex, options) => {
-      if (options?.side === "enemy") return;
-      summonRequests.push({
-        pet: newPet,
-        triggerFriendSummoned: options?.triggerFriendSummoned !== false,
-      });
-    },
+    summon: (newPet) => summonRequests.push(newPet),
     triggerCount: 1,
     petRegistry,
     friendAteFood: (fedPet) =>
@@ -245,13 +236,13 @@ export function fireShopFaint(
     grantExperience,
   });
 
-  getPetAbility(def, Trigger.faint)?.fn(context(pet));
+  if (def?.ability?.trigger === Trigger.faint) {
+    def.ability.fn(context(pet));
+  }
 
   if (isTriggerPerk(pet.perk) && pet.perk.trigger === Trigger.faint) {
     const summonRequest = triggerEffect(pet.perk, { self: pet }).summonRequest;
-    if (summonRequest) {
-      summonRequests.push({ pet: summonRequest, triggerFriendSummoned: true });
-    }
+    if (summonRequest) summonRequests.push(summonRequest);
   }
 
   const behind = compacted[selfIndex + 1];
@@ -259,15 +250,17 @@ export function fireShopFaint(
   if (friendAheadFaints) friendAheadFaints(context(behind));
 
   // Pill frees one slot, so any later summon requests are flung.
-  for (const { pet: summon, triggerFriendSummoned } of summonRequests) {
-    if (newBoard[boardPosition] !== null) break;
-    newBoard[boardPosition] = summon;
-    if (triggerFriendSummoned) {
-      newBoard = fireShopFriendSummoned(newBoard, boardPosition, petRegistry);
-    }
+  for (const summon of summonRequests) {
+    if (newApiBoard[boardPosition] !== null) break;
+    newApiBoard[boardPosition] = summon;
+    newApiBoard = fireShopFriendSummoned(
+      newApiBoard,
+      boardPosition,
+      petRegistry
+    );
   }
 
-  return newBoard;
+  return newApiBoard;
 }
 
 // Fires "friend-summoned" for every other pet on the board when a pet is
@@ -298,14 +291,12 @@ export function fireShopFriendSummoned(
     candidates,
     (c) => c.pet.attack
   )) {
-    const ctx: BattleAbilityContext = createBattleAbilityContext({
+    const ctx: BattleAbilityContext = {
       self: pet,
       selfIndex: compacted.indexOf(pet),
       team: compacted,
       enemyTeam: [],
       level: pet.level,
-      mode: AbilityMode.shop,
-      state: abilityStates.forPet(pet),
       summon: () => {},
       summonedIndex,
       triggerCount: 1,
@@ -314,7 +305,8 @@ export function fireShopFriendSummoned(
       grantExperience,
       friendAteFood: (fedPet) =>
         triggerFriendAteFood(compacted, fedPet, petRegistry),
-    });
+      inShop: true,
+    };
     ability.fn(ctx);
   }
 

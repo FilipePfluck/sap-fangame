@@ -14,7 +14,6 @@ export type PetInstance = {
   foodTriggersThisTurn?: number;
   friendBuysThisTurn?: number;
   friendAheadFaintsThisTurn?: number;
-  friendSummonsThisTurn?: number;
 };
 
 export type ShopPet = {
@@ -54,44 +53,20 @@ export type BattleStep = {
   description: string;
 };
 
-export enum AbilityMode {
-  battle = "battle",
-  shop = "shop",
-}
-export type ModeValue<T> = Record<AbilityMode, T>;
-export type PetStatChanges = Partial<Pick<PetInstance, "attack" | "health">>;
-export type PetSnapshot = Pick<PetInstance, "type" | "attack" | "health">;
-export type AbilityStateKey = string | number | symbol;
-export type AbilityState = {
-  get<T>(key: AbilityStateKey): T | undefined;
-  set<T>(key: AbilityStateKey, value: T): void;
-};
-
 export type BattleAbilityContext = {
   self: PetInstance;
   selfIndex: number;
   team: PetInstance[];
   enemyTeam: PetInstance[];
   level: number;
-  mode: AbilityMode;
-  resolveValue: <T>(values: ModeValue<T>) => T;
-  modifyStats: (target: PetInstance, changes: PetStatChanges) => void;
-  swallowFriendAhead: () => PetSnapshot | undefined;
-  state: AbilityState;
-  summon: (pet: PetInstance, afterIndex: number, options?: SummonOptions) => void;
+  summon: (pet: PetInstance, afterIndex: number) => void;
   summonedIndex?: number;
-  faintedIndex?: number;
   triggerCount: number;
   petRegistry: Record<string, StaticPet>;
   dealAbilityDamage: (target: PetInstance, damage: number) => number;
   grantExperience: (target: PetInstance, amount: number) => void;
   friendAteFood: (fedPet: PetInstance) => void;
-};
-
-export type SummonOptions = {
-  side?: "self" | "enemy";
-  triggerFriendSummoned?: boolean;
-  waitForSpace?: boolean;
+  inShop?: boolean;
 };
 
 export type FoodAbilityContext = {
@@ -99,7 +74,6 @@ export type FoodAbilityContext = {
   fedPet: PetInstance;
   friends: PetInstance[];
   level: number;
-  foodGroup?: FoodType["foodGroup"];
 };
 
 export type ShopAbilityContext = {
@@ -109,7 +83,7 @@ export type ShopAbilityContext = {
   shop: ShopState;
   level: number;
   goldGain: (amount: number) => void;
-  addShopFood: (foodName: string, discount?: number) => void;
+  addShopFood: (foodName: string) => void;
   grantExperience: (target: PetInstance, amount: number) => void;
   lastBattleResult?: "WIN" | "DRAW" | "LOSS";
   boughtPet?: StaticPet;
@@ -122,7 +96,6 @@ export enum Trigger {
   start_of_battle,
   level_up,
   friend_summoned,
-  friend_faints,
   start_of_turn,
   end_turn,
   before_attack,
@@ -133,16 +106,6 @@ export enum Trigger {
   friend_ate_food,
   friend_bought,
   friend_ahead_faints,
-  counter,
-}
-
-export enum CounterTrigger {
-  friend_hurt,
-}
-
-export type CounterCondition = {
-  trigger: CounterTrigger.friend_hurt;
-  every: number;
 }
 
 export type Ability =
@@ -152,7 +115,6 @@ export type Ability =
   | { trigger: Trigger.start_of_battle; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: Trigger.level_up; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.friend_summoned; fn: (ctx: BattleAbilityContext) => void }
-  | { trigger: Trigger.friend_faints; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: Trigger.start_of_turn; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.end_turn; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.before_attack; fn: (ctx: BattleAbilityContext) => void }
@@ -160,7 +122,6 @@ export type Ability =
   | { trigger: Trigger.hurt; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: Trigger.friend_ahead_attacks; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: Trigger.friend_ahead_faints; fn: (ctx: BattleAbilityContext) => void }
-  | { trigger: Trigger.counter; counter: CounterCondition; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: Trigger.friend_ate_food; fn: (ctx: FoodAbilityContext) => void }
   | { trigger: Trigger.friend_bought; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.knock_out; fn: (ctx: BattleAbilityContext) => void };
@@ -173,9 +134,7 @@ export type StaticPet = {
   baseHealth: number;
   isToken: boolean;
   ability: Ability | null;
-  additionalAbilities?: Ability[];
   innatePerk?: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null;
-  ignoresFriendFaintsFrom?: string[];
   description: string | ((level: number) => string);
 };
 
@@ -189,7 +148,6 @@ export type FoodType = {
   name: string;
   sprite: string;
   tier: number;
-  foodGroup?: "apple";
   perk?: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null;
   isToken: boolean;
   cost?: number;
@@ -227,7 +185,6 @@ export interface OffensivePerk extends BasePerkType {
 export interface DefensivePerk extends BasePerkType {
   blocksFor: number,
   minimumDamageTaken: number,
-  blocksAllDamage?: boolean,
   blocksAbilityDamage: boolean,
   blocksDirectDamage: boolean,
 }

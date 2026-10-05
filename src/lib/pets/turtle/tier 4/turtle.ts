@@ -1,5 +1,5 @@
 import { StaticPet, Trigger } from "@/lib/types";
-import { MelonPerk } from "@/lib/perks/turtle/melon";
+import { MelonPerk } from "@/lib/perks/melon";
 
 export const Turtle: Readonly<StaticPet> = {
   name: "Turtle",
@@ -13,7 +13,7 @@ export const Turtle: Readonly<StaticPet> = {
     fn: (ctx) => {
       const friends = ctx.team
         .slice(ctx.selfIndex + 1)
-        .filter((pet) => pet.health > 0 && pet.perk?.name !== MelonPerk.name)
+        .filter((pet) => pet.health > 0)
         .slice(0, ctx.level);
       for (const friend of friends) {
         friend.perk = { ...MelonPerk };

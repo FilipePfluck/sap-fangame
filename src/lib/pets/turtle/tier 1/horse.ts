@@ -12,7 +12,8 @@ export const Horse: Readonly<StaticPet> = {
     fn: (ctx) => {
       const target = ctx.team[ctx.summonedIndex!];
       if (!target || target.health <= 0) return;
-      ctx.modifyStats(target, { attack: ctx.level });
+      target.attack += ctx.level;
+      if (ctx.inShop) target.tempAttack = (target.tempAttack ?? 0) + ctx.level;
     },
   },
   description: (level: number) =>
