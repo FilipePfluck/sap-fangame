@@ -1,4 +1,4 @@
-import { Trigger, type PetSnapshot, type PetType } from "@/lib/types";
+import { Trigger, type PetSnapshot, type StaticPet } from "@/lib/types";
 
 const SWALLOWED_FRIENDS = Symbol("swallowed-friends");
 
@@ -8,7 +8,7 @@ function experienceForLevel(level: number): number {
   return 0;
 }
 
-export const Whale: PetType = {
+export const Whale: StaticPet = {
   name: "Whale",
   sprite: "/sap/Whale.webp",
   tier: 4,

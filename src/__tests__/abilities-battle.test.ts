@@ -23,7 +23,7 @@ import { MushroomPerk } from "@/lib/perks/mushroom";
 import { structuredClone } from "next/dist/compiled/@edge-runtime/primitives";
 import { SteakPerk } from "@/lib/perks/steak";
 import { ChiliPerk } from "@/lib/perks/chili";
-import { Ox } from "@/lib/pets/ox";
+import { Ox } from "@/lib/pets/turtle/tier 3/ox";
 import { abilityPet, registryWith, testAbilityStates } from "./helpers";
 import { dealAbilityDamage, dealDirectDamage } from "@/lib/utils/combat";
 import { fireShopFriendSummoned } from "@/lib/game/shop-ability";
@@ -1619,7 +1619,7 @@ describe("Perks", () => {
       const opponent = pet("Sloth", 1, 22);
 
       const { steps } = simulateBattle([steakSloth], [opponent], PET_REGISTRY);
-      expect(steps[0].attackerTeam[0].perk.name).toBe("Steak");
+      expect(steps[0].attackerTeam[0].perk?.name).toBe("Steak");
       expect(steps[1].attackerTeam[0].perk).toBe(null);
     });
   })
@@ -1940,4 +1940,3 @@ describe("Engine Behavior", () => {
     });
   });
 });
-

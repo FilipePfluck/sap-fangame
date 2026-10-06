@@ -1,0 +1,20 @@
+import { StaticPet, Trigger } from "@/lib/types";
+
+export const Horse: Readonly<StaticPet> = {
+  name: "Horse",
+  sprite: "/sap/horse.webp",
+  tier: 1,
+  baseAttack: 2,
+  baseHealth: 1,
+  isToken: false,
+  ability: {
+    trigger: Trigger.friend_summoned,
+    fn: (ctx) => {
+      const target = ctx.team[ctx.summonedIndex!];
+      if (!target || target.health <= 0) return;
+      ctx.modifyStats(target, { attack: ctx.level });
+    },
+  },
+  description: (level: number) =>
+    `Friend summoned: Give it +${level} attack until next turn.`,
+};

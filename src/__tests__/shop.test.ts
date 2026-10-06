@@ -1,18 +1,32 @@
 import { describe, it, expect } from "vitest";
 import { generateShop, clearDiscount } from "@/lib/game/shop";
-import { SHOP_PET_POOL, getShopPetTooltipText } from "@/lib/pets";
+import {
+  SAP_OTHER_PETS,
+  SHOP_PET_POOL,
+  TURTLE_PACK_PETS,
+  getShopPetTooltipText,
+} from "@/lib/pets";
 import { SHOP_FOOD_POOL } from "@/lib/foods";
-import type { PetType, FoodType } from "@/lib/types";
+import type { StaticPet, FoodType } from "@/lib/types";
 
 // Minimal multi-tier pack for tier-unlock tests
-const TIER1_PET: PetType = { name: "Sloth", sprite: "", tier: 1, baseAttack: 1, baseHealth: 1, isToken: false, ability: null, description: "" };
-const TIER2_PET: PetType = { name: "Tiger", sprite: "", tier: 2, baseAttack: 4, baseHealth: 3, isToken: false, ability: null, description: "" };
+const TIER1_PET: StaticPet = { name: "Sloth", sprite: "", tier: 1, baseAttack: 1, baseHealth: 1, isToken: false, ability: null, description: "" };
+const TIER2_PET: StaticPet = { name: "Tiger", sprite: "", tier: 2, baseAttack: 4, baseHealth: 3, isToken: false, ability: null, description: "" };
 const TIER1_FOOD: FoodType = { name: "Apple", sprite: "", tier: 1, isToken: false, effect: { attack: 1, health: 1 }, description: "" };
 const TIER2_FOOD: FoodType = { name: "Salad", sprite: "", tier: 2, isToken: false, effect: { health: 2 }, description: "" };
 const MULTI_TIER_PETS = [TIER1_PET, TIER2_PET];
 const MULTI_TIER_FOODS = [TIER1_FOOD, TIER2_FOOD];
 
 describe("generateShop", () => {
+  it("keeps SAP Other pets separate from the Turtle pack and in the shop pool", () => {
+    const sapOtherNames = SAP_OTHER_PETS.map((pet) => pet.name);
+    expect(sapOtherNames).toEqual(["Seagull", "Alpaca", "Jerboa"]);
+    expect(TURTLE_PACK_PETS.some((pet) => sapOtherNames.includes(pet.name))).toBe(false);
+    expect(SHOP_PET_POOL.map((pet) => pet.name)).toEqual(
+      expect.arrayContaining(sapOtherNames)
+    );
+  });
+
   it("returns 3 pet slots and 1 food slot at turn 1", () => {
     const shop = generateShop({ turn: 1, pack: SHOP_PET_POOL, foodTypes: SHOP_FOOD_POOL });
     expect(shop.shopPets).toHaveLength(3);

@@ -1,12 +1,12 @@
 import {
   BattleAbilityContext,
   BattleStep,
-  Board,
+  ApiBoard,
   CounterTrigger,
   isOffensivePerk,
   isTriggerPerk,
   PetInstance,
-  PetType,
+  StaticPet,
   SummonOptions,
   Trigger,
 } from "@/lib/types";
@@ -14,7 +14,10 @@ import { clonePetInstance } from "@/lib/utils/clone";
 import { AbilityStateStore, createBattleAbilityContext } from "@/lib/game/battle-ability-context";
 import { byCurrentAttack } from "@/lib/utils/random";
 import { dealAbilityDamage, dealDirectDamage } from "@/lib/utils/combat";
-import { compactBoard, grantExperience } from "@/lib/game/merge";
+import {
+  compactApiBoard,
+  grantExperience,
+} from "@/lib/game/merge";
 import { friendSummonedCandidates } from "@/lib/game/friend-summoned";
 import { friendAheadAbility, getPetAbility } from "@/lib/game/pet";
 import { triggerEffect } from "@/lib/perks/trigger-functions";
@@ -42,8 +45,8 @@ export type BattleSimulationResult = {
 
 type BattleAbility = { fn: (ctx: BattleAbilityContext) => void };
 
-function compactTeam(team: Board): PetInstance[] {
-  return compactBoard(team).map(clonePetInstance);
+function compactTeam(team: ApiBoard): PetInstance[] {
+  return compactApiBoard(team).map(clonePetInstance);
 }
 
 function nextTriggerCount(
@@ -63,7 +66,7 @@ function fireAbilityOn(
   index: number,
   team: PetInstance[],
   enemyTeam: PetInstance[],
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   counts: TriggerState,
   summon: (pet: PetInstance, afterIndex: number, options?: SummonOptions) => void,
   summonedIndex?: number,
@@ -131,7 +134,7 @@ function fireFriendSummoned(
   team: PetInstance[],
   summonedIndex: number,
   enemyTeam: PetInstance[],
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   counts: TriggerState
 ): void {
   const candidates = friendSummonedCandidates(team, summonedIndex, petRegistry);
@@ -173,7 +176,7 @@ function fireFaintAbility(
   faintedIndex: number,
   team: PetInstance[],
   enemyTeam: PetInstance[],
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   counts: TriggerState,
   pendingSummons: SummonRequest[]
 ): void {
@@ -207,7 +210,7 @@ function queueFaintPerkSummon(
 // Summons with no room left on the team are flung.
 function insertSummonRequests(
   pendingSummons: PendingSummon[],
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   counts: TriggerState
 ): void {
   const insertionsAt = new Map<PetInstance[], Map<number, number>>();
@@ -240,7 +243,7 @@ function insertSummons(
   team: PetInstance[],
   pendingSummons: SummonRequest[],
   enemyTeam: PetInstance[],
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   counts: TriggerState
 ): void {
   insertSummonRequests(
@@ -256,7 +259,7 @@ function insertSummons(
 
 function flushDeferredSummons(
   counts: TriggerState,
-  petRegistry: Record<string, PetType>
+  petRegistry: Record<string, StaticPet>
 ): void {
   if (counts.pendingSummons.length === 0) return;
   const pending = counts.pendingSummons.splice(0);
@@ -268,7 +271,7 @@ function fireFriendFaints(
   faintedIndex: number,
   team: PetInstance[],
   enemyTeam: PetInstance[],
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   counts: TriggerState
 ): void {
   const ignoredListeners = petRegistry[fainted.type]?.ignoresFriendFaintsFrom ?? [];
@@ -308,7 +311,7 @@ function fireFriendAheadFaints(
   faintedIndex: number,
   team: PetInstance[],
   enemyTeam: PetInstance[],
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   counts: TriggerState
 ): void {
   const pet = team[faintedIndex + 1];
@@ -330,7 +333,7 @@ function handleFaint(
   team: PetInstance[],
   faintedIndex: number,
   enemyTeam: PetInstance[],
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   counts: TriggerState
 ): void {
   const fainted = team[faintedIndex];
@@ -352,7 +355,7 @@ function handleFaint(
 function handleDeathsPhase(
   attacker: PetInstance[],
   defender: PetInstance[],
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   counts: TriggerState
 ): void {
   type DeadJob = {
@@ -386,7 +389,7 @@ function handleDeathsPhase(
 function fireStartOfBattlePhase(
   attacker: PetInstance[],
   defender: PetInstance[],
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   counts: TriggerState
 ): void {
   type Job = {
@@ -444,7 +447,7 @@ function fireSingleTrigger(
   index: number,
   team: PetInstance[],
   enemyTeam: PetInstance[],
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   counts: TriggerState
 ): void {
   const ability = getPetAbility(petRegistry[pet.type], trigger);
@@ -463,7 +466,7 @@ function fireSingleTrigger(
 
 function flushHurtTriggers(
   counts: TriggerState,
-  petRegistry: Record<string, PetType>
+  petRegistry: Record<string, StaticPet>
 ): void {
   while (counts.pendingHurt.length > 0) {
     const pending = counts.pendingHurt.splice(0);
@@ -497,7 +500,7 @@ function fireCounterTrigger(
   hurtPet: PetInstance,
   team: PetInstance[],
   enemyTeam: PetInstance[],
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   counts: TriggerState
 ): void {
   const candidates = team.flatMap((pet) => {
@@ -530,7 +533,7 @@ function fireCounterTrigger(
 function resolveDeathsAndHurt(
   attacker: PetInstance[],
   defender: PetInstance[],
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   counts: TriggerState
 ): void {
   while (true) {
@@ -569,7 +572,7 @@ function queueFriendAheadAttacks(
     team: PetInstance[];
     enemyTeam: PetInstance[];
   }[],
-  petRegistry: Record<string, PetType>
+  petRegistry: Record<string, StaticPet>
 ): FriendAheadJob[] {
   const candidates: FriendAheadJob[] = [];
 
@@ -585,7 +588,7 @@ function queueFriendAheadAttacks(
 
 function fireFriendAheadAttacks(
   candidates: FriendAheadJob[],
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   counts: TriggerState
 ): void {
   for (const { pet, team, enemyTeam, ability } of byCurrentAttack(
@@ -608,9 +611,9 @@ function fireFriendAheadAttacks(
 }
 
 export function simulateBattle(
-  playerTeam: Board,
-  opponentTeam: Board,
-  petRegistry: Record<string, PetType> = {}
+  playerTeam: ApiBoard,
+  opponentTeam: ApiBoard,
+  petRegistry: Record<string, StaticPet> = {}
 ): BattleSimulationResult {
   const attacker: PetInstance[] = compactTeam(playerTeam);
   const defender: PetInstance[] = compactTeam(opponentTeam);

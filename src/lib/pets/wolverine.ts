@@ -1,7 +1,7 @@
-import { CounterTrigger, Trigger, type PetType } from "@/lib/types";
+import { CounterTrigger, Trigger, type StaticPet } from "@/lib/types";
 import { removeHealth } from "@/lib/utils/combat";
 
-export const Wolverine: PetType = {
+export const Wolverine: StaticPet = {
   name: "Wolverine",
   sprite: "/sap/Wolverine.webp",
   tier: 6,

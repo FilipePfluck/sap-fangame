@@ -2,11 +2,11 @@
 
 import Image from "next/image";
 import type { PetInstance } from "@/lib/types";
-import { computeLevel } from "@/lib/game/merge";
 import { FOOD_SPRITES } from "@/lib/sprites";
 import { PET_REGISTRY, getPetDescription } from "@/lib/pets";
 import { FOOD_REGISTRY } from "@/lib/foods";
 import Tooltip from "./Tooltip";
+import { computeLevel } from "@/lib/game/board";
 
 type BoardSlotProps = {
   pet: PetInstance | null;

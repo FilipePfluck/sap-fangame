@@ -1,9 +1,9 @@
 import { createPet } from "@/lib/game/pet";
 import { ChiliPerk } from "@/lib/perks/chili";
-import { Trigger, type PetType } from "@/lib/types";
+import { Trigger, type StaticPet } from "@/lib/types";
 import { Bus } from "./bus";
 
-export const Deer: PetType = {
+export const Deer: StaticPet = {
   name: "Deer",
   sprite: "/sap/Deer.webp",
   tier: 4,

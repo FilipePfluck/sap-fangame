@@ -1,4 +1,4 @@
-import type { FoodType } from "@/lib/types";
+import { FoodType } from "@/lib/types";
 import { fireShopFaint } from "@/lib/game/shop-ability";
 
 export const Pill: FoodType = {

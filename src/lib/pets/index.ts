@@ -1,143 +1,143 @@
-export { Sloth } from "./sloth";
-export { Duck } from "./duck";
-export { Beaver } from "./beaver";
-export { Pigeon } from "./pigeon";
-export { Otter } from "./otter";
-export { Pig } from "./pig";
-export { Ant } from "./ant";
-export { Mosquito } from "./mosquito";
-export { Fish } from "./fish";
-export { Cricket } from "./cricket";
-export { Horse } from "./horse";
-export { ZombieCricket } from "./zombie-cricket";
-export { Bee } from "./bee";
-export { Snail } from "./snail";
-export { Crab } from "./crab";
-export { Swan } from "./swan";
-export { Dodo } from "./dodo";
-export { Ox } from "./ox";
-export { Badger } from "./badger";
-export { Dolphin } from "./dolphin";
-export { Skunk } from "./skunk";
-export { Hippo } from "./hippo";
-export { Bison } from "./bison";
-export { Scorpion } from "./scorpion";
-export { Crocodile } from "./crocodile";
-export { Rhino } from "./rhino";
-export { Leopard } from "./leopard";
-export { Boar } from "./boar";
-export { Tiger } from "./tiger";
-export { Squirrel } from "./squirrel";
-export { Peacock } from "./peacock";
-export { Kangaroo } from "./kangaroo";
-export { Elephant } from "./elephant";
-export { Rabbit } from "./rabbit";
-export { Penguin } from "./penguin";
-export { Armadillo } from "./armadillo";
-export { Hedgehog } from "./hedgehog";
-export { Flamingo } from "./flamingo";
-export { Giraffe } from "./giraffe";
-export { Camel } from "./camel";
-export { Dog } from "./dog";
-export { Sheep } from "./sheep";
-export { Ram } from "./ram";
-export { Blowfish } from "./blowfish";
-export { Turtle } from "./turtle";
-export { Turkey } from "./turkey";
-export { Monkey } from "./monkey";
-export { Seal } from "./seal";
-export { Rooster } from "./rooster";
-export { Chick } from "./chick";
-export { Dragon } from "./dragon";
-export { Mammoth } from "./mammoth";
-export { Snake } from "./snake";
-export { Jerboa } from "./jerboa";
+export { Sloth } from "./turtlepack/token/sloth";
+export { Duck } from "./turtlepack/tier 1/duck";
+export { Beaver } from "./turtlepack/tier 1/beaver";
+export { Pigeon } from "./turtlepack/tier 1/pigeon";
+export { Otter } from "./turtlepack/tier 1/otter";
+export { Pig } from "./turtlepack/tier 1/pig";
+export { Ant } from "./turtlepack/tier 1/ant";
+export { Mosquito } from "./turtlepack/tier 1/mosquito";
+export { Fish } from "./turtlepack/tier 1/fish";
+export { Cricket } from "./turtlepack/tier 1/cricket";
+export { Horse } from "./turtlepack/tier 1/horse";
+export { ZombieCricket } from "./turtlepack/token/zombie-cricket";
+export { Bee } from "./turtlepack/token/bee";
+export { Snail } from "./turtlepack/tier 2/snail";
+export { Crab } from "./turtlepack/tier 2/crab";
+export { Swan } from "./turtlepack/tier 2/swan";
+export { Dodo } from "./turtlepack/tier 3/dodo";
+export { Ox } from "./turtlepack/tier 3/ox";
+export { Badger } from "./turtlepack/tier 3/badger";
+export { Dolphin } from "./turtlepack/tier 3/dolphin";
+export { Skunk } from "./turtlepack/tier 4/skunk";
+export { Hippo } from "./turtlepack/tier 4/hippo";
+export { Bison } from "./turtlepack/tier 4/bison";
+export { Scorpion } from "./turtlepack/tier 5/scorpion";
+export { Crocodile } from "./turtlepack/tier 5/crocodile";
+export { Rhino } from "./turtlepack/tier 5/rhino";
+export { Leopard } from "./turtlepack/tier 6/leopard";
+export { Boar } from "./turtlepack/tier 6/boar";
+export { Tiger } from "./turtlepack/tier 6/tiger";
+export { Squirrel } from "./turtlepack/tier 4/squirrel";
+export { Peacock } from "./turtlepack/tier 2/peacock";
+export { Kangaroo } from "./turtlepack/tier 2/kangaroo";
+export { Elephant } from "./turtlepack/tier 3/elephant";
+export { Rabbit } from "./turtlepack/tier 3/rabbit";
+export { Penguin } from "./turtlepack/tier 4/penguin";
+export { Armadillo } from "./turtlepack/tier 5/armadillo";
+export { Hedgehog } from "./turtlepack/tier 2/hedgehog";
+export { Flamingo } from "./turtlepack/tier 2/flamingo";
+export { Giraffe } from "./turtlepack/tier 3/giraffe";
+export { Camel } from "./turtlepack/tier 3/camel";
+export { Dog } from "./turtlepack/tier 3/dog";
+export { Sheep } from "./turtlepack/tier 3/sheep";
+export { Ram } from "./turtlepack/token/ram";
+export { Blowfish } from "./turtlepack/tier 4/blowfish";
+export { Turtle } from "./turtlepack/tier 4/turtle";
+export { Turkey } from "./turtlepack/tier 5/turkey";
+export { Monkey } from "./turtlepack/tier 5/monkey";
+export { Seal } from "./turtlepack/tier 5/seal";
+export { Rooster } from "./turtlepack/tier 5/rooster";
+export { Chick } from "./turtlepack/token/chick";
+export { Dragon } from "./turtlepack/tier 6/dragon";
+export { Mammoth } from "./turtlepack/tier 6/mammoth";
+export { Snake } from "./turtlepack/tier 6/snake";
+export { Jerboa } from "./SAPOther/jerboa";
 export { Worm } from "./worm";
+export { Spider } from "./spider";
 export { Bus } from "./bus";
 export { Deer } from "./deer";
-export { Spider } from "./spider";
 export { Cow } from "./cow";
 export { Gorilla } from "./gorilla";
-export { Seagull } from "./seagull";
+export { Seagull } from "./SAPOther/seagull";
 export { Rat } from "./rat";
 export { DirtyRat } from "./dirty-rat";
 export { Fly } from "./fly";
 export { ZombieFly } from "./zombie-fly";
 export { Whale } from "./whale";
-export { Alpaca } from "./alpaca";
+export { Alpaca } from "./SAPOther/alpaca";
 export { Wolverine } from "./wolverine";
 
-import { Sloth } from "./sloth";
-import { Duck } from "./duck";
-import { Beaver } from "./beaver";
-import { Pigeon } from "./pigeon";
-import { Otter } from "./otter";
-import { Pig } from "./pig";
-import { Ant } from "./ant";
-import { Mosquito } from "./mosquito";
-import { Fish } from "./fish";
-import { Cricket } from "./cricket";
-import { Horse } from "./horse";
-import { ZombieCricket } from "./zombie-cricket";
-import { Bee } from "./bee";
-import { Snail } from "./snail";
-import { Crab } from "./crab";
-import { Swan } from "./swan";
-import { Dodo } from "./dodo";
-import { Ox } from "./ox";
-import { Badger } from "./badger";
-import { Dolphin } from "./dolphin";
-import { Skunk } from "./skunk";
-import { Hippo } from "./hippo";
-import { Bison } from "./bison";
-import { Scorpion } from "./scorpion";
-import { Crocodile } from "./crocodile";
-import { Rhino } from "./rhino";
-import { Leopard } from "./leopard";
-import { Boar } from "./boar";
-import { Tiger } from "./tiger";
-import { Squirrel } from "./squirrel";
-import { Peacock } from "./peacock";
-import { Kangaroo } from "./kangaroo";
-import { Elephant } from "./elephant";
-import { Rabbit } from "./rabbit";
-import { Penguin } from "./penguin";
-import { Armadillo } from "./armadillo";
-import { Hedgehog } from "./hedgehog";
-import { Flamingo } from "./flamingo";
-import { Giraffe } from "./giraffe";
-import { Camel } from "./camel";
-import { Dog } from "./dog";
-import { Sheep } from "./sheep";
-import { Ram } from "./ram";
-import { Blowfish } from "./blowfish";
-import { Turtle } from "./turtle";
-import { Turkey } from "./turkey";
-import { Monkey } from "./monkey";
-import { Seal } from "./seal";
-import { Rooster } from "./rooster";
-import { Chick } from "./chick";
-import { Dragon } from "./dragon";
-import { Mammoth } from "./mammoth";
-import { Snake } from "./snake";
-import { Jerboa } from "./jerboa";
+import { Sloth } from "./turtlepack/token/sloth";
+import { Duck } from "./turtlepack/tier 1/duck";
+import { Beaver } from "./turtlepack/tier 1/beaver";
+import { Pigeon } from "./turtlepack/tier 1/pigeon";
+import { Otter } from "./turtlepack/tier 1/otter";
+import { Pig } from "./turtlepack/tier 1/pig";
+import { Ant } from "./turtlepack/tier 1/ant";
+import { Mosquito } from "./turtlepack/tier 1/mosquito";
+import { Fish } from "./turtlepack/tier 1/fish";
+import { Cricket } from "./turtlepack/tier 1/cricket";
+import { Horse } from "./turtlepack/tier 1/horse";
+import { ZombieCricket } from "./turtlepack/token/zombie-cricket";
+import { Bee } from "./turtlepack/token/bee";
+import { Snail } from "./turtlepack/tier 2/snail";
+import { Crab } from "./turtlepack/tier 2/crab";
+import { Swan } from "./turtlepack/tier 2/swan";
+import { Dodo } from "./turtlepack/tier 3/dodo";
+import { Ox } from "./turtlepack/tier 3/ox";
+import { Badger } from "./turtlepack/tier 3/badger";
+import { Dolphin } from "./turtlepack/tier 3/dolphin";
+import { Skunk } from "./turtlepack/tier 4/skunk";
+import { Hippo } from "./turtlepack/tier 4/hippo";
+import { Bison } from "./turtlepack/tier 4/bison";
+import { Scorpion } from "./turtlepack/tier 5/scorpion";
+import { Crocodile } from "./turtlepack/tier 5/crocodile";
+import { Rhino } from "./turtlepack/tier 5/rhino";
+import { Leopard } from "./turtlepack/tier 6/leopard";
+import { Boar } from "./turtlepack/tier 6/boar";
+import { Tiger } from "./turtlepack/tier 6/tiger";
+import { Squirrel } from "./turtlepack/tier 4/squirrel";
+import { Peacock } from "./turtlepack/tier 2/peacock";
+import { Kangaroo } from "./turtlepack/tier 2/kangaroo";
+import { Elephant } from "./turtlepack/tier 3/elephant";
+import { Rabbit } from "./turtlepack/tier 3/rabbit";
+import { Penguin } from "./turtlepack/tier 4/penguin";
+import { Armadillo } from "./turtlepack/tier 5/armadillo";
+import { Hedgehog } from "./turtlepack/tier 2/hedgehog";
+import { Flamingo } from "./turtlepack/tier 2/flamingo";
+import { Giraffe } from "./turtlepack/tier 3/giraffe";
+import { Camel } from "./turtlepack/tier 3/camel";
+import { Dog } from "./turtlepack/tier 3/dog";
+import { Sheep } from "./turtlepack/tier 3/sheep";
+import { Ram } from "./turtlepack/token/ram";
+import { Blowfish } from "./turtlepack/tier 4/blowfish";
+import { Turtle } from "./turtlepack/tier 4/turtle";
+import { Turkey } from "./turtlepack/tier 5/turkey";
+import { Monkey } from "./turtlepack/tier 5/monkey";
+import { Seal } from "./turtlepack/tier 5/seal";
+import { Rooster } from "./turtlepack/tier 5/rooster";
+import { Chick } from "./turtlepack/token/chick";
+import { Dragon } from "./turtlepack/tier 6/dragon";
+import { Mammoth } from "./turtlepack/tier 6/mammoth";
+import { Snake } from "./turtlepack/tier 6/snake";
+import { Jerboa } from "./SAPOther/jerboa";
 import { Worm } from "./worm";
+import { Spider } from "./spider";
 import { Bus } from "./bus";
 import { Deer } from "./deer";
-import { Spider } from "./spider";
 import { Cow } from "./cow";
 import { Gorilla } from "./gorilla";
-import { Seagull } from "./seagull";
+import { Seagull } from "./SAPOther/seagull";
 import { Rat } from "./rat";
 import { DirtyRat } from "./dirty-rat";
 import { Fly } from "./fly";
 import { ZombieFly } from "./zombie-fly";
 import { Whale } from "./whale";
-import { Alpaca } from "./alpaca";
+import { Alpaca } from "./SAPOther/alpaca";
 import { Wolverine } from "./wolverine";
-import type { PetType } from "@/lib/types";
+import type { StaticPet } from "@/lib/types";
 
-export const TURTLE_PACK_PETS: PetType[] = [
+export const TURTLE_PACK_PETS = [
   Duck,
   Beaver,
   Pigeon,
@@ -173,7 +173,6 @@ export const TURTLE_PACK_PETS: PetType[] = [
   Kangaroo,
   Elephant,
   Rabbit,
-  Jerboa,
   Penguin,
   Armadillo,
   Hedgehog,
@@ -197,24 +196,24 @@ export const TURTLE_PACK_PETS: PetType[] = [
   Deer,
   Cow,
   Gorilla,
-  Seagull,
   Rat,
   Fly,
   DirtyRat,
   ZombieFly,
   Whale,
-  Alpaca,
   Wolverine,
 ];
 
-export const PET_REGISTRY: Record<string, PetType> = Object.fromEntries([
-  ...TURTLE_PACK_PETS.map((p) => [p.name, p]),
+export const SAP_OTHER_PETS = [Seagull, Alpaca, Jerboa];
+
+export const ALL_PETS = [...TURTLE_PACK_PETS, ...SAP_OTHER_PETS];
+
+export const PET_REGISTRY: Record<string, StaticPet> = Object.fromEntries([
+  ...ALL_PETS.map((p) => [p.name, p]),
   [Sloth.name, Sloth],
 ]);
 
-export const SHOP_PET_POOL: PetType[] = TURTLE_PACK_PETS.filter(
-  (p) => !p.isToken
-);
+export const SHOP_PET_POOL: StaticPet[] = ALL_PETS.filter((p) => !p.isToken);
 
 function stripTooltipNotes(text: string): string {
   return text
@@ -226,12 +225,21 @@ function stripTooltipNotes(text: string): string {
     .trim();
 }
 
-export function getPetDescription(pet: PetType | undefined, level: number): string | undefined {
+export function getPetDescription(
+  pet: StaticPet | undefined,
+  level: number
+): string | undefined {
   if (!pet) return undefined;
-  const description = typeof pet.description === "function" ? pet.description(level) : pet.description;
+  const description =
+    typeof pet.description === "function"
+      ? pet.description(level)
+      : pet.description;
   return description ? stripTooltipNotes(description) : undefined;
 }
 
-export function getShopPetTooltipText(pet: PetType | undefined, level: number): string {
+export function getShopPetTooltipText(
+  pet: StaticPet | undefined,
+  level: number
+): string {
   return getPetDescription(pet, level) ?? "";
 }

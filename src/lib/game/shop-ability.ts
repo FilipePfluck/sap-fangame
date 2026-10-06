@@ -3,16 +3,20 @@ import {
   BattleAbilityContext,
   isTriggerPerk,
   PetInstance,
-  PetType,
+  StaticPet,
   ShopAbilityContext,
   ShopState,
   Trigger,
+
 } from "@/lib/types";
 import { clonePetInstance } from "@/lib/utils/clone";
 import { AbilityStateStore, createBattleAbilityContext } from "@/lib/game/battle-ability-context";
 import { orderByAttack } from "@/lib/utils/random";
 import { stockFood } from "@/lib/game/shop";
-import { compactBoard, grantExperience } from "@/lib/game/merge";
+import {
+  compactApiBoard,
+  grantExperience,
+} from "@/lib/game/merge";
 import { friendSummonedCandidates } from "@/lib/game/friend-summoned";
 import { friendAheadAbility, getPetAbility } from "@/lib/game/pet";
 import { triggerEffect } from "@/lib/perks/trigger-functions";
@@ -46,7 +50,7 @@ function createShopContext(
   gold: { delta: number },
   justStocked: Set<object>,
   lastBattleResult?: "WIN" | "DRAW" | "LOSS",
-  boughtPet?: PetType
+  boughtPet?: StaticPet
 ): ShopAbilityContext {
   return {
     self,
@@ -77,7 +81,7 @@ export function fireShopAbility(
   petIndex: number,
   board: (PetInstance | null)[],
   shop: ShopState,
-  petRegistry: Record<string, PetType>
+  petRegistry: Record<string, StaticPet>
 ): ShopAbilityResult {
   const ability = getPetAbility(petRegistry[pet.type], trigger);
   if (!ability) {
@@ -100,7 +104,7 @@ export function fireBoardShopAbility(
   trigger: Trigger.start_of_turn | Trigger.end_turn,
   board: (PetInstance | null)[],
   shop: ShopState,
-  petRegistry: Record<string, PetType>,
+  petRegistry: Record<string, StaticPet>,
   lastBattleResult?: "WIN" | "DRAW" | "LOSS"
 ): ShopAbilityResult {
   const currentBoard = [...board];
@@ -160,10 +164,10 @@ export function fireBoardShopAbility(
 }
 
 export function fireShopFriendBought(
-  boughtPet: PetType,
+  boughtPet: StaticPet,
   board: (PetInstance | null)[],
   shop: ShopState,
-  petRegistry: Record<string, PetType>
+  petRegistry: Record<string, StaticPet>
 ): ShopAbilityResult {
   const currentBoard = [...board];
   const currentShop = cloneShop(shop);
@@ -204,7 +208,7 @@ export function fireShopFriendBought(
 export function fireShopFaint(
   board: (PetInstance | null)[],
   boardPosition: number,
-  petRegistry: Record<string, PetType>
+  petRegistry: Record<string, StaticPet>
 ): (PetInstance | null)[] {
   // Faint abilities can buff other pets in place, so work on copies.
   let newBoard = board.map((p) => (p ? clonePetInstance(p) : null));
@@ -212,7 +216,7 @@ export function fireShopFaint(
   if (!pet) return newBoard;
 
   const def = petRegistry[pet.type];
-  const compacted = compactBoard(newBoard);
+  const compacted = compactApiBoard(newBoard);
   const selfIndex = compacted.indexOf(pet);
 
   newBoard[boardPosition] = null;
@@ -274,13 +278,13 @@ export function fireShopFaint(
 export function fireShopFriendSummoned(
   board: (PetInstance | null)[],
   summonedBoardPosition: number,
-  petRegistry: Record<string, PetType>
+  petRegistry: Record<string, StaticPet>
 ): (PetInstance | null)[] {
   const newBoard = [...board];
   const summonedPet = newBoard[summonedBoardPosition];
   if (!summonedPet) return newBoard;
 
-  const compacted = compactBoard(newBoard);
+  const compacted = compactApiBoard(newBoard);
   const summonedIndex = compacted.indexOf(summonedPet);
   const candidates = friendSummonedCandidates(
     compacted,

@@ -1,6 +1,6 @@
-import { Trigger, type PetType } from "@/lib/types";
+import { Trigger, type StaticPet } from "@/lib/types";
 
-export const Rat: PetType = {
+export const Rat: StaticPet = {
   name: "Rat",
   sprite: "/sap/Rat.png",
   tier: 2,

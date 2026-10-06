@@ -1,4 +1,4 @@
-import { PetType, Trigger } from "@/lib/types";
+import { Trigger, type StaticPet } from "@/lib/types";
 import { pickRandom } from "@/lib/utils/random";
 
 const SPIDER_POOL = [
@@ -15,7 +15,7 @@ const SPIDER_POOL = [
 ];
 const XP_BY_LEVEL = [0, 2, 5] as const;
 
-export const Spider: PetType = {
+export const Spider: StaticPet = {
   name: "Spider",
   sprite: "/sap/Spider.webp",
   tier: 2,

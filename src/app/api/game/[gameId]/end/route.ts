@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
+import { prisma, toPrismaJson } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { simulateBattle } from "@/lib/game/battle";
 import { generateShop, getUnlockedTiers, pickFrozenItems, clearDiscount } from "@/lib/game/shop";
@@ -80,7 +80,7 @@ export async function POST(
       turnNumber,
       lives,
       trophies,
-      team: preBattleBoard,
+      team: toPrismaJson(preBattleBoard),
     },
   });
 
@@ -128,10 +128,10 @@ export async function POST(
     const battle = await tx.battle.create({
       data: {
         gameId,
-        opponentTeam,
+        opponentTeam: toPrismaJson(opponentTeam),
         opponentName,
         result,
-        steps,
+        steps: toPrismaJson(steps),
       },
     });
 
@@ -153,7 +153,7 @@ export async function POST(
       data: {
         gameId,
         turnId: newTurn.id,
-        boardState: nextBoard,
+        boardState: toPrismaJson(nextBoard),
         shopState: nextShop,
         goldRemaining: TURN_GOLD + turnGoldDelta,
       },
