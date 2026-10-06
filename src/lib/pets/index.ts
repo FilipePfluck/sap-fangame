@@ -15,6 +15,7 @@ export { Snail } from "./turtle/tier 2/snail";
 export { Crab } from "./turtle/tier 2/crab";
 export { Swan } from "./turtle/tier 2/swan";
 export { Dodo } from "./turtle/tier 3/dodo";
+export { Ox } from "./turtle/tier 3/ox";
 export { Badger } from "./turtle/tier 3/badger";
 export { Dolphin } from "./turtle/tier 3/dolphin";
 export { Skunk } from "./turtle/tier 4/skunk";
@@ -50,6 +51,21 @@ export { Chick } from "./turtle/token/chick";
 export { Dragon } from "./turtle/tier 6/dragon";
 export { Mammoth } from "./turtle/tier 6/mammoth";
 export { Snake } from "./turtle/tier 6/snake";
+export { Jerboa } from "./SAPOther/jerboa";
+export { Worm } from "./turtle/tier 2/worm";
+export { Spider } from "./turtle/tier 2/spider";
+export { Bus } from "./turtle/token/bus";
+export { Deer } from "./turtle/tier 4/deer";
+export { Cow } from "./turtle/tier 5/cow";
+export { Gorilla } from "./turtle/tier 6/gorilla";
+export { Seagull } from "./SAPOther/seagull";
+export { Rat } from "./turtle/tier 2/rat";
+export { DirtyRat } from "./turtle/token/dirty-rat";
+export { Fly } from "./turtle/tier 6/fly";
+export { ZombieFly } from "./turtle/token/zombie-fly";
+export { Whale } from "./turtle/tier 4/whale";
+export { Alpaca } from "./SAPOther/alpaca";
+export { Wolverine } from "./turtle/tier 6/wolverine";
 
 import { Sloth } from "./turtle/token/sloth";
 import { Duck } from "./turtle/tier 1/duck";
@@ -68,6 +84,7 @@ import { Snail } from "./turtle/tier 2/snail";
 import { Crab } from "./turtle/tier 2/crab";
 import { Swan } from "./turtle/tier 2/swan";
 import { Dodo } from "./turtle/tier 3/dodo";
+import { Ox } from "./turtle/tier 3/ox";
 import { Badger } from "./turtle/tier 3/badger";
 import { Dolphin } from "./turtle/tier 3/dolphin";
 import { Skunk } from "./turtle/tier 4/skunk";
@@ -103,6 +120,21 @@ import { Chick } from "./turtle/token/chick";
 import { Dragon } from "./turtle/tier 6/dragon";
 import { Mammoth } from "./turtle/tier 6/mammoth";
 import { Snake } from "./turtle/tier 6/snake";
+import { Jerboa } from "./SAPOther/jerboa";
+import { Worm } from "./turtle/tier 2/worm";
+import { Spider } from "./turtle/tier 2/spider";
+import { Bus } from "./turtle/token/bus";
+import { Deer } from "./turtle/tier 4/deer";
+import { Cow } from "./turtle/tier 5/cow";
+import { Gorilla } from "./turtle/tier 6/gorilla";
+import { Seagull } from "./SAPOther/seagull";
+import { Rat } from "./turtle/tier 2/rat";
+import { DirtyRat } from "./turtle/token/dirty-rat";
+import { Fly } from "./turtle/tier 6/fly";
+import { ZombieFly } from "./turtle/token/zombie-fly";
+import { Whale } from "./turtle/tier 4/whale";
+import { Alpaca } from "./SAPOther/alpaca";
+import { Wolverine } from "./turtle/tier 6/wolverine";
 import type { StaticPet } from "@/lib/types";
 
 export const TURTLE_PACK_PETS = [
@@ -121,7 +153,10 @@ export const TURTLE_PACK_PETS = [
   Snail,
   Crab,
   Swan,
+  Worm,
+  Spider,
   Dodo,
+  Ox,
   Badger,
   Dolphin,
   Skunk,
@@ -157,16 +192,28 @@ export const TURTLE_PACK_PETS = [
   Dragon,
   Mammoth,
   Snake,
-]
+  Bus,
+  Deer,
+  Cow,
+  Gorilla,
+  Rat,
+  Fly,
+  DirtyRat,
+  ZombieFly,
+  Whale,
+  Wolverine,
+];
+
+export const SAP_OTHER_PETS = [Seagull, Alpaca, Jerboa];
+
+export const ALL_PETS = [...TURTLE_PACK_PETS, ...SAP_OTHER_PETS];
 
 export const PET_REGISTRY: Record<string, StaticPet> = Object.fromEntries([
-  ...TURTLE_PACK_PETS.map((p) => [p.name, p]),
+  ...ALL_PETS.map((p) => [p.name, p]),
   [Sloth.name, Sloth],
 ]);
 
-export const SHOP_PET_POOL: StaticPet[] = TURTLE_PACK_PETS.filter(
-  (p) => !p.isToken
-);
+export const SHOP_PET_POOL: StaticPet[] = ALL_PETS.filter((p) => !p.isToken);
 
 function stripTooltipNotes(text: string): string {
   return text
@@ -178,12 +225,21 @@ function stripTooltipNotes(text: string): string {
     .trim();
 }
 
-export function getPetDescription(pet: StaticPet | undefined, level: number): string | undefined {
+export function getPetDescription(
+  pet: StaticPet | undefined,
+  level: number
+): string | undefined {
   if (!pet) return undefined;
-  const description = typeof pet.description === "function" ? pet.description(level) : pet.description;
+  const description =
+    typeof pet.description === "function"
+      ? pet.description(level)
+      : pet.description;
   return description ? stripTooltipNotes(description) : undefined;
 }
 
-export function getShopPetTooltipText(pet: StaticPet | undefined, level: number): string {
+export function getShopPetTooltipText(
+  pet: StaticPet | undefined,
+  level: number
+): string {
   return getPetDescription(pet, level) ?? "";
 }

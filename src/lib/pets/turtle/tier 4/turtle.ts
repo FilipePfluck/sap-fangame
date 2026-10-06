@@ -13,7 +13,7 @@ export const Turtle: Readonly<StaticPet> = {
     fn: (ctx) => {
       const friends = ctx.team
         .slice(ctx.selfIndex + 1)
-        .filter((pet) => pet.health > 0)
+        .filter((pet) => pet.health > 0 && pet.perk?.name !== MelonPerk.name)
         .slice(0, ctx.level);
       for (const friend of friends) {
         friend.perk = { ...MelonPerk };

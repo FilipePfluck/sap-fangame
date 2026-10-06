@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
+import { prisma, toPrismaJson } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { PET_REGISTRY } from "@/lib/pets";
 import { getSellValue } from "@/lib/game/costs";
@@ -7,8 +7,7 @@ import { fireShopAbility } from "@/lib/game/shop-ability";
 import { applyFrozenFlags } from "@/lib/game/shop";
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import { z } from "zod";
-import { Trigger } from "@/lib/types";
-import { Board } from "@/lib/game/board";
+import { ApiBoard, Trigger } from "@/lib/types";
 
 const SellPetSchema = z.object({
   boardPosition: z.number().int().min(0).max(4),
@@ -50,7 +49,7 @@ export async function POST(
   }
 
   const baseGoldGain = getSellValue(pet);
-  const newBoard: Board = [...state.board];
+  const newBoard: ApiBoard = [...state.board];
   newBoard[boardPosition] = null;
 
   const { board, shop, goldDelta } = fireShopAbility(
@@ -66,7 +65,7 @@ export async function POST(
     data: {
       gameId,
       turnId: state.turnId,
-      boardState: board,
+      boardState: toPrismaJson(board),
       shopState: shop,
       goldRemaining: state.goldRemaining + baseGoldGain + goldDelta,
     },

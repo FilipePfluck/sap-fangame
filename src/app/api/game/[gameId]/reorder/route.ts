@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
+import { prisma, toPrismaJson } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { applyFrozenFlags } from "@/lib/game/shop";
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
@@ -58,7 +58,7 @@ export async function POST(
     data: {
       gameId,
       turnId: state.turnId,
-      boardState: newBoard.pets,
+      boardState: toPrismaJson(newBoard.pets),
       shopState: applyFrozenFlags(state.shop, frozenPetPositions, frozenFoodPositions),
       goldRemaining: state.goldRemaining,
     },
