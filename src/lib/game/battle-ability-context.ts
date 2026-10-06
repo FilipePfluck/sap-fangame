@@ -45,6 +45,7 @@ export function createBattleAbilityContext(
 ): BattleAbilityContext {
   return {
     ...options,
+    inShop: options.mode === "shop",
     resolveValue: (values) => values[options.mode],
     modifyStats: (target, changes) => {
       const attack = changes.attack ?? 0;

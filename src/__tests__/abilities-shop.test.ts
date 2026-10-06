@@ -23,7 +23,7 @@ import { BreadPerk } from "@/lib/perks/bread";
 import { GarlicPerk } from "@/lib/perks/garlic";
 import { HoneyPerk } from "@/lib/perks/honey";
 import { MelonPerk } from "@/lib/perks/melon";
-import { Ox } from "@/lib/pets/turtlepack/tier 3/ox";
+import { Ox } from "@/lib/pets/turtle/tier 3/ox";
 import { abilityPet, registryWith } from "./helpers";
 
 function makePet(type: string, level = 1): PetInstance {

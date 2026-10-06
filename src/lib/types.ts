@@ -83,6 +83,7 @@ export type BattleAbilityContext = {
   dealAbilityDamage: (target: PetInstance, damage: number) => number;
   grantExperience: (target: PetInstance, amount: number) => void;
   friendAteFood: (fedPet: PetInstance) => void;
+  inShop?: boolean;
 };
 
 export type SummonOptions = {

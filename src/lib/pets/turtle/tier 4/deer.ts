@@ -1,7 +1,7 @@
 import { createPet } from "@/lib/game/pet";
 import { ChiliPerk } from "@/lib/perks/chili";
 import { Trigger, type StaticPet } from "@/lib/types";
-import { Bus } from "./bus";
+import { Bus } from "../token/bus";
 
 export const Deer: StaticPet = {
   name: "Deer",

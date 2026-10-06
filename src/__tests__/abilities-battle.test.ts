@@ -23,7 +23,7 @@ import { MushroomPerk } from "@/lib/perks/mushroom";
 import { structuredClone } from "next/dist/compiled/@edge-runtime/primitives";
 import { SteakPerk } from "@/lib/perks/steak";
 import { ChiliPerk } from "@/lib/perks/chili";
-import { Ox } from "@/lib/pets/turtlepack/tier 3/ox";
+import { Ox } from "@/lib/pets/turtle/tier 3/ox";
 import { abilityPet, registryWith, testAbilityStates } from "./helpers";
 import { dealAbilityDamage, dealDirectDamage } from "@/lib/utils/combat";
 import { fireShopFriendSummoned } from "@/lib/game/shop-ability";
