@@ -1,39 +1,23 @@
 import {
   BattleAbilityContext,
   BattleStep,
-  ApiBoard,
-  CounterTrigger,
   isOffensivePerk,
   isTriggerPerk,
   PetInstance,
   StaticPet,
-  SummonOptions,
   Trigger,
 } from "@/lib/types";
-import { clonePetInstance } from "@/lib/utils/clone";
-import { AbilityStateStore, createBattleAbilityContext } from "@/lib/game/battle-ability-context";
 import { byCurrentAttack } from "@/lib/utils/random";
 import { dealAbilityDamage, dealDirectDamage } from "@/lib/utils/combat";
 import {
   compactApiBoard,
+  compactBoard,
   grantExperience,
 } from "@/lib/game/merge";
 import { friendSummonedCandidates } from "@/lib/game/friend-summoned";
-import { friendAheadAbility, getPetAbility } from "@/lib/game/pet";
+import { friendAheadAbility } from "@/lib/game/pet";
 import { triggerEffect } from "@/lib/perks/trigger-functions";
 import { triggerFriendAteFood } from "@/lib/game/food";
-
-type HurtJob = {
-  pet: PetInstance;
-  team: PetInstance[];
-  enemyTeam: PetInstance[];
-};
-type TriggerState = {
-  counts: WeakMap<PetInstance, number>;
-  abilityStates: AbilityStateStore;
-  pendingHurt: HurtJob[];
-  pendingSummons: PendingSummon[];
-};
 
 const MAX_TEAM_SIZE = 5;
 const NOOP_SUMMON = () => {};
@@ -45,21 +29,29 @@ export type BattleSimulationResult = {
 
 type BattleAbility = { fn: (ctx: BattleAbilityContext) => void };
 
-function compactTeam(team: ApiBoard): PetInstance[] {
-  return compactApiBoard(team).map(clonePetInstance);
+function clonePet(p: PetInstance): PetInstance {
+  return { ...p };
+}
+
+function compactTeam(team: (PetInstance | null)[]): PetInstance[] {
+  return compactApiBoard(team).map(clonePet);
 }
 
 function nextTriggerCount(
-  counts: TriggerState,
+  counts: WeakMap<PetInstance, number>,
   pet: PetInstance
 ): number {
-  const next = (counts.counts.get(pet) ?? 0) + 1;
-  counts.counts.set(pet, next);
+  const next = (counts.get(pet) ?? 0) + 1;
+  counts.set(pet, next);
   return next;
 }
 
 // Fires `ability` for `pet`, then repeats it once more at level 1 if a
 // Tiger sits directly behind (skipped on the repeat itself).
+// TODO - Tiger support makes this function grow with every new trigger. Options:
+//   - Tiger directly calls the pet ahead's ability
+//   - battle.ts checks for a Tiger behind whenever any ability activates, then repeats it
+//   - (worst) move as much of this as possible into helpers in tiger.ts
 function fireAbilityOn(
   ability: BattleAbility,
   pet: PetInstance,
@@ -67,24 +59,20 @@ function fireAbilityOn(
   team: PetInstance[],
   enemyTeam: PetInstance[],
   petRegistry: Record<string, StaticPet>,
-  counts: TriggerState,
-  summon: (pet: PetInstance, afterIndex: number, options?: SummonOptions) => void,
+  counts: WeakMap<PetInstance, number>,
+  summon: (pet: PetInstance, afterIndex: number) => void,
   summonedIndex?: number,
-  levelOverride?: number,
-  faintedIndex?: number
+  levelOverride?: number
 ): void {
   const triggerCount = nextTriggerCount(counts, pet);
-  const ctx: BattleAbilityContext = createBattleAbilityContext({
+  const ctx: BattleAbilityContext = {
     self: pet,
     selfIndex: index,
     team,
     enemyTeam,
     level: levelOverride ?? pet.level,
-    mode: "battle",
-    state: counts.abilityStates.forPet(pet),
     summon,
     summonedIndex,
-    faintedIndex,
     triggerCount,
     petRegistry,
     dealAbilityDamage: (target, damage) => {
@@ -94,38 +82,40 @@ function fireAbilityOn(
       if (target.health < healthBefore) {
         const targetTeam = team.includes(target) ? team : enemyTeam;
         const otherTeam = targetTeam === team ? enemyTeam : team;
-        counts.pendingHurt.push({
-          pet: target,
-          team: targetTeam,
-          enemyTeam: otherTeam,
-        });
+        fireSingleTrigger(
+          Trigger.hurt,
+          target,
+          targetTeam.indexOf(target),
+          targetTeam,
+          otherTeam,
+          petRegistry,
+          counts
+        );
       }
       return dealt;
     },
     grantExperience,
     friendAteFood: (fedPet) =>
       triggerFriendAteFood(team, fedPet, petRegistry),
-  });
+  };
   ability.fn(ctx);
 
-  const currentIndex = team.indexOf(pet);
   if (
     levelOverride === undefined &&
-    currentIndex >= 0 &&
-    team[currentIndex + 1]?.type === "Tiger"
+    index >= 0 &&
+    team[index + 1]?.type === "Tiger"
   ) {
     fireAbilityOn(
       ability,
       pet,
-      currentIndex,
+      index,
       team,
       enemyTeam,
       petRegistry,
       counts,
       summon,
       summonedIndex,
-      1,
-      faintedIndex
+      1
     );
   }
 }
@@ -135,7 +125,7 @@ function fireFriendSummoned(
   summonedIndex: number,
   enemyTeam: PetInstance[],
   petRegistry: Record<string, StaticPet>,
-  counts: TriggerState
+  counts: WeakMap<PetInstance, number>
 ): void {
   const candidates = friendSummonedCandidates(team, summonedIndex, petRegistry);
 
@@ -161,15 +151,7 @@ function fireFriendSummoned(
   }
 }
 
-type SummonRequest = {
-  pet: PetInstance;
-  afterIndex: number;
-  options?: SummonOptions;
-};
-type PendingSummon = SummonRequest & {
-  team: PetInstance[];
-  enemyTeam: PetInstance[];
-};
+type PendingSummon = { pet: PetInstance; afterIndex: number };
 
 function fireFaintAbility(
   fainted: PetInstance,
@@ -177,10 +159,10 @@ function fireFaintAbility(
   team: PetInstance[],
   enemyTeam: PetInstance[],
   petRegistry: Record<string, StaticPet>,
-  counts: TriggerState,
-  pendingSummons: SummonRequest[]
+  counts: WeakMap<PetInstance, number>,
+  pendingSummons: PendingSummon[]
 ): void {
-  const ability = getPetAbility(petRegistry[fainted.type], Trigger.faint);
+  const ability = petRegistry[fainted.type]?.ability;
   if (ability?.trigger !== Trigger.faint) return;
   fireAbilityOn(
     ability,
@@ -190,17 +172,14 @@ function fireFaintAbility(
     enemyTeam,
     petRegistry,
     counts,
-    (pet, afterIndex, options) => pendingSummons.push({ pet, afterIndex, options }),
-    undefined,
-    undefined,
-    faintedIndex
+    (pet, afterIndex) => pendingSummons.push({ pet, afterIndex })
   );
 }
 
 function queueFaintPerkSummon(
   fainted: PetInstance,
   faintedIndex: number,
-  pendingSummons: SummonRequest[]
+  pendingSummons: PendingSummon[]
 ): void {
   if (!isTriggerPerk(fainted.perk) || fainted.perk.trigger !== Trigger.faint) return;
   const { summonRequest } = triggerEffect(fainted.perk, { self: fainted });
@@ -208,102 +187,21 @@ function queueFaintPerkSummon(
 }
 
 // Summons with no room left on the team are flung.
-function insertSummonRequests(
-  pendingSummons: PendingSummon[],
-  petRegistry: Record<string, StaticPet>,
-  counts: TriggerState
-): void {
-  const insertionsAt = new Map<PetInstance[], Map<number, number>>();
-  const deferred: PendingSummon[] = [];
-  for (const request of pendingSummons) {
-    const { pet, afterIndex, team, enemyTeam, options } = request;
-    if (team.length >= MAX_TEAM_SIZE) {
-      if (options?.waitForSpace) deferred.push(request);
-      continue;
-    }
-    let teamInsertions = insertionsAt.get(team);
-    if (!teamInsertions) {
-      teamInsertions = new Map<number, number>();
-      insertionsAt.set(team, teamInsertions);
-    }
-    const offset = teamInsertions.get(afterIndex) ?? 0;
-    const insertAt = options?.side === "enemy"
-      ? Math.min(offset, team.length)
-      : Math.min(afterIndex + offset, team.length);
-    teamInsertions.set(afterIndex, offset + 1);
-    team.splice(insertAt, 0, pet);
-    if (options?.triggerFriendSummoned !== false) {
-      fireFriendSummoned(team, insertAt, enemyTeam, petRegistry, counts);
-    }
-  }
-  counts.pendingSummons.push(...deferred);
-}
-
 function insertSummons(
   team: PetInstance[],
-  pendingSummons: SummonRequest[],
+  pendingSummons: PendingSummon[],
   enemyTeam: PetInstance[],
   petRegistry: Record<string, StaticPet>,
-  counts: TriggerState
+  counts: WeakMap<PetInstance, number>
 ): void {
-  insertSummonRequests(
-    pendingSummons.map((request) => ({
-      ...request,
-      team: request.options?.side === "enemy" ? enemyTeam : team,
-      enemyTeam: request.options?.side === "enemy" ? team : enemyTeam,
-    })),
-    petRegistry,
-    counts
-  );
-}
-
-function flushDeferredSummons(
-  counts: TriggerState,
-  petRegistry: Record<string, StaticPet>
-): void {
-  if (counts.pendingSummons.length === 0) return;
-  const pending = counts.pendingSummons.splice(0);
-  insertSummonRequests(pending, petRegistry, counts);
-}
-
-function fireFriendFaints(
-  fainted: PetInstance,
-  faintedIndex: number,
-  team: PetInstance[],
-  enemyTeam: PetInstance[],
-  petRegistry: Record<string, StaticPet>,
-  counts: TriggerState
-): void {
-  const ignoredListeners = petRegistry[fainted.type]?.ignoresFriendFaintsFrom ?? [];
-  const candidates = team.flatMap((pet) => {
-    if (pet === fainted || pet.health <= 0 || ignoredListeners.includes(pet.type)) return [];
-    const ability = getPetAbility(petRegistry[pet.type], Trigger.friend_faints);
-    return ability?.trigger === Trigger.friend_faints ? [{ pet, ability }] : [];
-  });
-
-  for (const { pet, ability } of byCurrentAttack(candidates, (candidate) => candidate.pet.attack)) {
-    const index = team.indexOf(pet);
-    if (index === -1) continue;
-    fireAbilityOn(
-      ability,
-      pet,
-      index,
-      team,
-      enemyTeam,
-      petRegistry,
-      counts,
-      (summonedPet, afterIndex, options) =>
-        counts.pendingSummons.push({
-          pet: summonedPet,
-          afterIndex,
-          team,
-          enemyTeam,
-          options: { ...options, waitForSpace: true },
-        }),
-      undefined,
-      undefined,
-      faintedIndex
-    );
+  const insertionsAt = new Map<number, number>();
+  for (const { pet, afterIndex } of pendingSummons) {
+    if (team.length >= MAX_TEAM_SIZE) break;
+    const offset = insertionsAt.get(afterIndex) ?? 0;
+    const insertAt = Math.min(afterIndex + offset, team.length);
+    insertionsAt.set(afterIndex, offset + 1);
+    team.splice(insertAt, 0, pet);
+    fireFriendSummoned(team, insertAt, enemyTeam, petRegistry, counts);
   }
 }
 
@@ -312,7 +210,7 @@ function fireFriendAheadFaints(
   team: PetInstance[],
   enemyTeam: PetInstance[],
   petRegistry: Record<string, StaticPet>,
-  counts: TriggerState
+  counts: WeakMap<PetInstance, number>
 ): void {
   const pet = team[faintedIndex + 1];
   const fn = friendAheadAbility(pet, Trigger.friend_ahead_faints, petRegistry);
@@ -334,17 +232,15 @@ function handleFaint(
   faintedIndex: number,
   enemyTeam: PetInstance[],
   petRegistry: Record<string, StaticPet>,
-  counts: TriggerState
+  counts: WeakMap<PetInstance, number>
 ): void {
   const fainted = team[faintedIndex];
-  const pendingSummons: SummonRequest[] = [];
+  const pendingSummons: PendingSummon[] = [];
   fireFaintAbility(fainted, faintedIndex, team, enemyTeam, petRegistry, counts, pendingSummons);
   queueFaintPerkSummon(fainted, faintedIndex, pendingSummons);
   fireFriendAheadFaints(faintedIndex, team, enemyTeam, petRegistry, counts);
-  fireFriendFaints(fainted, faintedIndex, team, enemyTeam, petRegistry, counts);
   team.splice(faintedIndex, 1);
   insertSummons(team, pendingSummons, enemyTeam, petRegistry, counts);
-  flushDeferredSummons(counts, petRegistry);
 }
 
 // Routes deaths through handleFaint (not a bare splice) so faint abilities
@@ -356,7 +252,7 @@ function handleDeathsPhase(
   attacker: PetInstance[],
   defender: PetInstance[],
   petRegistry: Record<string, StaticPet>,
-  counts: TriggerState
+  counts: WeakMap<PetInstance, number>
 ): void {
   type DeadJob = {
     pet: PetInstance;
@@ -390,7 +286,7 @@ function fireStartOfBattlePhase(
   attacker: PetInstance[],
   defender: PetInstance[],
   petRegistry: Record<string, StaticPet>,
-  counts: TriggerState
+  counts: WeakMap<PetInstance, number>
 ): void {
   type Job = {
     pet: PetInstance;
@@ -400,13 +296,13 @@ function fireStartOfBattlePhase(
   };
   const jobs: Job[] = [];
   for (const pet of attacker) {
-    const ability = getPetAbility(petRegistry[pet.type], Trigger.start_of_battle);
+    const ability = petRegistry[pet.type]?.ability;
     if (ability?.trigger === Trigger.start_of_battle) {
       jobs.push({ pet, team: attacker, enemyTeam: defender, ability });
     }
   }
   for (const pet of defender) {
-    const ability = getPetAbility(petRegistry[pet.type], Trigger.start_of_battle);
+    const ability = petRegistry[pet.type]?.ability;
     if (ability?.trigger === Trigger.start_of_battle) {
       jobs.push({ pet, team: defender, enemyTeam: attacker, ability });
     }
@@ -418,8 +314,13 @@ function fireStartOfBattlePhase(
   )) {
     const index = team.indexOf(pet);
     if (index === -1) continue;
-    const summon = (p: PetInstance, afterIndex: number, options?: SummonOptions) =>
-      insertSummons(team, [{ pet: p, afterIndex, options }], enemyTeam, petRegistry, counts);
+    const summon = (p: PetInstance, afterIndex: number) => {
+      if (team.length < MAX_TEAM_SIZE) {
+        const insertAt = Math.min(afterIndex, team.length);
+        team.splice(insertAt, 0, p);
+        fireFriendSummoned(team, insertAt, enemyTeam, petRegistry, counts);
+      }
+    };
     fireAbilityOn(
       ability,
       pet,
@@ -448,12 +349,12 @@ function fireSingleTrigger(
   team: PetInstance[],
   enemyTeam: PetInstance[],
   petRegistry: Record<string, StaticPet>,
-  counts: TriggerState
+  counts: WeakMap<PetInstance, number>
 ): void {
-  const ability = getPetAbility(petRegistry[pet.type], trigger);
-  if (!ability) return;
+  const def = petRegistry[pet.type];
+  if (def?.ability?.trigger !== trigger) return;
   fireAbilityOn(
-    ability,
+    def.ability,
     pet,
     index,
     team,
@@ -462,101 +363,6 @@ function fireSingleTrigger(
     counts,
     NOOP_SUMMON
   );
-}
-
-function flushHurtTriggers(
-  counts: TriggerState,
-  petRegistry: Record<string, StaticPet>
-): void {
-  while (counts.pendingHurt.length > 0) {
-    const pending = counts.pendingHurt.splice(0);
-    for (const { pet, team, enemyTeam } of byCurrentAttack(
-      pending,
-      (job) => job.pet.attack
-    )) {
-      fireSingleTrigger(
-        Trigger.hurt,
-        pet,
-        team.indexOf(pet),
-        team,
-        enemyTeam,
-        petRegistry,
-        counts
-      );
-      fireCounterTrigger(
-        CounterTrigger.friend_hurt,
-        pet,
-        team,
-        enemyTeam,
-        petRegistry,
-        counts
-      );
-    }
-  }
-}
-
-function fireCounterTrigger(
-  trigger: CounterTrigger,
-  hurtPet: PetInstance,
-  team: PetInstance[],
-  enemyTeam: PetInstance[],
-  petRegistry: Record<string, StaticPet>,
-  counts: TriggerState
-): void {
-  const candidates = team.flatMap((pet) => {
-    if (pet === hurtPet || pet.health <= 0) return [];
-    const ability = getPetAbility(petRegistry[pet.type], Trigger.counter);
-    if (ability?.trigger !== Trigger.counter || ability.counter.trigger !== trigger) {
-      return [];
-    }
-    return counts.abilityStates.reached(pet, trigger, ability.counter.every)
-      ? [{ pet, ability }]
-      : [];
-  });
-
-  for (const { pet, ability } of byCurrentAttack(candidates, (candidate) => candidate.pet.attack)) {
-    const index = team.indexOf(pet);
-    if (index === -1) continue;
-    fireAbilityOn(
-      ability,
-      pet,
-      index,
-      team,
-      enemyTeam,
-      petRegistry,
-      counts,
-      NOOP_SUMMON
-    );
-  }
-}
-
-function resolveDeathsAndHurt(
-  attacker: PetInstance[],
-  defender: PetInstance[],
-  petRegistry: Record<string, StaticPet>,
-  counts: TriggerState
-): void {
-  while (true) {
-    handleDeathsPhase(attacker, defender, petRegistry, counts);
-    if (counts.pendingHurt.length === 0) return;
-    flushHurtTriggers(counts, petRegistry);
-  }
-}
-
-function applyChili(
-  pet: PetInstance,
-  team: PetInstance[],
-  enemyTeam: PetInstance[]
-) {
-  if (pet.perk?.name !== "Chili") return null;
-
-  const target = enemyTeam[1];
-  if (!target || target.health <= 0) return null;
-  const healthBefore = target.health;
-  dealAbilityDamage(target, 5);
-  return target.health < healthBefore
-    ? { pet: target, team: enemyTeam, enemyTeam: team }
-    : null;
 }
 
 type FriendAheadJob = {
@@ -589,7 +395,7 @@ function queueFriendAheadAttacks(
 function fireFriendAheadAttacks(
   candidates: FriendAheadJob[],
   petRegistry: Record<string, StaticPet>,
-  counts: TriggerState
+  counts: WeakMap<PetInstance, number>
 ): void {
   for (const { pet, team, enemyTeam, ability } of byCurrentAttack(
     candidates,
@@ -611,30 +417,24 @@ function fireFriendAheadAttacks(
 }
 
 export function simulateBattle(
-  playerTeam: ApiBoard,
-  opponentTeam: ApiBoard,
+  playerTeam: (PetInstance | null)[],
+  opponentTeam: (PetInstance | null)[],
   petRegistry: Record<string, StaticPet> = {}
 ): BattleSimulationResult {
   const attacker: PetInstance[] = compactTeam(playerTeam);
   const defender: PetInstance[] = compactTeam(opponentTeam);
   const steps: BattleStep[] = [];
-  const triggerCounts: TriggerState = {
-    counts: new WeakMap<PetInstance, number>(),
-    abilityStates: new AbilityStateStore(),
-    pendingHurt: [],
-    pendingSummons: [],
-  };
+  const triggerCounts = new WeakMap<PetInstance, number>();
 
   steps.push({
-    attackerTeam: attacker.map(clonePetInstance),
-    defenderTeam: defender.map(clonePetInstance),
+    attackerTeam: attacker.map(clonePet),
+    defenderTeam: defender.map(clonePet),
     description: "Battle start",
   });
 
   // Start-of-battle abilities fire across both teams, highest attack first
   fireStartOfBattlePhase(attacker, defender, petRegistry, triggerCounts);
-  flushHurtTriggers(triggerCounts, petRegistry);
-  resolveDeathsAndHurt(attacker, defender, petRegistry, triggerCounts);
+  handleDeathsPhase(attacker, defender, petRegistry, triggerCounts);
 
   let rounds = 0;
   const MAX_ROUNDS = 50;
@@ -662,7 +462,6 @@ export function simulateBattle(
         triggerCounts
       );
     }
-    flushHurtTriggers(triggerCounts, petRegistry);
 
     const description = `${atkFront.type} (${atkFront.attack}/${atkFront.health}) attacks ${defFront.type} (${defFront.attack}/${defFront.health})`;
 
@@ -689,11 +488,6 @@ export function simulateBattle(
     ) {
       atkFront.health = Math.min(atkFront.health, 0);
     }
-
-    const chiliHits = [
-      applyChili(atkFront, attacker, defender),
-      applyChili(defFront, defender, attacker),
-    ].filter((hit) => hit !== null);
 
     // Queued before after-attack abilities so a pet they faint still reacts.
     const friendAheadQueue = queueFriendAheadAttacks(
@@ -725,17 +519,28 @@ export function simulateBattle(
 
     fireFriendAheadAttacks(friendAheadQueue, petRegistry, triggerCounts);
 
-    const hurtEvents = [
-      ...chiliHits,
-      ...(defFront.health < defenderHealthBefore
-        ? [{ pet: defFront, team: defender, enemyTeam: attacker }]
-        : []),
-      ...(atkFront.health < attackerHealthBefore
-        ? [{ pet: atkFront, team: attacker, enemyTeam: defender }]
-        : []),
-    ];
-    triggerCounts.pendingHurt.push(...hurtEvents);
-    flushHurtTriggers(triggerCounts, petRegistry);
+    const hurtOrder = byCurrentAttack(
+      [
+        ...(defFront.health < defenderHealthBefore
+          ? [{ pet: defFront, team: defender, enemyTeam: attacker }]
+          : []),
+        ...(atkFront.health < attackerHealthBefore
+          ? [{ pet: atkFront, team: attacker, enemyTeam: defender }]
+          : []),
+      ],
+      (job) => job.pet.attack
+    );
+    for (const { pet, team, enemyTeam } of hurtOrder) {
+      fireSingleTrigger(
+        Trigger.hurt,
+        pet,
+        team.indexOf(pet),
+        team,
+        enemyTeam,
+        petRegistry,
+        triggerCounts
+      );
+    }
 
     const defenderDied = defFront.health <= 0;
     const attackerDied = atkFront.health <= 0;
@@ -743,7 +548,7 @@ export function simulateBattle(
     // Faint runs first (highest attack first on a mutual kill) so a
     // knock-out ability like Rhino's sees the new front, not the pet that
     // just died.
-    resolveDeathsAndHurt(attacker, defender, petRegistry, triggerCounts);
+    handleDeathsPhase(attacker, defender, petRegistry, triggerCounts);
 
     const knockoutOrder = byCurrentAttack(
       [
@@ -769,8 +574,8 @@ export function simulateBattle(
     }
 
     steps.push({
-      attackerTeam: attacker.map(clonePetInstance),
-      defenderTeam: defender.map(clonePetInstance),
+      attackerTeam: attacker.map(clonePet),
+      defenderTeam: defender.map(clonePet),
       description,
     });
   }

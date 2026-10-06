@@ -1,5 +1,4 @@
 import { Ability, PetInstance, StaticPet, Trigger } from "@/lib/types";
-import { getPetAbility } from "@/lib/game/pet";
 
 export type FriendSummonedAbility = Extract<
   Ability,
@@ -16,8 +15,8 @@ export function friendSummonedCandidates(
   const candidates: { pet: PetInstance; ability: FriendSummonedAbility }[] = [];
   team.forEach((pet, i) => {
     if (i === summonedIndex || pet.health <= 0) return;
-    const ability = getPetAbility(petRegistry[pet.type], Trigger.friend_summoned);
-    if (ability)
+    const ability = petRegistry[pet.type]?.ability;
+    if (ability?.trigger === Trigger.friend_summoned)
       candidates.push({ pet, ability });
   });
   return candidates;

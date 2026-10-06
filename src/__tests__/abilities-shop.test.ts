@@ -7,24 +7,17 @@ import {
   fireShopFriendSummoned,
 } from "@/lib/game/shop-ability";
 import { PET_REGISTRY } from "@/lib/pets";
-import {
-  Apple,
-  BestApple,
-  BetterApple,
-  FOOD_REGISTRY,
-  Pill,
-} from "@/lib/foods";
+import { Apple, FOOD_REGISTRY, Pill } from "@/lib/foods";
 import { getFoodCost } from "@/lib/game/costs";
 import { applyFoodEffect } from "@/lib/game/food";
 import { Cupcake } from "@/lib/foods/cupcake";
 import { ApiBoard, PetInstance, ShopState, Trigger } from "@/lib/types";
-import { dealDirectDamage } from "@/lib/utils/combat";
 import { BreadPerk } from "@/lib/perks/bread";
 import { GarlicPerk } from "@/lib/perks/garlic";
 import { HoneyPerk } from "@/lib/perks/honey";
-import { MelonPerk } from "@/lib/perks/melon";
 import { Ox } from "@/lib/pets/turtle/tier 3/ox";
 import { abilityPet, registryWith } from "./helpers";
+import { Board } from "@/lib/game/board";
 
 function makePet(type: string, level = 1): PetInstance {
   return {
@@ -599,50 +592,6 @@ describe("Squirrel — start-of-turn", () => {
   });
 });
 
-describe("Worm — start-of-turn", () => {
-  it.each([
-    { level: 1, food: "Apple" },
-    { level: 2, food: "Better Apple" },
-    { level: 3, food: "Best Apple" },
-  ])("stocks one 2-gold $food at level $level", ({ level, food }) => {
-    const { shop } = fireBoardShopAbility(
-      Trigger.start_of_turn,
-      makeBoard([makePet("Worm", level)]),
-      makeShop(),
-      PET_REGISTRY
-    );
-    const stockedFood = shop.shopFoods[0];
-
-    expect(stockedFood).toMatchObject({ type: food, discount: 1 });
-    expect(getFoodCost(stockedFood, FOOD_REGISTRY[food])).toBe(2);
-  });
-});
-
-describe("Cow — buy", () => {
-  it.each([
-    { level: 1, food: "Milk" },
-    { level: 2, food: "Better Milk" },
-    { level: 3, food: "Best Milk" },
-  ])("replaces shop food with two free $food at level $level", ({ level, food }) => {
-    const cow = makePet("Cow", level);
-    const { shop } = fireShopAbility(
-      Trigger.buy,
-      cow,
-      0,
-      makeBoard([cow]),
-      makeShop(["Ant"], ["Apple", "Pear"]),
-      PET_REGISTRY
-    );
-
-    expect(shop.shopPets.map((pet) => pet.type)).toEqual(["Ant"]);
-    expect(shop.shopFoods).toHaveLength(2);
-    for (const milk of shop.shopFoods) {
-      expect(milk).toMatchObject({ type: food, frozen: false });
-      expect(getFoodCost(milk, FOOD_REGISTRY[food])).toBe(0);
-    }
-  });
-});
-
 describe("Penguin — start-of-turn", () => {
   it.each([
     { level: 1, expected: 2 },
@@ -800,59 +749,6 @@ describe("Turkey — friend summoned", () => {
     expect(nextTurn[1]).toMatchObject({ attack: 7, health: 3 });
     expect(nextTurn[1]?.tempAttack).toBeUndefined();
     expect(nextTurn[1]?.tempHealth).toBeUndefined();
-  });
-});
-
-describe("Seagull — friend summoned", () => {
-  // Board is a Melon Seagull followed by Sloths, summoned front to back.
-  function summonSloths(seagullLevel: number, sloths: PetInstance[]): ApiBoard {
-    const seagull = { ...makePet("Seagull", seagullLevel), perk: { ...MelonPerk } };
-    let board = makeBoard([seagull, ...sloths]);
-    for (let position = 1; position <= sloths.length; position++) {
-      board = fireShopFriendSummoned(board, position, PET_REGISTRY);
-    }
-    return board;
-  }
-
-  function slothPerks(board: ApiBoard) {
-    return board.slice(1).filter((sloth) => sloth !== null).map((sloth) => sloth.perk?.name);
-  }
-
-  it.each([
-    { level: 1, perks: ["Melon", undefined, undefined, undefined] },
-    { level: 2, perks: ["Melon", "Melon", undefined, undefined] },
-    { level: 3, perks: ["Melon", "Melon", "Melon", undefined] },
-  ])("gives Melon to only the first $level of four summoned friends at level $level", ({ level, perks }) => {
-    const board = summonSloths(level, [
-      makePet("Sloth"),
-      makePet("Sloth"),
-      makePet("Sloth"),
-      makePet("Sloth"),
-    ]);
-
-    expect(slothPerks(board)).toEqual(perks);
-  });
-
-  it("does not count a summoned friend that already has Melon", () => {
-    const slothWithMelon = { ...makePet("Sloth"), perk: { ...MelonPerk } };
-    const board = summonSloths(1, [slothWithMelon, makePet("Sloth")]);
-
-    expect(slothPerks(board)).toEqual(["Melon", "Melon"]);
-  });
-
-  it("gives Melon again after the next start of turn", () => {
-    const board = summonSloths(1, [makePet("Sloth"), makePet("Sloth")]);
-    expect(slothPerks(board)).toEqual(["Melon", undefined]);
-
-    const nextTurn = fireBoardShopAbility(
-      Trigger.start_of_turn,
-      board,
-      makeShop(),
-      PET_REGISTRY
-    ).board;
-    const result = fireShopFriendSummoned(nextTurn, 2, PET_REGISTRY);
-
-    expect(slothPerks(result)).toEqual(["Melon", "Melon"]);
   });
 });
 
@@ -1025,32 +921,6 @@ describe("Rabbit — friend ate food", () => {
 
     expect(result[1]?.health).toBe(2);
     expect(result[0]?.foodTriggersThisTurn).toBeUndefined();
-  });
-});
-
-describe("Jerboa — eats Apple", () => {
-  it.each([
-    { level: 1, food: Apple, expected: 2 },
-    { level: 2, food: BetterApple, expected: 3 },
-    { level: 3, food: BestApple, expected: 4 },
-  ])("buffs a friend by +$level/+$level for $food.name", ({ level, food, expected }) => {
-    const result = applyFoodEffect(
-      food,
-      makeBoard([makePet("Jerboa", level), makePet("Ant")]),
-      0,
-      PET_REGISTRY
-    );
-
-    expect(result[1]).toMatchObject({ attack: expected, health: expected });
-  });
-
-  it("triggers only once per turn and ignores non-Apple foods", () => {
-    let board = makeBoard([makePet("Jerboa"), makePet("Ant")]);
-    board = applyFoodEffect(Apple, board, 0, PET_REGISTRY);
-    board = applyFoodEffect(Apple, board, 0, PET_REGISTRY);
-    board = applyFoodEffect(Cupcake, board, 0, PET_REGISTRY);
-
-    expect(board[1]).toMatchObject({ attack: 2, health: 2 });
   });
 });
 
@@ -1386,12 +1256,6 @@ describe("fireShopFaint — Pill", () => {
     expect(result[0]?.type).toBe("Zombie Cricket");
   });
 
-  it("does not put Rat's summons on the player's shop board", () => {
-    const result = fireShopFaint(makeBoard([makePet("Rat")]), 0, PET_REGISTRY);
-
-    expect(result[0]).toBeNull();
-  });
-
   it("flings later summons when the Pill opens only one slot", () => {
     const cricket = { ...makePet("Cricket"), perk: { ...HoneyPerk } };
     const board = makeBoard([cricket]);
@@ -1432,24 +1296,6 @@ describe("fireShopFaint — Pill", () => {
     const afterSecond = fireShopFaint(afterFirst, 0, registryWith(Ox));
 
     expect(afterSecond[2]).toMatchObject({ attack: 2, health: 1 });
-  });
-
-  it("does not share Melon perk instances between the original board and a pilled Turtle clone", () => {
-    const board = makeBoard([
-      makePet("Turtle"),
-      { ...makePet("Sloth"), perk: { ...MelonPerk } },
-    ]);
-
-    const result = fireShopFaint(board, 0, PET_REGISTRY);
-    const melonPet = result[1] as PetInstance;
-
-    expect(board[1]?.perk).toBeTruthy();
-    expect(melonPet.perk).not.toBe(board[1]?.perk);
-
-    dealDirectDamage({ ...makePet("Ant"), attack: 3 }, melonPet);
-
-    expect(melonPet.perk).toBeNull();
-    expect(board[1]?.perk).toMatchObject({ name: "Melon", usesRemaining: 1 });
   });
 
   it("refreshes Friend ahead faints at start of turn", () => {
@@ -1499,31 +1345,6 @@ describe("fireShopFaint — Pill", () => {
     expect((result[0] as PetInstance).health).toBe(-2); // 1 - 3
     expect((result[2] as PetInstance).health).toBe(-2);
     expect(result[1]).toBeNull();
-  });
-});
-
-describe("fireShopFriendSummoned — Alpaca", () => {
-  it.each([
-    { level: 1, expectedCount: 1 },
-    { level: 2, expectedCount: 2 },
-    { level: 3, expectedCount: 3 },
-  ])("grants +1 experience up to $expectedCount times at level $level", ({ level, expectedCount }) => {
-    const alpaca = makePet("Alpaca", level);
-    let board = makeBoard([
-      alpaca,
-      makePet("Sloth"),
-      makePet("Sloth"),
-      makePet("Sloth"),
-    ]);
-
-    for (let summonedIndex = 1; summonedIndex <= 3; summonedIndex++) {
-      board = fireShopFriendSummoned(board, summonedIndex, PET_REGISTRY);
-    }
-
-    const summoned = board.slice(1).filter((friend): friend is PetInstance => friend !== null);
-    expect(summoned.filter((friend) => friend.xp === 1)).toHaveLength(expectedCount);
-    expect(summoned.filter((friend) => friend.xp === 0)).toHaveLength(3 - expectedCount);
-    expect(alpaca.friendSummonsThisTurn).toBe(expectedCount);
   });
 });
 

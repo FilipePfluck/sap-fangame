@@ -33,7 +33,7 @@ export async function getLastBoardState(
     id: boardState.id,
     gameId: boardState.gameId,
     turnId: boardState.turnId,
-    board: boardState.boardState as ApiBoard,
+    board: boardState.boardState,
     shop: boardState.shopState as ShopState,
     goldRemaining: boardState.goldRemaining,
     turn: {
