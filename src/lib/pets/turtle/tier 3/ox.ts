@@ -1,5 +1,6 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { MelonPerk } from "@/lib/perks/melon";
+import { tryIncrementTriggerCount } from "@/lib/game/pet";
 
 const TRIGGER_LIMIT = 1;
 
@@ -13,9 +14,15 @@ export const Ox: Readonly<StaticPet> = {
   ability: {
     trigger: Trigger.friend_ahead_faints,
     fn: (ctx) => {
-      const triggers = ctx.self.friendAheadFaintsThisTurn ?? 0;
-      if (triggers >= TRIGGER_LIMIT) return;
-      ctx.self.friendAheadFaintsThisTurn = triggers + 1;
+      if (
+        !tryIncrementTriggerCount(
+          ctx.self,
+          Trigger.friend_ahead_faints,
+          TRIGGER_LIMIT
+        )
+      ) {
+        return;
+      }
       ctx.self.attack += ctx.level;
       ctx.self.perk = { ...MelonPerk };
     },

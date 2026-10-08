@@ -11,9 +11,7 @@ export type PetInstance = {
   // start of the next turn (e.g. Horse's shop buff).
   tempAttack?: number;
   tempHealth?: number;
-  foodTriggersThisTurn?: number;
-  friendBuysThisTurn?: number;
-  friendAheadFaintsThisTurn?: number;
+  triggerCountsThisTurn?: Partial<Record<Trigger, number>>;
 };
 
 export type ShopPet = {

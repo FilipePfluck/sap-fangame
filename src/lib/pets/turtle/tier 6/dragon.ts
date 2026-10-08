@@ -1,4 +1,5 @@
 import { StaticPet, Trigger } from "@/lib/types";
+import { tryIncrementTriggerCount } from "@/lib/game/pet";
 
 const TRIGGER_LIMIT = 4;
 
@@ -13,9 +14,15 @@ export const Dragon: Readonly<StaticPet> = {
     trigger: Trigger.friend_bought,
     fn: (ctx) => {
       if (ctx.boughtPet?.tier !== 1) return;
-      const triggers = ctx.self.friendBuysThisTurn ?? 0;
-      if (triggers >= TRIGGER_LIMIT) return;
-      ctx.self.friendBuysThisTurn = triggers + 1;
+      if (
+        !tryIncrementTriggerCount(
+          ctx.self,
+          Trigger.friend_bought,
+          TRIGGER_LIMIT
+        )
+      ) {
+        return;
+      }
       for (const friend of ctx.board) {
         if (!friend || friend === ctx.self || friend.health <= 0) continue;
         friend.attack += ctx.level;

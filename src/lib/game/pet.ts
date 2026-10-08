@@ -1,7 +1,24 @@
-import { Trigger } from "@/lib/types";
-import type { BattleAbilityContext, PetInstance, StaticPet } from "@/lib/types";
+import {
+  Trigger,
+  type BattleAbilityContext,
+  type PetInstance,
+  type StaticPet,
+} from "@/lib/types";
 
-type FriendAheadTrigger = Trigger.friend_ahead_attacks | Trigger.friend_ahead_faints;
+export function tryIncrementTriggerCount(
+  pet: PetInstance,
+  trigger: Trigger,
+  limit: number
+): boolean {
+  const counts = pet.triggerCountsThisTurn ?? {};
+  const count = counts[trigger] ?? 0;
+  if (count >= limit) return false;
+  pet.triggerCountsThisTurn = { ...counts, [trigger]: count + 1 };
+  return true;
+}
+
+type FriendAheadTrigger =
+  Trigger.friend_ahead_attacks | Trigger.friend_ahead_faints;
 
 export function friendAheadAbility(
   pet: PetInstance | undefined,

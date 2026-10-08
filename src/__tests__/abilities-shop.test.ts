@@ -17,7 +17,6 @@ import { GarlicPerk } from "@/lib/perks/garlic";
 import { HoneyPerk } from "@/lib/perks/honey";
 import { Ox } from "@/lib/pets/turtle/tier 3/ox";
 import { abilityPet, registryWith } from "./helpers";
-import { Board } from "@/lib/game/board";
 
 function makePet(type: string, level = 1): PetInstance {
   return {
@@ -804,6 +803,9 @@ describe("Dragon — Tier 1 friend bought", () => {
       ).board;
     }
     expect(board[1]).toMatchObject({ attack: 5, health: 5 });
+    expect(board[0]?.triggerCountsThisTurn).toEqual({
+      [Trigger.friend_bought]: 4,
+    });
 
     board = fireShopFriendBought(
       PET_REGISTRY.Sloth,
@@ -872,6 +874,9 @@ describe("Rabbit — friend ate food", () => {
       board = applyFoodEffect(Apple, board, 1, PET_REGISTRY);
     }
     expect(board[1]?.health).toBe(8);
+    expect(board[0]?.triggerCountsThisTurn).toEqual({
+      [Trigger.friend_ate_food]: 3,
+    });
 
     const reset = fireBoardShopAbility(
       Trigger.start_of_turn,
@@ -905,7 +910,7 @@ describe("Rabbit — friend ate food", () => {
     const result = applyFoodEffect(Pill, board, 1, PET_REGISTRY);
 
     expect(result[0]?.health).toBe(1);
-    expect(result[0]?.foodTriggersThisTurn).toBeUndefined();
+    expect(result[0]?.triggerCountsThisTurn).toBeUndefined();
     expect(result[1]).toBeNull();
 
     const fedFish = applyFoodEffect(Apple, result, 2, PET_REGISTRY);
@@ -920,7 +925,7 @@ describe("Rabbit — friend ate food", () => {
     const result = applyFoodEffect(Apple, board, 1, PET_REGISTRY);
 
     expect(result[1]?.health).toBe(2);
-    expect(result[0]?.foodTriggersThisTurn).toBeUndefined();
+    expect(result[0]?.triggerCountsThisTurn).toBeUndefined();
   });
 });
 
@@ -1301,7 +1306,10 @@ describe("fireShopFaint — Pill", () => {
   it("refreshes Friend ahead faints at start of turn", () => {
     const board = makeBoard([
       makePet("Sloth"),
-      { ...makePet("Ox"), friendAheadFaintsThisTurn: 1 },
+      {
+        ...makePet("Ox"),
+        triggerCountsThisTurn: { [Trigger.friend_ahead_faints]: 1 },
+      },
     ]);
     const nextTurn = fireBoardShopAbility(
       Trigger.start_of_turn,

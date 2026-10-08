@@ -1,4 +1,7 @@
 import { StaticPet, Trigger } from "@/lib/types";
+import { tryIncrementTriggerCount } from "@/lib/game/pet";
+
+const TRIGGER_LIMIT = 3;
 
 export const Rabbit: Readonly<StaticPet> = {
   name: "Rabbit",
@@ -10,9 +13,15 @@ export const Rabbit: Readonly<StaticPet> = {
   ability: {
     trigger: Trigger.friend_ate_food,
     fn: (ctx) => {
-      const triggerCount = ctx.self.foodTriggersThisTurn ?? 0;
-      if (triggerCount >= 3) return;
-      ctx.self.foodTriggersThisTurn = triggerCount + 1;
+      if (
+        !tryIncrementTriggerCount(
+          ctx.self,
+          Trigger.friend_ate_food,
+          TRIGGER_LIMIT
+        )
+      ) {
+        return;
+      }
       ctx.fedPet.health += ctx.level;
     },
   },

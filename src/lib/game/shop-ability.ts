@@ -7,21 +7,15 @@ import {
   ShopAbilityContext,
   ShopState,
   Trigger,
-
 } from "@/lib/types";
 import { orderByAttack } from "@/lib/utils/random";
 import { stockFood } from "@/lib/game/shop";
-import {
-  compactApiBoard,
-  compactBoard,
-  grantExperience,
-} from "@/lib/game/merge";
+import { compactApiBoard, grantExperience } from "@/lib/game/merge";
 import { friendSummonedCandidates } from "@/lib/game/friend-summoned";
 import { friendAheadAbility } from "@/lib/game/pet";
 import { triggerEffect } from "@/lib/perks/trigger-functions";
 import { dealAbilityDamage } from "@/lib/utils/combat";
 import { triggerFriendAteFood } from "@/lib/game/food";
-import { Board } from "@/lib/game/board";
 
 // TODO - Order shop abilities through a shared queue manager (supporting dynamic
 // updates) and remove the per-function orderByAttack sorting below.
@@ -124,9 +118,7 @@ export function fireBoardShopAbility(
 
     if (trigger === Trigger.start_of_turn) {
       clearTempStats(pet);
-      delete pet.foodTriggersThisTurn;
-      delete pet.friendBuysThisTurn;
-      delete pet.friendAheadFaintsThisTurn;
+      delete pet.triggerCountsThisTurn;
     }
 
     const perk = isTriggerPerk(pet.perk) && pet.perk.trigger === trigger
