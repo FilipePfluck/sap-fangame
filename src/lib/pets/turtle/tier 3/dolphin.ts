@@ -1,5 +1,6 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { livingPets } from "@/lib/utils/combat";
+import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Dolphin: Readonly<StaticPet> = {
   name: "Dolphin",
@@ -8,7 +9,7 @@ export const Dolphin: Readonly<StaticPet> = {
   baseAttack: 4,
   baseHealth: 3,
   isToken: false,
-  ability: {
+  abilities: createAbilityMap({
     trigger: Trigger.start_of_battle,
     fn: (ctx) => {
       for (let i = 0; i < ctx.level; i++) {
@@ -20,7 +21,7 @@ export const Dolphin: Readonly<StaticPet> = {
         ctx.dealAbilityDamage(target, 4);
       }
     },
-  },
+  }),
   description: (level: number) =>
     level > 1
       ? `Start of battle: Deal 4 damage to the lowest health enemy. Triggers ${level} times.`

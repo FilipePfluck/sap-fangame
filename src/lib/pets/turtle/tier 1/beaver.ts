@@ -1,5 +1,6 @@
 import { PetInstance, StaticPet, Trigger } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
+import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Beaver: Readonly<StaticPet> = {
   name: "Beaver",
@@ -8,7 +9,7 @@ export const Beaver: Readonly<StaticPet> = {
   baseAttack: 3,
   baseHealth: 2,
   isToken: false,
-  ability: {
+  abilities: createAbilityMap({
     trigger: Trigger.sell,
     fn: (ctx) => {
       const friends: { pet: PetInstance; idx: number }[] = [];
@@ -22,6 +23,6 @@ export const Beaver: Readonly<StaticPet> = {
         ctx.board[idx] = { ...pet, attack: pet.attack + ctx.level };
       }
     },
-  },
+  }),
   description: (level: number) => `Sell: Give two random friends +${level} attack.`,
 };

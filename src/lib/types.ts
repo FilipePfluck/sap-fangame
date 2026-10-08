@@ -124,6 +124,8 @@ export type Ability =
   | { trigger: Trigger.friend_bought; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.knock_out; fn: (ctx: BattleAbilityContext) => void };
 
+export type AbilityData = Pick<Ability, "trigger">;
+
 export type StaticPet = {
   name: string;
   sprite: string;
@@ -131,9 +133,14 @@ export type StaticPet = {
   baseAttack: number;
   baseHealth: number;
   isToken: boolean;
-  ability: Ability | null;
+  abilities: Map<Trigger, Ability>;
   innatePerk?: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null;
   description: string | ((level: number) => string);
+};
+
+export type PetData = Omit<StaticPet, "abilities" | "description"> & {
+  abilities: AbilityData[];
+  description: string;
 };
 
 export type FoodApplyContext = {

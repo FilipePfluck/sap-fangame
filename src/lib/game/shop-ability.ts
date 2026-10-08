@@ -13,6 +13,7 @@ import { stockFood } from "@/lib/game/shop";
 import { compactApiBoard, grantExperience } from "@/lib/game/merge";
 import { friendSummonedCandidates } from "@/lib/game/friend-summoned";
 import { friendAheadAbility } from "@/lib/game/pet";
+import { getAbility } from "@/lib/pets/ability";
 import { triggerEffect } from "@/lib/perks/trigger-functions";
 import { dealAbilityDamage } from "@/lib/utils/combat";
 import { triggerFriendAteFood } from "@/lib/game/food";
@@ -77,7 +78,8 @@ export function fireShopAbility(
   petRegistry: Record<string, StaticPet>
 ): ShopAbilityResult {
   const def = petRegistry[pet.type];
-  if (!def?.ability || def.ability.trigger !== trigger) {
+  const ability = getAbility(def, trigger);
+  if (!ability) {
     return { board: [...board], shop, goldDelta: 0 };
   }
 
@@ -85,7 +87,7 @@ export function fireShopAbility(
   const newShop = cloneShop(shop);
   const gold = { delta: 0 };
 
-  def.ability.fn(
+  ability.fn(
     createShopContext(pet, petIndex, newBoard, newShop, gold, new Set())
   );
   return { board: newBoard, shop: newShop, goldDelta: gold.delta };
@@ -108,7 +110,10 @@ export function fireBoardShopAbility(
     pet: PetInstance;
     index: number;
     perk: Extract<PetInstance["perk"], { trigger: Trigger }> | null;
-    ability: Extract<Ability, { trigger: Trigger.start_of_turn | Trigger.end_turn }> | null;
+    ability: Extract<
+      Ability,
+      { trigger: Trigger.start_of_turn | Trigger.end_turn }
+    > | null;
   };
   const jobs: Job[] = [];
 
@@ -121,11 +126,9 @@ export function fireBoardShopAbility(
       delete pet.triggerCountsThisTurn;
     }
 
-    const perk = isTriggerPerk(pet.perk) && pet.perk.trigger === trigger
-      ? pet.perk
-      : null;
-    const ability = petRegistry[pet.type]?.ability;
-    const petAbility = ability?.trigger === trigger ? ability : null;
+    const perk =
+      isTriggerPerk(pet.perk) && pet.perk.trigger === trigger ? pet.perk : null;
+    const petAbility = getAbility(petRegistry[pet.type], trigger) ?? null;
     if (pet.health > 0 && (perk || petAbility)) {
       jobs.push({ pet, index: i, perk, ability: petAbility });
     }
@@ -164,11 +167,17 @@ export function fireShopFriendBought(
   const currentShop = cloneShop(shop);
   const gold = { delta: 0 };
   const justStocked = new Set<object>();
-  const listeners: { pet: PetInstance; index: number; ability: FriendBoughtAbility }[] = [];
+  const listeners: {
+    pet: PetInstance;
+    index: number;
+    ability: FriendBoughtAbility;
+  }[] = [];
   for (let i = 0; i < currentBoard.length; i++) {
     const pet = currentBoard[i];
-    const ability = pet && petRegistry[pet.type]?.ability;
-    if (!pet || pet.health <= 0 || ability?.trigger !== Trigger.friend_bought) continue;
+    const ability = pet
+      ? getAbility(petRegistry[pet.type], Trigger.friend_bought)
+      : undefined;
+    if (!pet || pet.health <= 0 || !ability) continue;
     listeners.push({ pet, index: i, ability });
   }
   for (const { pet, index, ability } of orderByAttack(
@@ -202,7 +211,7 @@ export function fireShopFaint(
   petRegistry: Record<string, StaticPet>
 ): (PetInstance | null)[] {
   // Faint abilities can buff other pets in place, so work on copies.
-  let newApiBoard = [...board]
+  let newApiBoard = [...board];
   const pet = newApiBoard[boardPosition];
   if (!pet) return newApiBoard;
 
@@ -228,9 +237,7 @@ export function fireShopFaint(
     grantExperience,
   });
 
-  if (def?.ability?.trigger === Trigger.faint) {
-    def.ability.fn(context(pet));
-  }
+  getAbility(def, Trigger.faint)?.fn(context(pet));
 
   if (isTriggerPerk(pet.perk) && pet.perk.trigger === Trigger.faint) {
     const summonRequest = triggerEffect(pet.perk, { self: pet }).summonRequest;
@@ -238,7 +245,11 @@ export function fireShopFaint(
   }
 
   const behind = compacted[selfIndex + 1];
-  const friendAheadFaints = friendAheadAbility(behind, Trigger.friend_ahead_faints, petRegistry);
+  const friendAheadFaints = friendAheadAbility(
+    behind,
+    Trigger.friend_ahead_faints,
+    petRegistry
+  );
   if (friendAheadFaints) friendAheadFaints(context(behind));
 
   // Pill frees one slot, so any later summon requests are flung.

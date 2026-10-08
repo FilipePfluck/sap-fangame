@@ -2,6 +2,7 @@ import { StaticPet, Trigger } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 import { livingPets } from "@/lib/utils/combat";
 import { numberToText } from "@/lib/utils/flavor-text";
+import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Leopard: Readonly<StaticPet> = {
   name: "Leopard",
@@ -10,7 +11,7 @@ export const Leopard: Readonly<StaticPet> = {
   baseAttack: 10,
   baseHealth: 4,
   isToken: false,
-  ability: {
+  abilities: createAbilityMap({
     trigger: Trigger.start_of_battle,
     fn: (ctx) => {
       const enemies = livingPets(ctx.enemyTeam);
@@ -19,7 +20,7 @@ export const Leopard: Readonly<StaticPet> = {
         ctx.dealAbilityDamage(target, Math.floor(ctx.self.attack * 0.5));
       }
     },
-  },
+  }),
   description: (level: number) =>
     `Start of battle: Deal 50% attack damage to ${numberToText[level]} random enemy.`,
 };

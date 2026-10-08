@@ -7,6 +7,6 @@ export const Tiger: Readonly<StaticPet> = {
   baseAttack: 6,
   baseHealth: 4,
   isToken: false,
-  ability: null,
+  abilities: new Map(),
   description: (level: number) => `The friend ahead repeats their ability in battle as if they were level ${level}.`,
 };

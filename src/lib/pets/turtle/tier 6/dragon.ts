@@ -1,5 +1,8 @@
 import { StaticPet, Trigger } from "@/lib/types";
-import { tryIncrementTriggerCount } from "@/lib/game/pet";
+import {
+  createAbilityMap,
+  tryIncrementTriggerCount,
+} from "@/lib/pets/ability";
 
 const TRIGGER_LIMIT = 4;
 
@@ -10,7 +13,7 @@ export const Dragon: Readonly<StaticPet> = {
   baseAttack: 3,
   baseHealth: 8,
   isToken: false,
-  ability: {
+  abilities: createAbilityMap({
     trigger: Trigger.friend_bought,
     fn: (ctx) => {
       if (ctx.boughtPet?.tier !== 1) return;
@@ -29,7 +32,7 @@ export const Dragon: Readonly<StaticPet> = {
         friend.health += ctx.level;
       }
     },
-  },
+  }),
   description: (level: number) =>
     `Tier 1 friend bought: Give friends +${level} attack and +${level} health. Works 4 times per turn.`,
 };

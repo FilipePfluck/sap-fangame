@@ -1,5 +1,6 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { livingPets } from "@/lib/utils/combat";
+import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Armadillo: Readonly<StaticPet> = {
   name: "Armadillo",
@@ -8,14 +9,14 @@ export const Armadillo: Readonly<StaticPet> = {
   baseAttack: 4,
   baseHealth: 8,
   isToken: false,
-  ability: {
+  abilities: createAbilityMap({
     trigger: Trigger.start_of_battle,
     fn: (ctx) => {
       for (const target of livingPets([...ctx.team, ...ctx.enemyTeam])) {
         target.health += 8 * ctx.level;
       }
     },
-  },
+  }),
   description: (level: number) =>
     `Start of battle: Give ALL pets +${8 * level} health.`
 };

@@ -1,5 +1,8 @@
 import { StaticPet, Trigger } from "@/lib/types";
-import { tryIncrementTriggerCount } from "@/lib/game/pet";
+import {
+  createAbilityMap,
+  tryIncrementTriggerCount,
+} from "@/lib/pets/ability";
 
 const TRIGGER_LIMIT = 3;
 
@@ -10,7 +13,7 @@ export const Rabbit: Readonly<StaticPet> = {
   baseAttack: 1,
   baseHealth: 2,
   isToken: false,
-  ability: {
+  abilities: createAbilityMap({
     trigger: Trigger.friend_ate_food,
     fn: (ctx) => {
       if (
@@ -24,7 +27,7 @@ export const Rabbit: Readonly<StaticPet> = {
       }
       ctx.fedPet.health += ctx.level;
     },
-  },
+  }),
   description: (level: number) =>
     `Friendly ate food: Give them +${level} health. Works 3 times per turn.`,
 };

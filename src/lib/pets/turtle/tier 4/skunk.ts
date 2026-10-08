@@ -1,6 +1,7 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { removeHealth } from "@/lib/utils/combat";
 import { livingPets } from "@/lib/utils/combat";
+import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Skunk: Readonly<StaticPet> = {
   name: "Skunk",
@@ -9,7 +10,7 @@ export const Skunk: Readonly<StaticPet> = {
   baseAttack: 3,
   baseHealth: 5,
   isToken: false,
-  ability: {
+  abilities: createAbilityMap({
     trigger: Trigger.start_of_battle,
     fn: (ctx) => {
       const enemies = livingPets(ctx.enemyTeam);
@@ -19,7 +20,7 @@ export const Skunk: Readonly<StaticPet> = {
       );
       removeHealth(target, 0.33 * ctx.level);
     },
-  },
+  }),
   description:
     (level: number) =>
     `Start of battle: Reduce the highest health enemy by ${level * 33}% health.`,

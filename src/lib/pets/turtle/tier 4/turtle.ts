@@ -1,5 +1,6 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { MelonPerk } from "@/lib/perks/melon";
+import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Turtle: Readonly<StaticPet> = {
   name: "Turtle",
@@ -8,7 +9,7 @@ export const Turtle: Readonly<StaticPet> = {
   baseAttack: 2,
   baseHealth: 5,
   isToken: false,
-  ability: {
+  abilities: createAbilityMap({
     trigger: Trigger.faint,
     fn: (ctx) => {
       const friends = ctx.team
@@ -19,7 +20,7 @@ export const Turtle: Readonly<StaticPet> = {
         friend.perk = { ...MelonPerk };
       }
     },
-  },
+  }),
   description: (level: number) =>
     `Faint: Give Melon perk to the ${level === 1 ? "nearest friend" : `${level === 2 ? "two" : level} nearest friends`} behind.`,
 };

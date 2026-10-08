@@ -11,11 +11,11 @@ import { byCurrentAttack } from "@/lib/utils/random";
 import { dealAbilityDamage, dealDirectDamage } from "@/lib/utils/combat";
 import {
   compactApiBoard,
-  compactBoard,
   grantExperience,
 } from "@/lib/game/merge";
 import { friendSummonedCandidates } from "@/lib/game/friend-summoned";
 import { friendAheadAbility } from "@/lib/game/pet";
+import { getAbility } from "@/lib/pets/ability";
 import { triggerEffect } from "@/lib/perks/trigger-functions";
 import { triggerFriendAteFood } from "@/lib/game/food";
 
@@ -95,8 +95,7 @@ function fireAbilityOn(
       return dealt;
     },
     grantExperience,
-    friendAteFood: (fedPet) =>
-      triggerFriendAteFood(team, fedPet, petRegistry),
+    friendAteFood: (fedPet) => triggerFriendAteFood(team, fedPet, petRegistry),
   };
   ability.fn(ctx);
 
@@ -162,8 +161,8 @@ function fireFaintAbility(
   counts: WeakMap<PetInstance, number>,
   pendingSummons: PendingSummon[]
 ): void {
-  const ability = petRegistry[fainted.type]?.ability;
-  if (ability?.trigger !== Trigger.faint) return;
+  const ability = getAbility(petRegistry[fainted.type], Trigger.faint);
+  if (!ability) return;
   fireAbilityOn(
     ability,
     fainted,
@@ -181,9 +180,11 @@ function queueFaintPerkSummon(
   faintedIndex: number,
   pendingSummons: PendingSummon[]
 ): void {
-  if (!isTriggerPerk(fainted.perk) || fainted.perk.trigger !== Trigger.faint) return;
+  if (!isTriggerPerk(fainted.perk) || fainted.perk.trigger !== Trigger.faint)
+    return;
   const { summonRequest } = triggerEffect(fainted.perk, { self: fainted });
-  if (summonRequest) pendingSummons.push({ pet: summonRequest, afterIndex: faintedIndex });
+  if (summonRequest)
+    pendingSummons.push({ pet: summonRequest, afterIndex: faintedIndex });
 }
 
 // Summons with no room left on the team are flung.
@@ -236,7 +237,15 @@ function handleFaint(
 ): void {
   const fainted = team[faintedIndex];
   const pendingSummons: PendingSummon[] = [];
-  fireFaintAbility(fainted, faintedIndex, team, enemyTeam, petRegistry, counts, pendingSummons);
+  fireFaintAbility(
+    fainted,
+    faintedIndex,
+    team,
+    enemyTeam,
+    petRegistry,
+    counts,
+    pendingSummons
+  );
   queueFaintPerkSummon(fainted, faintedIndex, pendingSummons);
   fireFriendAheadFaints(faintedIndex, team, enemyTeam, petRegistry, counts);
   team.splice(faintedIndex, 1);
@@ -296,14 +305,14 @@ function fireStartOfBattlePhase(
   };
   const jobs: Job[] = [];
   for (const pet of attacker) {
-    const ability = petRegistry[pet.type]?.ability;
-    if (ability?.trigger === Trigger.start_of_battle) {
+    const ability = getAbility(petRegistry[pet.type], Trigger.start_of_battle);
+    if (ability) {
       jobs.push({ pet, team: attacker, enemyTeam: defender, ability });
     }
   }
   for (const pet of defender) {
-    const ability = petRegistry[pet.type]?.ability;
-    if (ability?.trigger === Trigger.start_of_battle) {
+    const ability = getAbility(petRegistry[pet.type], Trigger.start_of_battle);
+    if (ability) {
       jobs.push({ pet, team: defender, enemyTeam: attacker, ability });
     }
   }
@@ -351,10 +360,10 @@ function fireSingleTrigger(
   petRegistry: Record<string, StaticPet>,
   counts: WeakMap<PetInstance, number>
 ): void {
-  const def = petRegistry[pet.type];
-  if (def?.ability?.trigger !== trigger) return;
+  const ability = getAbility(petRegistry[pet.type], trigger);
+  if (!ability) return;
   fireAbilityOn(
-    def.ability,
+    ability,
     pet,
     index,
     team,
@@ -386,7 +395,11 @@ function queueFriendAheadAttacks(
     const attackerIndex = team.indexOf(attackingPet);
     if (attackerIndex === -1) continue;
     const pet = team[attackerIndex + 1];
-    const fn = friendAheadAbility(pet, Trigger.friend_ahead_attacks, petRegistry);
+    const fn = friendAheadAbility(
+      pet,
+      Trigger.friend_ahead_attacks,
+      petRegistry
+    );
     if (fn) candidates.push({ pet, team, enemyTeam, ability: { fn } });
   }
   return candidates;

@@ -5,8 +5,8 @@ import { SHOP_FOOD_POOL } from "@/lib/foods";
 import type { StaticPet, FoodType } from "@/lib/types";
 
 // Minimal multi-tier pack for tier-unlock tests
-const TIER1_PET: StaticPet = { name: "Sloth", sprite: "", tier: 1, baseAttack: 1, baseHealth: 1, isToken: false, ability: null, description: "" };
-const TIER2_PET: StaticPet = { name: "Tiger", sprite: "", tier: 2, baseAttack: 4, baseHealth: 3, isToken: false, ability: null, description: "" };
+const TIER1_PET: StaticPet = { name: "Sloth", sprite: "", tier: 1, baseAttack: 1, baseHealth: 1, isToken: false, abilities: new Map(), description: "" };
+const TIER2_PET: StaticPet = { name: "Tiger", sprite: "", tier: 2, baseAttack: 4, baseHealth: 3, isToken: false, abilities: new Map(), description: "" };
 const TIER1_FOOD: FoodType = { name: "Apple", sprite: "", tier: 1, isToken: false, effect: { attack: 1, health: 1 }, description: "" };
 const TIER2_FOOD: FoodType = { name: "Salad", sprite: "", tier: 2, isToken: false, effect: { health: 2 }, description: "" };
 const MULTI_TIER_PETS = [TIER1_PET, TIER2_PET];
@@ -190,7 +190,7 @@ describe("shop pet tooltip text", () => {
       baseAttack: 1,
       baseHealth: 1,
       isToken: false,
-      ability: null,
+      abilities: new Map(),
       description: (level: number) => `Sell: Give shop pets +${level} health.\n\nSimilar targeting to Armadillo.`,
     };
 

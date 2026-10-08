@@ -1,4 +1,5 @@
 import { StaticPet, Trigger } from "@/lib/types";
+import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Rooster: Readonly<StaticPet> = {
   name: "Rooster",
@@ -7,7 +8,7 @@ export const Rooster: Readonly<StaticPet> = {
   baseAttack: 6,
   baseHealth: 4,
   isToken: false,
-  ability: {
+  abilities: createAbilityMap({
     trigger: Trigger.faint,
     fn: (ctx) => {
       const attack = Math.floor(ctx.self.attack * 0.5);
@@ -26,7 +27,7 @@ export const Rooster: Readonly<StaticPet> = {
         );
       }
     },
-  },
+  }),
   description: (level: number) =>
     `Faint: Summon ${level === 1 ? "one" : level} ${level === 1 ? "Chick" : "Chicks"} with 1 health and 50% attack of this.`,
 };

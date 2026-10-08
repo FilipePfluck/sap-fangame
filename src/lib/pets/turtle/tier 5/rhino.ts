@@ -1,5 +1,6 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { livingPets } from "@/lib/utils/combat";
+import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Rhino: Readonly<StaticPet> = {
   name: "Rhino",
@@ -8,7 +9,7 @@ export const Rhino: Readonly<StaticPet> = {
   baseAttack: 6,
   baseHealth: 7,
   isToken: false,
-  ability: {
+  abilities: createAbilityMap({
     trigger: Trigger.knock_out,
     fn: (ctx) => {
       const target = livingPets(ctx.enemyTeam)[0];
@@ -16,7 +17,7 @@ export const Rhino: Readonly<StaticPet> = {
       const isTier1 = ctx.petRegistry[target.type]?.tier === 1;
       ctx.dealAbilityDamage(target, (isTier1 ? 8 : 4) * ctx.level);
     },
-  },
+  }),
   description:
     (level: number) => `Knock out: Deal ${4 * level} damage to the first enemy. Double against Tier 1 Pets.`,
 };

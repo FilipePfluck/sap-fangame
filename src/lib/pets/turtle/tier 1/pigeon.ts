@@ -1,5 +1,6 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { numberToText } from "@/lib/utils/flavor-text";
+import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Pigeon: Readonly<StaticPet> = {
   name: "Pigeon",
@@ -8,13 +9,13 @@ export const Pigeon: Readonly<StaticPet> = {
   baseAttack: 3,
   baseHealth: 2,
   isToken: false,
-  ability: {
+  abilities: createAbilityMap({
     trigger: Trigger.sell,
     fn: (ctx) => {
       for (let i = 0; i < ctx.level; i++) {
         ctx.addShopFood("Bread Crumbs");
       }
     },
-  },
+  }),
   description: (level: number) => `Sell: Stock ${numberToText[level]} free Bread Crumbs.`
 };

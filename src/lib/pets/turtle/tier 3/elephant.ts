@@ -1,4 +1,5 @@
 import { StaticPet, Trigger } from "@/lib/types";
+import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Elephant: Readonly<StaticPet> = {
   name: "Elephant",
@@ -7,7 +8,7 @@ export const Elephant: Readonly<StaticPet> = {
   baseAttack: 3,
   baseHealth: 7,
   isToken: false,
-  ability: {
+  abilities: createAbilityMap({
     trigger: Trigger.after_attack,
     fn: (ctx) => {
       for (let i = 0; i < ctx.level; i++) {
@@ -18,7 +19,7 @@ export const Elephant: Readonly<StaticPet> = {
         ctx.dealAbilityDamage(target, 1);
       }
     },
-  },
+  }),
   description: (level: number) =>
     level > 1
       ? `After attack: Deal 1 damage to the nearest friend behind. Triggers ${level} times.`

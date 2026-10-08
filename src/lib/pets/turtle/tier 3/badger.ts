@@ -1,4 +1,5 @@
 import { StaticPet, Trigger } from "@/lib/types";
+import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Badger: Readonly<StaticPet> = {
   name: "Badger",
@@ -7,7 +8,7 @@ export const Badger: Readonly<StaticPet> = {
   baseAttack: 6,
   baseHealth: 3,
   isToken: false,
-  ability: {
+  abilities: createAbilityMap({
     trigger: Trigger.faint,
     fn: (ctx) => {
       const damage = Math.floor(ctx.self.attack * 0.5 * ctx.level);
@@ -21,7 +22,7 @@ export const Badger: Readonly<StaticPet> = {
       if (aheadTarget) ctx.dealAbilityDamage(aheadTarget, damage);
       if (behindTarget) ctx.dealAbilityDamage(behindTarget, damage);
     },
-  },
+  }),
   description: (level) =>
     `Faint: Deal ${level * 50}% attack damage to adjacent pets.`,
 };

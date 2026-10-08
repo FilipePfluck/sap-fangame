@@ -200,8 +200,8 @@ describe("Pet Abilities", () => {
       const deadFriend = pet("Sloth", 1, 0);
       const overkilledFriend = pet("Sloth", 1, -3);
       const livingFriend = pet("Sloth", 1, 10);
-      const ability = PET_REGISTRY.Armadillo.ability;
-      if (ability?.trigger !== Trigger.start_of_battle) {
+      const ability = PET_REGISTRY.Armadillo.abilities.get(Trigger.start_of_battle);
+      if (!ability || ability.trigger !== Trigger.start_of_battle) {
         throw new Error("Expected Armadillo start-of-battle ability");
       }
 
@@ -226,8 +226,9 @@ describe("Pet Abilities", () => {
       const livingFriend = pet("Sloth", 1, 10);
       const deadFriend = pet("Sloth", 1, 0);
       const enemy = pet("Sloth", 1, 10);
-      const ability = PET_REGISTRY.Hedgehog.ability;
-      if (ability?.trigger !== Trigger.faint) throw new Error("Expected faint ability");
+      const ability = PET_REGISTRY.Hedgehog.abilities.get(Trigger.faint);
+      if (!ability || ability.trigger !== Trigger.faint)
+        throw new Error("Expected faint ability");
 
       ability.fn(battleContext(hedgehog, [hedgehog, livingFriend, deadFriend], [enemy]));
 
@@ -245,8 +246,8 @@ describe("Pet Abilities", () => {
     ])("gives the two nearest friends behind +$level/+$level at level $level", ({ level, expected }) => {
       const flamingo = petLevel("Flamingo", 3, 0, level);
       const friends = [pet("Sloth", 1, 5), pet("Sloth", 1, 5), pet("Sloth", 1, 5), pet("Sloth", 1, 5)];
-      const ability = PET_REGISTRY.Flamingo.ability;
-      if (ability?.trigger !== Trigger.faint) throw new Error("Expected faint ability");
+      const ability = PET_REGISTRY.Flamingo.abilities.get(Trigger.faint);
+      if (!ability || ability.trigger !== Trigger.faint) throw new Error("Expected faint ability");
 
       ability.fn(battleContext(flamingo, [flamingo, ...friends], []));
 
@@ -260,8 +261,8 @@ describe("Pet Abilities", () => {
       const secondFriend = pet("Sloth", 1, 5);
       const thirdFriend = pet("Sloth", 1, 5);
       const team = [flamingo, deadFriend, firstFriend, secondFriend, thirdFriend];
-      const ability = PET_REGISTRY.Flamingo.ability;
-      if (ability?.trigger !== Trigger.faint) throw new Error("Expected faint ability");
+      const ability = PET_REGISTRY.Flamingo.abilities.get(Trigger.faint);
+      if (!ability || ability.trigger !== Trigger.faint) throw new Error("Expected faint ability");
 
       ability.fn(battleContext(flamingo, team, []));
 
@@ -291,8 +292,8 @@ describe("Pet Abilities", () => {
       const camel = pet("Camel", 3, 3);
       const deadFriend = pet("Sloth", 1, 0);
       const livingFriend = pet("Sloth", 1, 10);
-      const ability = PET_REGISTRY.Camel.ability;
-      if (ability?.trigger !== Trigger.hurt) throw new Error("Expected hurt ability");
+      const ability = PET_REGISTRY.Camel.abilities.get(Trigger.hurt);
+      if (!ability || ability.trigger !== Trigger.hurt) throw new Error("Expected hurt ability");
 
       ability.fn(battleContext(camel, [camel, deadFriend, livingFriend], []));
 
@@ -358,8 +359,8 @@ describe("Pet Abilities", () => {
     ])("gives Melon to the $level nearest friends behind at level $level", ({ level, perks }) => {
       const turtle = petLevel("Turtle", 2, 0, level);
       const friends = [pet("Sloth", 1, 5), pet("Sloth", 1, 5), pet("Sloth", 1, 5), pet("Sloth", 1, 5)];
-      const ability = PET_REGISTRY.Turtle.ability;
-      if (ability?.trigger !== Trigger.faint) throw new Error("Expected faint ability");
+      const ability = PET_REGISTRY.Turtle.abilities.get(Trigger.faint);
+      if (!ability || ability.trigger !== Trigger.faint) throw new Error("Expected faint ability");
 
       ability.fn(battleContext(turtle, [turtle, ...friends], []));
 
@@ -371,8 +372,8 @@ describe("Pet Abilities", () => {
       const deadFriend = pet("Sloth", 1, 0);
       const firstFriend = pet("Sloth", 1, 5);
       const secondFriend = pet("Sloth", 1, 5);
-      const ability = PET_REGISTRY.Turtle.ability;
-      if (ability?.trigger !== Trigger.faint) throw new Error("Expected faint ability");
+      const ability = PET_REGISTRY.Turtle.abilities.get(Trigger.faint);
+      if (!ability || ability.trigger !== Trigger.faint) throw new Error("Expected faint ability");
 
       ability.fn(battleContext(turtle, [turtle, deadFriend, firstFriend, secondFriend], []));
 
@@ -422,8 +423,8 @@ describe("Pet Abilities", () => {
       const mammoth = pet("Mammoth", 4, 0);
       const deadFriend = pet("Sloth", 1, 0);
       const livingFriend = pet("Sloth", 1, 10);
-      const ability = PET_REGISTRY.Mammoth.ability;
-      if (ability?.trigger !== Trigger.faint) throw new Error("Expected faint ability");
+      const ability = PET_REGISTRY.Mammoth.abilities.get(Trigger.faint);
+      if (!ability || ability.trigger !== Trigger.faint) throw new Error("Expected faint ability");
 
       ability.fn(battleContext(mammoth, [mammoth, deadFriend, livingFriend], []));
 
@@ -615,8 +616,8 @@ describe("Pet Abilities", () => {
       const deadEnemy = pet("Sloth", 1, 0);
       const livingEnemy = pet("Sloth", 1, 10);
       const mosquito = pet("Mosquito", 2, 2);
-      const ability = PET_REGISTRY.Mosquito.ability;
-      if (ability?.trigger !== Trigger.start_of_battle) throw new Error("Expected Mosquito start-of-battle ability");
+      const ability = PET_REGISTRY.Mosquito.abilities.get(Trigger.start_of_battle);
+      if (!ability || ability.trigger !== Trigger.start_of_battle) throw new Error("Expected Mosquito start-of-battle ability");
 
       ability.fn(battleContext(mosquito, [mosquito], [deadEnemy, livingEnemy]));
 
@@ -629,8 +630,8 @@ describe("Pet Abilities", () => {
       const deadFriend = pet("Sloth", 1, 0);
       const livingFriend = pet("Sloth", 1, 10);
       const team = [elephant, deadFriend, livingFriend];
-      const ability = PET_REGISTRY.Elephant.ability;
-      if (ability?.trigger !== Trigger.after_attack) throw new Error("Expected Elephant after-attack ability");
+      const ability = PET_REGISTRY.Elephant.abilities.get(Trigger.after_attack);
+      if (!ability || ability.trigger !== Trigger.after_attack) throw new Error("Expected Elephant after-attack ability");
 
       ability.fn(battleContext(elephant, team, []));
 
@@ -835,8 +836,8 @@ describe("Pet Abilities", () => {
     it("hits the front enemy when it is at the front of its team", () => {
       const badger = pet("Badger", 6, 0);
       const enemy = pet("Sloth", 1, 10);
-      const ability = PET_REGISTRY.Badger.ability;
-      if (ability?.trigger !== Trigger.faint) throw new Error("Expected Badger faint ability");
+      const ability = PET_REGISTRY.Badger.abilities.get(Trigger.faint);
+      if (!ability || ability.trigger !== Trigger.faint) throw new Error("Expected Badger faint ability");
 
       ability.fn(battleContext(badger, [badger], [enemy]));
 
@@ -851,8 +852,8 @@ describe("Pet Abilities", () => {
       const deadEnemyFront = pet("Sloth", 1, 0);
       const livingEnemyBehind = pet("Sloth", 1, 10);
       const team = [deadFriendAhead, badger, deadFriendBehind, livingFriendBehind];
-      const ability = PET_REGISTRY.Badger.ability;
-      if (ability?.trigger !== Trigger.faint) throw new Error("Expected Badger faint ability");
+      const ability = PET_REGISTRY.Badger.abilities.get(Trigger.faint);
+      if (!ability || ability.trigger !== Trigger.faint) throw new Error("Expected Badger faint ability");
 
       ability.fn(battleContext(badger, team, [deadEnemyFront, livingEnemyBehind]));
 
@@ -1443,8 +1444,8 @@ describe("Engine Behavior", () => {
     const turtle = pet("Turtle", 2, 0);
     const melonFriend = pet("Sloth", 1, 5, MelonPerk);
     const plainFriend = pet("Sloth", 1, 5);
-    const ability = PET_REGISTRY.Turtle.ability;
-    if (ability?.trigger !== Trigger.faint) throw new Error("Expected faint ability");
+    const ability = PET_REGISTRY.Turtle.abilities.get(Trigger.faint);
+    if (!ability || ability.trigger !== Trigger.faint) throw new Error("Expected faint ability");
 
     ability.fn(battleContext(turtle, [turtle, melonFriend, plainFriend], []));
 

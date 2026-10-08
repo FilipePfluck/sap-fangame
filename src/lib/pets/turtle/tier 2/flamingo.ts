@@ -1,4 +1,5 @@
 import { StaticPet, Trigger } from "@/lib/types";
+import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Flamingo: Readonly<StaticPet> = {
   name: "Flamingo",
@@ -7,7 +8,7 @@ export const Flamingo: Readonly<StaticPet> = {
   baseAttack: 3,
   baseHealth: 2,
   isToken: false,
-  ability: {
+  abilities: createAbilityMap({
     trigger: Trigger.faint,
     fn: (ctx) => {
       const friends = ctx.team
@@ -19,7 +20,7 @@ export const Flamingo: Readonly<StaticPet> = {
         friend.health += ctx.level;
       }
     },
-  },
+  }),
   description: (level: number) =>
     `Faint: Give the two nearest friends behind +${level} attack and +${level} health.`,
 };

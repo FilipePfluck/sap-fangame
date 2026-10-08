@@ -1,4 +1,5 @@
 import { StaticPet, Trigger } from "@/lib/types";
+import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Sheep: Readonly<StaticPet> = {
   name: "Sheep",
@@ -7,7 +8,7 @@ export const Sheep: Readonly<StaticPet> = {
   baseAttack: 2,
   baseHealth: 2,
   isToken: false,
-  ability: {
+  abilities: createAbilityMap({
     trigger: Trigger.faint,
     fn: (ctx) => {
       for (let i = 0; i < 2; i++) {
@@ -24,7 +25,7 @@ export const Sheep: Readonly<StaticPet> = {
         );
       }
     },
-  },
+  }),
   description: (level: number) =>
     `Faint: Summon two ${2 * level}/${2 * level} Rams.`,
 };
