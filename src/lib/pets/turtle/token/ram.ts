@@ -7,6 +7,6 @@ export const Ram: Readonly<StaticPet> = {
   baseAttack: 2,
   baseHealth: 2,
   isToken: true,
-  ability: null,
+  abilities: new Map(),
   description: "No ability.",
 };

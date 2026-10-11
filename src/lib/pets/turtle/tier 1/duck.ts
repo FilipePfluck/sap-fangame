@@ -1,4 +1,5 @@
 import { StaticPet, Trigger } from "@/lib/types";
+import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Duck: Readonly<StaticPet> = {
   name: "Duck",
@@ -7,13 +8,13 @@ export const Duck: Readonly<StaticPet> = {
   baseAttack: 2,
   baseHealth: 2,
   isToken: false,
-  ability: {
+  abilities: createAbilityMap({
     trigger: Trigger.sell,
     fn: (ctx) => {
       for (const shopPet of ctx.shop.shopPets) {
         shopPet.tempHealthBonus = (shopPet.tempHealthBonus ?? 0) + ctx.level;
       }
     },
-  },
+  }),
   description: (level: number) => `Sell: Give shop pets +${level} health.`,
 };

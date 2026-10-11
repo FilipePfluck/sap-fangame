@@ -1,6 +1,7 @@
 import { PetInstance, StaticPet, Trigger } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 import { numberToText } from "@/lib/utils/flavor-text";
+import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Otter: Readonly<StaticPet> = {
   name: "Otter",
@@ -9,7 +10,7 @@ export const Otter: Readonly<StaticPet> = {
   baseAttack: 1,
   baseHealth: 3,
   isToken: false,
-  ability: {
+  abilities: createAbilityMap({
     trigger: Trigger.buy,
     fn: (ctx) => {
       const friends: { pet: PetInstance; idx: number }[] = [];
@@ -25,6 +26,6 @@ export const Otter: Readonly<StaticPet> = {
         target.pet.health += 1;
       }
     },
-  },
+  }),
   description: (level: number) => `Buy: Give ${numberToText[level]} random friend +1 health.`,
 };

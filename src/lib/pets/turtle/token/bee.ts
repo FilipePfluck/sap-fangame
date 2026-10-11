@@ -7,6 +7,6 @@ export const Bee: Readonly<StaticPet> = {
   baseAttack: 1,
   baseHealth: 1,
   isToken: true,
-  ability: null,
+  abilities: new Map(),
   description: "No special ability.",
 };

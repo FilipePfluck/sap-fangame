@@ -1,5 +1,6 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
+import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Seal: Readonly<StaticPet> = {
   name: "Seal",
@@ -8,7 +9,7 @@ export const Seal: Readonly<StaticPet> = {
   baseAttack: 3,
   baseHealth: 8,
   isToken: false,
-  ability: {
+  abilities: createAbilityMap({
     trigger: Trigger.friend_ate_food,
     fn: (ctx) => {
       if (ctx.self !== ctx.fedPet) return;
@@ -19,7 +20,7 @@ export const Seal: Readonly<StaticPet> = {
         friend.attack += ctx.level;
       }
     },
-  },
+  }),
   description: (level: number) =>
     `Eats food: Give three random friends +${level} attack.`,
 };
