@@ -1,5 +1,10 @@
 import { StaticPet, Trigger } from "@/lib/types";
-import { createAbilityMap } from "@/lib/pets/ability";
+import {
+  createAbilityMap,
+  tryIncrementTriggerCount,
+} from "@/lib/pets/ability";
+
+const TRIGGER_LIMIT = 3;
 
 export const Hippo: Readonly<StaticPet> = {
   name: "Hippo",
@@ -11,7 +16,11 @@ export const Hippo: Readonly<StaticPet> = {
   abilities: createAbilityMap({
     trigger: Trigger.knock_out,
     fn: (ctx) => {
-      if (ctx.triggerCount > 3) return;
+      if (
+        !tryIncrementTriggerCount(ctx.self, Trigger.knock_out, TRIGGER_LIMIT)
+      ) {
+        return;
+      }
       ctx.self.attack += 3 * ctx.level;
       ctx.self.health += 3 * ctx.level;
     },

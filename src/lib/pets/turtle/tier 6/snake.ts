@@ -1,7 +1,12 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { pickRandom } from "@/lib/utils/random";
 import { livingPets } from "@/lib/utils/combat";
-import { createAbilityMap } from "@/lib/pets/ability";
+import {
+  createAbilityMap,
+  tryIncrementTriggerCount,
+} from "@/lib/pets/ability";
+
+const TRIGGER_LIMIT = 5;
 
 export const Snake: Readonly<StaticPet> = {
   name: "Snake",
@@ -13,7 +18,15 @@ export const Snake: Readonly<StaticPet> = {
   abilities: createAbilityMap({
     trigger: Trigger.friend_ahead_attacks,
     fn: (ctx) => {
-      if (ctx.triggerCount > 5) return;
+      if (
+        !tryIncrementTriggerCount(
+          ctx.self,
+          Trigger.friend_ahead_attacks,
+          TRIGGER_LIMIT
+        )
+      ) {
+        return;
+      }
       const enemy = pickRandom(livingPets(ctx.enemyTeam));
       if (enemy) ctx.dealAbilityDamage(enemy, 5 * ctx.level);
     },

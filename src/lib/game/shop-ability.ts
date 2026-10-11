@@ -229,7 +229,6 @@ export function fireShopFaint(
     enemyTeam: [],
     level: self.level,
     summon: (newPet) => summonRequests.push(newPet),
-    triggerCount: 1,
     petRegistry,
     friendAteFood: (fedPet) =>
       triggerFriendAteFood(compacted, fedPet, petRegistry),
@@ -302,7 +301,6 @@ export function fireShopFriendSummoned(
       level: pet.level,
       summon: () => {},
       summonedIndex,
-      triggerCount: 1,
       petRegistry,
       dealAbilityDamage,
       grantExperience,

@@ -59,7 +59,6 @@ export type BattleAbilityContext = {
   level: number;
   summon: (pet: PetInstance, afterIndex: number) => void;
   summonedIndex?: number;
-  triggerCount: number;
   petRegistry: Record<string, StaticPet>;
   dealAbilityDamage: (target: PetInstance, damage: number) => number;
   grantExperience: (target: PetInstance, amount: number) => void;

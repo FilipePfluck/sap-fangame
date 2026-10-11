@@ -43,7 +43,6 @@ function battleContext(
     enemyTeam,
     level: self.level,
     summon: () => {},
-    triggerCount: 1,
     petRegistry: PET_REGISTRY,
     dealAbilityDamage: (target, damage) => {
       if (target.health <= 0) return 0;
