@@ -9,7 +9,6 @@ import { orderByAttack, pickN } from "@/lib/utils/random";
 import { grantExperience } from "@/lib/game/merge";
 import { MAX_PET_EXPERIENCE } from "@/lib/game/rules";
 import { Board } from "@/lib/game/board";
-import { getAbility } from "@/lib/pets/ability";
 
 // Whether the player has to pick a pet to feed this food to.
 export function needsTarget(food: FoodType): boolean {
@@ -46,28 +45,20 @@ function applyStandardEffect(food: FoodType, pet: PetInstance): PetInstance {
     ...pet,
     attack: pet.attack + attackBonus,
     health: pet.health + healthBonus,
-    perk: food.perk ? { ...food.perk } : pet.perk,
+    perk: food.perk ? food.perk : pet.perk,
   };
   if (food.effect.temporary) {
-    if (attackBonus)
-      updatedPet.tempAttack = (pet.tempAttack ?? 0) + attackBonus;
-    if (healthBonus)
-      updatedPet.tempHealth = (pet.tempHealth ?? 0) + healthBonus;
+    if (attackBonus) updatedPet.tempAttack = (pet.tempAttack ?? 0) + attackBonus;
+    if (healthBonus) updatedPet.tempHealth = (pet.tempHealth ?? 0) + healthBonus;
   }
-  if ("experience" in food.effect)
-    grantExperience(updatedPet, food.effect.experience ?? 0);
+  if ("experience" in food.effect) grantExperience(updatedPet, food.effect.experience ?? 0);
   return updatedPet;
 }
 
 // Board positions the food acts on: the chosen one, or a random selection of
 // occupied positions (all of them if there are fewer than asked for).
-function pickTargets(
-  food: FoodType,
-  board: Board,
-  boardPosition: number | undefined
-): number[] {
-  if (!food.targeting)
-    return boardPosition === undefined ? [] : [boardPosition];
+function pickTargets(food: FoodType, board: Board, boardPosition: number | undefined): number[] {
+  if (!food.targeting) return boardPosition === undefined ? [] : [boardPosition];
   const occupied = board.pets.flatMap((pet, i) => (pet ? [i] : []));
   return pickN(occupied, food.targeting.random);
 }
@@ -75,8 +66,7 @@ function pickTargets(
 export function triggerFriendAteFood(
   board: ApiBoard,
   fedPet: PetInstance,
-  petRegistry: Record<string, StaticPet>,
-  foodGroup?: FoodType["foodGroup"]
+  petRegistry: Record<string, StaticPet>
 ): void {
   if (fedPet.health <= 0) return;
   // TODO - Wrap board in a class with board.friends() / board.friendly() helpers
@@ -84,19 +74,17 @@ export function triggerFriendAteFood(
     (pet): pet is PetInstance => pet !== null && pet.health > 0
   );
   const listeners = friends.flatMap((pet) => {
-    const ability = getAbility(petRegistry[pet.type], Trigger.friend_ate_food);
-    return ability ? [{ pet, ability }] : [];
+    const ability = petRegistry[pet.type]?.ability;
+    return ability?.trigger === Trigger.friend_ate_food
+      ? [{ pet, ability }]
+      : [];
   });
-  for (const { pet, ability } of orderByAttack(
-    listeners,
-    (job) => job.pet.attack
-  )) {
+  for (const { pet, ability } of orderByAttack(listeners, (job) => job.pet.attack)) {
     ability.fn({
       self: pet,
       fedPet,
       friends,
       level: pet.level,
-      foodGroup,
     });
   }
 }
@@ -116,7 +104,7 @@ export function applyFoodEffect(
 
     const fedPet = newBoard[boardPosition];
     if (fedPet && !food.skipsFriendAteFood) {
-      triggerFriendAteFood(newBoard, fedPet, petRegistry, food.foodGroup);
+      triggerFriendAteFood(newBoard, fedPet, petRegistry);
     }
     return food.applyEffect({ board: newBoard, boardPosition, petRegistry });
   }
@@ -128,7 +116,7 @@ export function applyFoodEffect(
       const fedPet = applyStandardEffect(food, pet);
       newBoard[i] = fedPet;
       if (!food.skipsFriendAteFood) {
-        triggerFriendAteFood(newBoard, fedPet, petRegistry, food.foodGroup);
+        triggerFriendAteFood(newBoard, fedPet, petRegistry);
       }
     }
   }

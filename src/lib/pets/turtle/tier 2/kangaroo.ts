@@ -1,5 +1,4 @@
 import { StaticPet, Trigger } from "@/lib/types";
-import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Kangaroo: Readonly<StaticPet> = {
   name: "Kangaroo",
@@ -8,13 +7,13 @@ export const Kangaroo: Readonly<StaticPet> = {
   baseAttack: 2,
   baseHealth: 2,
   isToken: false,
-  abilities: createAbilityMap({
+  ability: {
     trigger: Trigger.friend_ahead_attacks,
     fn: (ctx) => {
       ctx.self.attack += ctx.level;
       ctx.self.health += ctx.level;
     },
-  }),
+  },
   description: (level: number) =>
     `Friend ahead attacks: Gain +${level} attack and +${level} health.`,
 };

@@ -1,5 +1,4 @@
 import { StaticPet, Trigger } from "@/lib/types";
-import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Snail: Readonly<StaticPet> = {
   name: "Snail",
@@ -8,7 +7,7 @@ export const Snail: Readonly<StaticPet> = {
   baseAttack: 2,
   baseHealth: 3,
   isToken: false,
-  abilities: createAbilityMap({
+  ability: {
     trigger: Trigger.end_turn,
     fn: (ctx) => {
       if (ctx.lastBattleResult !== "LOSS") return;
@@ -21,7 +20,7 @@ export const Snail: Readonly<StaticPet> = {
         }
       }
     },
-  }),
+  },
   description: (level: number) =>
     `End turn: If you lost last battle, give the three nearest friends ahead +${level} attack.`,
 };

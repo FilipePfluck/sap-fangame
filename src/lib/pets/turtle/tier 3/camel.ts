@@ -1,5 +1,4 @@
 import { StaticPet, Trigger } from "@/lib/types";
-import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Camel: Readonly<StaticPet> = {
   name: "Camel",
@@ -8,7 +7,7 @@ export const Camel: Readonly<StaticPet> = {
   baseAttack: 3,
   baseHealth: 3,
   isToken: false,
-  abilities: createAbilityMap({
+  ability: {
     trigger: Trigger.hurt,
     fn: (ctx) => {
       const friend = ctx.team
@@ -18,7 +17,7 @@ export const Camel: Readonly<StaticPet> = {
       friend.attack += ctx.level;
       friend.health += 2 * ctx.level;
     },
-  }),
+  },
   description: (level: number) =>
     `Hurt: Give the nearest friend behind +${level} attack and +${2 * level} health.`,
 };

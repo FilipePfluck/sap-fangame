@@ -1,5 +1,4 @@
 import { StaticPet, Trigger } from "@/lib/types";
-import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Turkey: Readonly<StaticPet> = {
   name: "Turkey",
@@ -8,7 +7,7 @@ export const Turkey: Readonly<StaticPet> = {
   baseAttack: 3,
   baseHealth: 4,
   isToken: false,
-  abilities: createAbilityMap({
+  ability: {
     trigger: Trigger.friend_summoned,
     fn: (ctx) => {
       const index = ctx.summonedIndex;
@@ -18,7 +17,7 @@ export const Turkey: Readonly<StaticPet> = {
       summoned.attack += 3 * ctx.level;
       summoned.health += ctx.level;
     },
-  }),
+  },
   description: (level: number) =>
     `Friend summoned: Give it +${3 * level} attack and +${level} health.`,
 };

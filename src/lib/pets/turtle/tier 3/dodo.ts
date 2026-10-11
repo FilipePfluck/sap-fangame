@@ -1,5 +1,4 @@
 import { StaticPet, Trigger } from "@/lib/types";
-import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Dodo: Readonly<StaticPet> = {
   name: "Dodo",
@@ -8,7 +7,7 @@ export const Dodo: Readonly<StaticPet> = {
   baseAttack: 4,
   baseHealth: 2,
   isToken: false,
-  abilities: createAbilityMap({
+  ability: {
     trigger: Trigger.start_of_battle,
     fn: (ctx) => {
       const friend = ctx.team
@@ -18,7 +17,7 @@ export const Dodo: Readonly<StaticPet> = {
       if (!friend) return;
       friend.attack += Math.floor(ctx.self.attack * 0.5 * ctx.level);
     },
-  }),
+  },
   description: (level: number) =>
     `Start of battle: Give ${level * 50}% of attack to nearest friend ahead.`,
 };
