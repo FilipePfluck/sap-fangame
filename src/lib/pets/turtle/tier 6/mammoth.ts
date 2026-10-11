@@ -1,7 +1,7 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { livingPets } from "@/lib/utils/combat";
 
-export const Mammoth: StaticPet = {
+export const Mammoth: Readonly<StaticPet> = {
   name: "Mammoth",
   sprite: "/sap/Mammoth.png",
   tier: 6,

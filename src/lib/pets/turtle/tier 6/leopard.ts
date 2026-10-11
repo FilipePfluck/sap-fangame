@@ -3,7 +3,7 @@ import { pickN } from "@/lib/utils/random";
 import { livingPets } from "@/lib/utils/combat";
 import { numberToText } from "@/lib/utils/flavor-text";
 
-export const Leopard: StaticPet = {
+export const Leopard: Readonly<StaticPet> = {
   name: "Leopard",
   sprite: "/sap/leopard.webp",
   tier: 6,

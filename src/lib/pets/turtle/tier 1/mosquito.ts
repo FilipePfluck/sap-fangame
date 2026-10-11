@@ -3,7 +3,7 @@ import { pickN } from "@/lib/utils/random";
 import { livingPets } from "@/lib/utils/combat";
 import { numberToText } from "@/lib/utils/flavor-text";
 
-export const Mosquito: StaticPet = {
+export const Mosquito: Readonly<StaticPet> = {
   name: "Mosquito",
   sprite: "/sap/mosquito.webp",
   tier: 1,

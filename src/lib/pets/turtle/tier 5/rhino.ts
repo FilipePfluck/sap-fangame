@@ -1,7 +1,7 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { livingPets } from "@/lib/utils/combat";
 
-export const Rhino: StaticPet = {
+export const Rhino: Readonly<StaticPet> = {
   name: "Rhino",
   sprite: "/sap/rhino.webp",
   tier: 5,

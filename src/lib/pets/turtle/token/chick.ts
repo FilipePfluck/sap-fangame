@@ -1,6 +1,6 @@
 import { StaticPet } from "@/lib/types";
 
-export const Chick: StaticPet = {
+export const Chick: Readonly<StaticPet> = {
   name: "Chick",
   sprite: "/sap/Chick.webp",
   tier: 5,

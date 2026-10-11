@@ -2,7 +2,7 @@ import { StaticPet, Trigger } from "@/lib/types";
 import { MelonPerk } from "@/lib/perks/melon";
 
 
-export const Ox: StaticPet = {
+export const Ox: Readonly<StaticPet> = {
   name: "Ox",
   sprite: "/sap/Ox.webp",
   tier: 3,

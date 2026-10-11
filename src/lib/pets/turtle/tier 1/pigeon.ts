@@ -1,7 +1,7 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { numberToText } from "@/lib/utils/flavor-text";
 
-export const Pigeon: StaticPet = {
+export const Pigeon: Readonly<StaticPet> = {
   name: "Pigeon",
   sprite: "/sap/pigeon.webp",
   tier: 1,

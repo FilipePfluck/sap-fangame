@@ -2,7 +2,7 @@ import { StaticPet, Trigger } from "@/lib/types";
 import { removeHealth } from "@/lib/utils/combat";
 import { livingPets } from "@/lib/utils/combat";
 
-export const Skunk: StaticPet = {
+export const Skunk: Readonly<StaticPet> = {
   name: "Skunk",
   sprite: "/sap/skunk.webp",
   tier: 4,

@@ -132,7 +132,7 @@ export async function POST(
   currentShop = friendBoughtResult.shop;
   extraGold += friendBoughtResult.goldDelta;
 
-  if (response.newLevel) {
+  if (response.levelUpReward) {
     // TODO: Update pet abilities to fire based on previous level
     const levelUpResult = fireShopAbility(
       Trigger.level_up,
@@ -145,9 +145,7 @@ export async function POST(
     newBoardData = levelUpResult.board;
     currentShop = levelUpResult.shop;
     extraGold += levelUpResult.goldDelta;
-  }
 
-  if (response.levelUpReward) {
     currentShop = addLevelUpReward(
       currentShop,
       state.turn.turnNumber,

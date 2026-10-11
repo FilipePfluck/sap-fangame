@@ -1,6 +1,6 @@
 import type { StaticPet } from "@/lib/types";
 
-export const Tiger: StaticPet = {
+export const Tiger: Readonly<StaticPet> = {
   name: "Tiger",
   sprite: "/sap/tiger.webp",
   tier: 6,

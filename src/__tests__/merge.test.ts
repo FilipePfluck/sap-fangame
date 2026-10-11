@@ -1,9 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { mergePets, mergeError, computeLevel } from "@/lib/game/merge";
+import { mergePets, mergeError } from "@/lib/game/merge";
 import { createPet } from "@/lib/game/pet";
 import { PET_REGISTRY } from "@/lib/pets";
 import type { PetData } from "@/lib/types";
 import { pet } from "@/__tests__/helpers";
+import { computeLevel } from "@/lib/game/board";
 
 const sloth = (xp: number): PetData => ({
   type: "Sloth",

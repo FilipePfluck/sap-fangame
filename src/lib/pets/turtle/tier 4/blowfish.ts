@@ -2,7 +2,7 @@ import { StaticPet, Trigger } from "@/lib/types";
 import { livingPets } from "@/lib/utils/combat";
 import { pickRandom } from "@/lib/utils/random";
 
-export const Blowfish: StaticPet = {
+export const Blowfish: Readonly<StaticPet> = {
   name: "Blowfish",
   sprite: "/sap/Blowfish.png",
   tier: 4,

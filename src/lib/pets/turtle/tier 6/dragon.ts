@@ -2,7 +2,7 @@ import { StaticPet, Trigger } from "@/lib/types";
 
 const TRIGGER_LIMIT = 4;
 
-export const Dragon: StaticPet = {
+export const Dragon: Readonly<StaticPet> = {
   name: "Dragon",
   sprite: "/sap/Dragon.png",
   tier: 6,

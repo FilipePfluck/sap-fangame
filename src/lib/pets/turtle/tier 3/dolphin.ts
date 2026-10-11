@@ -1,7 +1,7 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { livingPets } from "@/lib/utils/combat";
 
-export const Dolphin: StaticPet = {
+export const Dolphin: Readonly<StaticPet> = {
   name: "Dolphin",
   sprite: "/sap/dolphin.webp",
   tier: 3,
