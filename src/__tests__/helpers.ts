@@ -9,7 +9,7 @@ export function abilityPet(name: string, ability: Ability, tier = 1): StaticPet 
     baseAttack: 1,
     baseHealth: 1,
     isToken: false,
-    abilities: new Map([[ability.trigger, ability]]),
+    ability,
     description: "",
   };
 }

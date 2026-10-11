@@ -1,5 +1,4 @@
 import { StaticPet, Trigger } from "@/lib/types";
-import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Monkey: Readonly<StaticPet> = {
   name: "Monkey",
@@ -8,7 +7,7 @@ export const Monkey: Readonly<StaticPet> = {
   baseAttack: 1,
   baseHealth: 2,
   isToken: false,
-  abilities: createAbilityMap({
+  ability: {
     trigger: Trigger.end_turn,
     fn: (ctx) => {
       const frontFriend =
@@ -16,7 +15,7 @@ export const Monkey: Readonly<StaticPet> = {
       frontFriend.attack += 2 * ctx.level;
       frontFriend.health += 2 * ctx.level;
     },
-  }),
+  },
   description: (level: number) =>
     `End turn: Give front-most friendly pet +${2 * level} attack and +${2 * level} health.`,
 };

@@ -1,6 +1,4 @@
 import { StaticPet, Trigger } from "@/lib/types";
-import { createAbilityMap } from "@/lib/pets/ability";
-import { BattleActions } from "@/lib/game/ability-actions";
 
 export const Badger: Readonly<StaticPet> = {
   name: "Badger",
@@ -9,10 +7,9 @@ export const Badger: Readonly<StaticPet> = {
   baseAttack: 6,
   baseHealth: 3,
   isToken: false,
-  abilities: createAbilityMap({
+  ability: {
     trigger: Trigger.faint,
     fn: (ctx) => {
-      const actions = new BattleActions(ctx);
       const damage = Math.floor(ctx.self.attack * 0.5 * ctx.level);
       const aheadTarget = [
         ...ctx.team.slice(0, ctx.selfIndex).reverse(),
@@ -21,10 +18,10 @@ export const Badger: Readonly<StaticPet> = {
       const behindTarget = ctx.team
         .slice(ctx.selfIndex + 1)
         .find((target) => target.health > 0);
-      if (aheadTarget) actions.dealAbilityDamage(aheadTarget, damage);
-      if (behindTarget) actions.dealAbilityDamage(behindTarget, damage);
+      if (aheadTarget) ctx.dealAbilityDamage(aheadTarget, damage);
+      if (behindTarget) ctx.dealAbilityDamage(behindTarget, damage);
     },
-  }),
+  },
   description: (level) =>
     `Faint: Deal ${level * 50}% attack damage to adjacent pets.`,
 };
