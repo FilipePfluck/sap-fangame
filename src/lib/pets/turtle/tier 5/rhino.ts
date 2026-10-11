@@ -1,6 +1,7 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { livingPets } from "@/lib/utils/combat";
 import { createAbilityMap } from "@/lib/pets/ability";
+import { BattleActions } from "@/lib/game/ability-actions";
 
 export const Rhino: Readonly<StaticPet> = {
   name: "Rhino",
@@ -15,7 +16,7 @@ export const Rhino: Readonly<StaticPet> = {
       const target = livingPets(ctx.enemyTeam)[0];
       if (!target) return;
       const isTier1 = ctx.petRegistry[target.type]?.tier === 1;
-      ctx.dealAbilityDamage(target, (isTier1 ? 8 : 4) * ctx.level);
+      new BattleActions(ctx).dealAbilityDamage(target, (isTier1 ? 8 : 4) * ctx.level);
     },
   }),
   description:

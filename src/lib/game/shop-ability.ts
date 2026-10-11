@@ -6,17 +6,15 @@ import {
   StaticPet,
   ShopAbilityContext,
   ShopState,
+  SummonRequest,
   Trigger,
 } from "@/lib/types";
 import { orderByAttack } from "@/lib/utils/random";
-import { stockFood } from "@/lib/game/shop";
-import { compactApiBoard, grantExperience } from "@/lib/game/merge";
+import { compactApiBoard } from "@/lib/game/merge";
 import { friendSummonedCandidates } from "@/lib/game/friend-summoned";
 import { friendAheadAbility } from "@/lib/game/pet";
 import { getAbility } from "@/lib/pets/ability";
 import { triggerEffect } from "@/lib/perks/trigger-functions";
-import { dealAbilityDamage } from "@/lib/utils/combat";
-import { triggerFriendAteFood } from "@/lib/game/food";
 
 // TODO - Order shop abilities through a shared queue manager (supporting dynamic
 // updates) and remove the per-function orderByAttack sorting below.
@@ -52,11 +50,8 @@ function createShopContext(
     board,
     shop,
     level: self.level,
-    goldGain: (amount) => {
-      gold.delta += amount;
-    },
-    addShopFood: (foodName) => stockFood(shop, foodName, justStocked),
-    grantExperience,
+    gold,
+    justStocked,
     lastBattleResult,
     boughtPet,
   };
@@ -220,7 +215,7 @@ export function fireShopFaint(
   const selfIndex = compacted.indexOf(pet);
 
   newApiBoard[boardPosition] = null;
-  const summonRequests: PetInstance[] = [];
+  const summonRequests: SummonRequest[] = [];
 
   const context = (self: PetInstance): BattleAbilityContext => ({
     self,
@@ -228,19 +223,19 @@ export function fireShopFaint(
     team: compacted,
     enemyTeam: [],
     level: self.level,
-    summon: (newPet) => summonRequests.push(newPet),
+    summonRequests,
+    hurtPets: [],
     petRegistry,
-    friendAteFood: (fedPet) =>
-      triggerFriendAteFood(compacted, fedPet, petRegistry),
-    dealAbilityDamage,
-    grantExperience,
+    inShop: true,
   });
 
   getAbility(def, Trigger.faint)?.fn(context(pet));
 
   if (isTriggerPerk(pet.perk) && pet.perk.trigger === Trigger.faint) {
     const summonRequest = triggerEffect(pet.perk, { self: pet }).summonRequest;
-    if (summonRequest) summonRequests.push(summonRequest);
+    if (summonRequest) {
+      summonRequests.push({ pet: summonRequest, afterIndex: selfIndex });
+    }
   }
 
   const behind = compacted[selfIndex + 1];
@@ -251,10 +246,13 @@ export function fireShopFaint(
   );
   if (friendAheadFaints) friendAheadFaints(context(behind));
 
-  // Pill frees one slot, so any later summon requests are flung.
-  for (const summon of summonRequests) {
+  // Pill frees one slot, so any later summon requests are flung. There is no
+  // opposing team in the shop, so summons for it are dropped.
+  for (const request of summonRequests) {
+    if (request.onEnemyTeam) continue;
     if (newApiBoard[boardPosition] !== null) break;
-    newApiBoard[boardPosition] = summon;
+    newApiBoard[boardPosition] = request.pet;
+    if (request.skipsFriendSummoned) continue;
     newApiBoard = fireShopFriendSummoned(
       newApiBoard,
       boardPosition,
@@ -299,13 +297,10 @@ export function fireShopFriendSummoned(
       team: compacted,
       enemyTeam: [],
       level: pet.level,
-      summon: () => {},
+      summonRequests: [],
+      hurtPets: [],
       summonedIndex,
       petRegistry,
-      dealAbilityDamage,
-      grantExperience,
-      friendAteFood: (fedPet) =>
-        triggerFriendAteFood(compacted, fedPet, petRegistry),
       inShop: true,
     };
     ability.fn(ctx);

@@ -5,6 +5,7 @@ import {
   createAbilityMap,
   tryIncrementTriggerCount,
 } from "@/lib/pets/ability";
+import { BattleActions } from "@/lib/game/ability-actions";
 
 const TRIGGER_LIMIT = 5;
 
@@ -28,7 +29,7 @@ export const Snake: Readonly<StaticPet> = {
         return;
       }
       const enemy = pickRandom(livingPets(ctx.enemyTeam));
-      if (enemy) ctx.dealAbilityDamage(enemy, 5 * ctx.level);
+      if (enemy) new BattleActions(ctx).dealAbilityDamage(enemy, 5 * ctx.level);
     },
   }),
   description: (level: number) =>

@@ -1,5 +1,7 @@
 import { StaticPet, Trigger } from "@/lib/types";
+import { numberToText } from "@/lib/utils/flavor-text";
 import { createAbilityMap } from "@/lib/pets/ability";
+import { BattleActions } from "@/lib/game/ability-actions";
 
 export const Rooster: Readonly<StaticPet> = {
   name: "Rooster",
@@ -11,10 +13,11 @@ export const Rooster: Readonly<StaticPet> = {
   abilities: createAbilityMap({
     trigger: Trigger.faint,
     fn: (ctx) => {
+      const actions = new BattleActions(ctx);
       const attack = Math.floor(ctx.self.attack * 0.5);
       if (attack === 0) return;
       for (let i = 0; i < ctx.level; i++) {
-        ctx.summon(
+        actions.summon(
           {
             type: "Chick",
             attack,
@@ -29,5 +32,5 @@ export const Rooster: Readonly<StaticPet> = {
     },
   }),
   description: (level: number) =>
-    `Faint: Summon ${level === 1 ? "one" : level} ${level === 1 ? "Chick" : "Chicks"} with 1 health and 50% attack of this.`,
+    `Faint: Summon ${numberToText[level]} ${level === 1 ? "Chick" : "Chicks"} with 1 health and 50% attack of this.`,
 };

@@ -3,6 +3,7 @@ import { pickN } from "@/lib/utils/random";
 import { livingPets } from "@/lib/utils/combat";
 import { numberToText } from "@/lib/utils/flavor-text";
 import { createAbilityMap } from "@/lib/pets/ability";
+import { BattleActions } from "@/lib/game/ability-actions";
 
 export const Mosquito: Readonly<StaticPet> = {
   name: "Mosquito",
@@ -14,8 +15,9 @@ export const Mosquito: Readonly<StaticPet> = {
   abilities: createAbilityMap({
     trigger: Trigger.start_of_battle,
     fn: (ctx) => {
+      const actions = new BattleActions(ctx);
       for (const target of pickN(livingPets(ctx.enemyTeam), ctx.level)) {
-        ctx.dealAbilityDamage(target, 1);
+        actions.dealAbilityDamage(target, 1);
       }
     },
   }),

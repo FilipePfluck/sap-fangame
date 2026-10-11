@@ -46,7 +46,7 @@ function applyStandardEffect(food: FoodType, pet: PetInstance): PetInstance {
     ...pet,
     attack: pet.attack + attackBonus,
     health: pet.health + healthBonus,
-    perk: food.perk ? food.perk : pet.perk,
+    perk: food.perk ? { ...food.perk } : pet.perk,
   };
   if (food.effect.temporary) {
     if (attackBonus)
@@ -75,7 +75,8 @@ function pickTargets(
 export function triggerFriendAteFood(
   board: ApiBoard,
   fedPet: PetInstance,
-  petRegistry: Record<string, StaticPet>
+  petRegistry: Record<string, StaticPet>,
+  foodGroup?: FoodType["foodGroup"]
 ): void {
   if (fedPet.health <= 0) return;
   // TODO - Wrap board in a class with board.friends() / board.friendly() helpers
@@ -95,6 +96,7 @@ export function triggerFriendAteFood(
       fedPet,
       friends,
       level: pet.level,
+      foodGroup,
     });
   }
 }
@@ -114,7 +116,7 @@ export function applyFoodEffect(
 
     const fedPet = newBoard[boardPosition];
     if (fedPet && !food.skipsFriendAteFood) {
-      triggerFriendAteFood(newBoard, fedPet, petRegistry);
+      triggerFriendAteFood(newBoard, fedPet, petRegistry, food.foodGroup);
     }
     return food.applyEffect({ board: newBoard, boardPosition, petRegistry });
   }
@@ -126,7 +128,7 @@ export function applyFoodEffect(
       const fedPet = applyStandardEffect(food, pet);
       newBoard[i] = fedPet;
       if (!food.skipsFriendAteFood) {
-        triggerFriendAteFood(newBoard, fedPet, petRegistry);
+        triggerFriendAteFood(newBoard, fedPet, petRegistry, food.foodGroup);
       }
     }
   }

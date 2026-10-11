@@ -1,5 +1,6 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { createAbilityMap } from "@/lib/pets/ability";
+import { BattleActions } from "@/lib/game/ability-actions";
 
 export const Cricket: Readonly<StaticPet> = {
   name: "Cricket",
@@ -11,7 +12,7 @@ export const Cricket: Readonly<StaticPet> = {
   abilities: createAbilityMap({
     trigger: Trigger.faint,
     fn: (ctx) => {
-      ctx.summon(
+      new BattleActions(ctx).summon(
         {
           type: "Zombie Cricket",
           attack: ctx.level,

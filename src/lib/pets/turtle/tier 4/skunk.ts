@@ -1,5 +1,5 @@
 import { StaticPet, Trigger } from "@/lib/types";
-import { removeHealth } from "@/lib/utils/combat";
+import { removePercentageHealth } from "@/lib/utils/combat";
 import { livingPets } from "@/lib/utils/combat";
 import { createAbilityMap } from "@/lib/pets/ability";
 
@@ -18,7 +18,7 @@ export const Skunk: Readonly<StaticPet> = {
       const target = enemies.reduce((highest, p) =>
         p.health > highest.health ? p : highest
       );
-      removeHealth(target, 0.33 * ctx.level);
+      removePercentageHealth(target, 0.33 * ctx.level);
     },
   }),
   description:

@@ -1,5 +1,6 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { createAbilityMap } from "@/lib/pets/ability";
+import { BattleActions } from "@/lib/game/ability-actions";
 
 export const Elephant: Readonly<StaticPet> = {
   name: "Elephant",
@@ -11,12 +12,13 @@ export const Elephant: Readonly<StaticPet> = {
   abilities: createAbilityMap({
     trigger: Trigger.after_attack,
     fn: (ctx) => {
+      const actions = new BattleActions(ctx);
       for (let i = 0; i < ctx.level; i++) {
         const target = ctx.team
           .slice(ctx.selfIndex + 1)
           .find((friend) => friend.health > 0);
         if (!target) return;
-        ctx.dealAbilityDamage(target, 1);
+        actions.dealAbilityDamage(target, 1);
       }
     },
   }),
