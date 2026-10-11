@@ -1,5 +1,4 @@
 import { PetInstance, StaticPet, Trigger } from "@/lib/types";
-import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Giraffe: Readonly<StaticPet> = {
   name: "Giraffe",
@@ -8,7 +7,7 @@ export const Giraffe: Readonly<StaticPet> = {
   baseAttack: 1,
   baseHealth: 2,
   isToken: false,
-  abilities: createAbilityMap({
+  ability: {
     trigger: Trigger.start_of_turn,
     fn: (ctx) => {
       const friend = ctx.board
@@ -19,7 +18,7 @@ export const Giraffe: Readonly<StaticPet> = {
       friend.attack += ctx.level;
       friend.health += ctx.level;
     },
-  }),
+  },
   description: (level: number) =>
     `Start of turn: Give the nearest friend ahead +${level} attack and +${level} health.`,
 };

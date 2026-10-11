@@ -1,6 +1,5 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { livingPets } from "@/lib/utils/combat";
-import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Mammoth: Readonly<StaticPet> = {
   name: "Mammoth",
@@ -9,7 +8,7 @@ export const Mammoth: Readonly<StaticPet> = {
   baseAttack: 4,
   baseHealth: 12,
   isToken: false,
-  abilities: createAbilityMap({
+  ability: {
     trigger: Trigger.faint,
     fn: (ctx) => {
       for (const friend of livingPets(ctx.team)) {
@@ -18,7 +17,7 @@ export const Mammoth: Readonly<StaticPet> = {
         friend.health += 2 * ctx.level;
       }
     },
-  }),
+  },
   description: (level: number) =>
     `Faint: Give all friends +${2 * level} attack and +${2 * level} health.`,
 };

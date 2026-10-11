@@ -1,27 +1,7 @@
-import {
-  AbilityData,
-  PetData,
-  Trigger,
-  type BattleAbilityContext,
-  type PetInstance,
-  type StaticPet,
-} from "@/lib/types";
-import { getAbility } from "@/lib/pets/ability";
+import { Trigger } from "@/lib/types";
+import type { BattleAbilityContext, PetInstance, StaticPet } from "@/lib/types";
 
-export function serializePetData(pet: StaticPet, level: number): PetData {
-  const { abilities, description, ...data } = pet;
-  return {
-    ...data,
-    abilities: Array.from(abilities.values(), ({ trigger }): AbilityData => ({
-      trigger,
-    })),
-    description:
-      typeof description === "function" ? description(level) : description,
-  };
-}
-
-type FriendAheadTrigger =
-  Trigger.friend_ahead_attacks | Trigger.friend_ahead_faints;
+type FriendAheadTrigger = Trigger.friend_ahead_attacks | Trigger.friend_ahead_faints;
 
 export function friendAheadAbility(
   pet: PetInstance | undefined,
@@ -29,7 +9,8 @@ export function friendAheadAbility(
   petRegistry: Record<string, StaticPet>
 ): ((ctx: BattleAbilityContext) => void) | null {
   if (!pet || pet.health <= 0) return null;
-  return getAbility(petRegistry[pet.type], trigger)?.fn ?? null;
+  const ability = petRegistry[pet.type]?.ability;
+  return ability?.trigger === trigger ? ability.fn : null;
 }
 
 // A brand-new level-1 pet, as bought from the shop. `tempHealthBonus` is the

@@ -42,7 +42,6 @@ export { Sheep } from "./turtle/tier 3/sheep";
 export { Ram } from "./turtle/token/ram";
 export { Blowfish } from "./turtle/tier 4/blowfish";
 export { Turtle } from "./turtle/tier 4/turtle";
-export { Whale } from "./turtle/tier 4/whale";
 export { Turkey } from "./turtle/tier 5/turkey";
 export { Monkey } from "./turtle/tier 5/monkey";
 export { Seal } from "./turtle/tier 5/seal";
@@ -51,21 +50,6 @@ export { Chick } from "./turtle/token/chick";
 export { Dragon } from "./turtle/tier 6/dragon";
 export { Mammoth } from "./turtle/tier 6/mammoth";
 export { Snake } from "./turtle/tier 6/snake";
-export { Wolverine } from "./turtle/tier 6/wolverine";
-export { Ox } from "./turtle/tier 3/ox";
-export { Worm } from "./turtle/tier 2/worm";
-export { Spider } from "./turtle/tier 2/spider";
-export { Rat } from "./turtle/tier 2/rat";
-export { Deer } from "./turtle/tier 4/deer";
-export { Cow } from "./turtle/tier 5/cow";
-export { Gorilla } from "./turtle/tier 6/gorilla";
-export { Fly } from "./turtle/tier 6/fly";
-export { Bus } from "./turtle/token/bus";
-export { DirtyRat } from "./turtle/token/dirty-rat";
-export { ZombieFly } from "./turtle/token/zombie-fly";
-export { Seagull } from "./SAPOther/seagull";
-export { Alpaca } from "./SAPOther/alpaca";
-export { Jerboa } from "./SAPOther/jerboa";
 
 import { Sloth } from "./turtle/token/sloth";
 import { Duck } from "./turtle/tier 1/duck";
@@ -111,7 +95,6 @@ import { Sheep } from "./turtle/tier 3/sheep";
 import { Ram } from "./turtle/token/ram";
 import { Blowfish } from "./turtle/tier 4/blowfish";
 import { Turtle } from "./turtle/tier 4/turtle";
-import { Whale } from "./turtle/tier 4/whale";
 import { Turkey } from "./turtle/tier 5/turkey";
 import { Monkey } from "./turtle/tier 5/monkey";
 import { Seal } from "./turtle/tier 5/seal";
@@ -120,21 +103,6 @@ import { Chick } from "./turtle/token/chick";
 import { Dragon } from "./turtle/tier 6/dragon";
 import { Mammoth } from "./turtle/tier 6/mammoth";
 import { Snake } from "./turtle/tier 6/snake";
-import { Wolverine } from "./turtle/tier 6/wolverine";
-import { Ox } from "./turtle/tier 3/ox";
-import { Worm } from "./turtle/tier 2/worm";
-import { Spider } from "./turtle/tier 2/spider";
-import { Rat } from "./turtle/tier 2/rat";
-import { Deer } from "./turtle/tier 4/deer";
-import { Cow } from "./turtle/tier 5/cow";
-import { Gorilla } from "./turtle/tier 6/gorilla";
-import { Fly } from "./turtle/tier 6/fly";
-import { Bus } from "./turtle/token/bus";
-import { DirtyRat } from "./turtle/token/dirty-rat";
-import { ZombieFly } from "./turtle/token/zombie-fly";
-import { Seagull } from "./SAPOther/seagull";
-import { Alpaca } from "./SAPOther/alpaca";
-import { Jerboa } from "./SAPOther/jerboa";
 import type { StaticPet } from "@/lib/types";
 
 export const TURTLE_PACK_PETS = [
@@ -181,7 +149,6 @@ export const TURTLE_PACK_PETS = [
   Ram,
   Blowfish,
   Turtle,
-  Whale,
   Turkey,
   Monkey,
   Seal,
@@ -190,31 +157,16 @@ export const TURTLE_PACK_PETS = [
   Dragon,
   Mammoth,
   Snake,
-  Wolverine,
-  Ox,
-  Worm,
-  Spider,
-  Rat,
-  Deer,
-  Cow,
-  Gorilla,
-  Fly,
-  Bus,
-  DirtyRat,
-  ZombieFly,
-];
-
-// Pets from outside the Turtle pack.
-export const SAP_OTHER_PETS = [Seagull, Alpaca, Jerboa];
-
-export const ALL_PETS = [...TURTLE_PACK_PETS, ...SAP_OTHER_PETS];
+]
 
 export const PET_REGISTRY: Record<string, StaticPet> = Object.fromEntries([
-  ...ALL_PETS.map((p) => [p.name, p]),
+  ...TURTLE_PACK_PETS.map((p) => [p.name, p]),
   [Sloth.name, Sloth],
 ]);
 
-export const SHOP_PET_POOL: StaticPet[] = ALL_PETS.filter((p) => !p.isToken);
+export const SHOP_PET_POOL: StaticPet[] = TURTLE_PACK_PETS.filter(
+  (p) => !p.isToken
+);
 
 function stripTooltipNotes(text: string): string {
   return text

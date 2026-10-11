@@ -33,7 +33,7 @@ export async function getLastBoardState(
     id: boardState.id,
     gameId: boardState.gameId,
     turnId: boardState.turnId,
-    board: boardState.boardState as ApiBoard,
+    board: boardState.boardState,
     shop: boardState.shopState as ShopState,
     goldRemaining: boardState.goldRemaining,
     turn: {
@@ -204,13 +204,6 @@ export class Board {
     }
     return null;
   }
-}
-
-// The least XP a pet of `level` can have.
-export function xpForLevel(level: number): number {
-  if (level >= 3) return MAX_PET_EXPERIENCE;
-  if (level === 2) return 2;
-  return 0;
 }
 
 export function computeLevel(xp: number): 1 | 2 | 3 {

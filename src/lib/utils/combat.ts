@@ -37,12 +37,10 @@ export function dealDirectDamage(
   }
 
   if (isDefensivePerk(target.perk) && target.perk.blocksDirectDamage) {
-    damage = target.perk.blocksAllDamage
-      ? 0
-      : Math.max(
-          damage - target.perk.blocksFor,
-          Math.min(damage, target.perk.minimumDamageTaken)
-        );
+    damage = Math.max(
+      damage - target.perk.blocksFor,
+      Math.min(damage, target.perk.minimumDamageTaken)
+    );
     
     if (target.perk.usesRemaining !== DOES_NOT_DECAY) {
       target.perk.usesRemaining -= 1;
@@ -62,12 +60,10 @@ export function dealAbilityDamage(
   damage: number
 ): number {
   if (isDefensivePerk(target.perk) && target.perk.blocksAbilityDamage) {
-    damage = target.perk.blocksAllDamage
-      ? 0
-      : Math.max(
-          damage - target.perk.blocksFor,
-          target.perk.minimumDamageTaken
-        );
+    damage = Math.max(
+      damage - target.perk.blocksFor,
+      target.perk.minimumDamageTaken
+    );
 
     if (target.perk.usesRemaining !== DOES_NOT_DECAY) {
       target.perk.usesRemaining -= 1;
@@ -83,19 +79,10 @@ export function dealAbilityDamage(
 }
 
 
-// Removes health directly, rather than dealing damage — so unlike
-// dealAbilityDamage, this never checks Garlic/Melon/Peanut. It always leaves
-// a living pet at least 1 health.
-export function removeHealth(target: PetInstance, amount: number): void {
-  if (target.health <= 0) return;
-  target.health = Math.max(1, target.health - Math.max(0, amount));
-}
-
-// Skunk-style effects remove a percentage of a pet's *current* health,
-// rounded up.
-export function removePercentageHealth(
-  target: PetInstance,
-  fraction: number
-): void {
-  removeHealth(target, Math.ceil(target.health * fraction));
+// Skunk-style effects remove a flat percentage of a pet's *current* health
+// directly, rather than dealing damage — so unlike dealAbilityDamage, this
+// never checks Garlic/Melon/Peanut. It always leaves at least 1 health.
+export function removeHealth(target: PetInstance, fraction: number): void {
+  const reduced = target.health - Math.ceil(target.health * fraction);
+  target.health = Math.max(1, reduced);
 }

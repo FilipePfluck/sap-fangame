@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { prisma, toPrismaJson } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { FOOD_REGISTRY } from "@/lib/foods";
 import { PET_REGISTRY } from "@/lib/pets";
@@ -78,7 +78,7 @@ export async function POST(
     data: {
       gameId,
       turnId: state.turnId,
-      boardState: toPrismaJson(newBoard),
+      boardState: newBoard,
       shopState: newShop,
       goldRemaining: state.goldRemaining - cost,
     },
