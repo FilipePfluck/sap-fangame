@@ -1,5 +1,6 @@
 import { PetInstance, StaticPet, Trigger } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
+import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Fish: Readonly<StaticPet> = {
   name: "Fish",
@@ -8,7 +9,7 @@ export const Fish: Readonly<StaticPet> = {
   baseAttack: 3,
   baseHealth: 2,
   isToken: false,
-  ability: {
+  abilities: createAbilityMap({
     trigger: Trigger.level_up,
     // ctx.level is the OLD level (before level-up) — see fireShopAbility call sites.
     // lvl1 fish levels up → ctx.level=1 → +1/+1 to 2 friends
@@ -29,7 +30,7 @@ export const Fish: Readonly<StaticPet> = {
         };
       }
     },
-  },
+  }),
   description: (level: number) =>
     level >= 3
       ? "No ability."

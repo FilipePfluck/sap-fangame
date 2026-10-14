@@ -1,4 +1,9 @@
 export { Apple } from "./apple";
+export { BetterApple } from "./better-apple";
+export { BestApple } from "./best-apple";
+export { Milk } from "./milk";
+export { BetterMilk } from "./better-milk";
+export { BestMilk } from "./best-milk";
 export { Honey } from "./honey";
 export { BreadCrumbs } from "./bread-crumbs";
 export { Pill } from "./pill";
@@ -7,6 +12,7 @@ export { Bread } from "./bread";
 export { Sushi } from "./sushi";
 export { Melon } from "./melon";
 export { Peanut } from "./peanut";
+export { Coconut } from "./coconut";
 
 import type { FoodType } from "@/lib/types";
 import { Cupcake } from "@/lib/foods/cupcake";
@@ -21,6 +27,11 @@ import { Pizza } from "@/lib/foods/pizza";
 import { Cake } from "@/lib/foods/cake";
 import { BreadCrumbs } from "@/lib/foods/bread-crumbs";
 import { Apple } from "@/lib/foods/apple";
+import { BetterApple } from "@/lib/foods/better-apple";
+import { BestApple } from "@/lib/foods/best-apple";
+import { Milk } from "@/lib/foods/milk";
+import { BetterMilk } from "@/lib/foods/better-milk";
+import { BestMilk } from "@/lib/foods/best-milk";
 import { Honey } from "@/lib/foods/honey";
 import { Pill } from "@/lib/foods/pill";
 import { MeatBone } from "@/lib/foods/meat-bone";
@@ -29,10 +40,16 @@ import { Bread } from "@/lib/foods/bread";
 import { Sushi } from "@/lib/foods/sushi";
 import { Melon } from "@/lib/foods/melon";
 import { Peanut } from "@/lib/foods/peanut";
+import { Coconut } from "@/lib/foods/coconut";
 
 export const TURTLE_PACK_FOODS: FoodType[] = [
   BreadCrumbs,
   Apple,
+  BetterApple,
+  BestApple,
+  Milk,
+  BetterMilk,
+  BestMilk,
   Honey,
   Pill,
   MeatBone,
@@ -51,6 +68,7 @@ export const TURTLE_PACK_FOODS: FoodType[] = [
   Mushroom,
   Pizza,
   Peanut,
+  Coconut,
 ];
 
 export const FOOD_REGISTRY: Record<string, FoodType> = Object.fromEntries(

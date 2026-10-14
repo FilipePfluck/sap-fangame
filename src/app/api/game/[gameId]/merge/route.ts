@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
+import { prisma, toPrismaJson } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { mergePets, mergeError, levelUpRewardEarned } from "@/lib/game/merge";
 import { addLevelUpReward, applyFrozenFlags } from "@/lib/game/shop";
@@ -7,8 +7,7 @@ import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
 import { fireShopAbility } from "@/lib/game/shop-ability";
 import { z } from "zod";
-import { ShopState, Trigger } from "@/lib/types";
-import { Board } from "@/lib/game/board";
+import { ApiBoard, ShopState, Trigger } from "@/lib/types";
 
 const MergeSchema = z.object({
   from: z.number().int().min(0).max(4),
@@ -68,7 +67,7 @@ export async function POST(
   const merged = mergePets(petFrom, petTo);
   const didLevelUp = merged.level > preMergeLevel;
 
-  let currentBoard: Board = [...state.board];
+  let currentBoard: ApiBoard = [...state.board];
   currentBoard[to] = merged;
   currentBoard[from] = null;
   let currentShop: ShopState = applyFrozenFlags(state.shop, frozenPetPositions, frozenFoodPositions);
@@ -90,7 +89,7 @@ export async function POST(
     data: {
       gameId,
       turnId: state.turnId,
-      boardState: currentBoard,
+      boardState: toPrismaJson(currentBoard),
       shopState: currentShop,
       goldRemaining: state.goldRemaining + extraGold,
     },

@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { STARTING_LIVES, TURN_GOLD } from "@/lib/game/rules";
 import { generateShop } from "@/lib/game/shop";
-import { TURTLE_PACK_PETS } from "@/lib/pets";
+import { ALL_PETS } from "@/lib/pets";
 import { TURTLE_PACK_FOODS } from "@/lib/foods";
 
 export async function POST() {
@@ -13,7 +13,7 @@ export async function POST() {
 
   const shop = generateShop({
     turn: 1,
-    pack: TURTLE_PACK_PETS,
+    pack: ALL_PETS,
     foodTypes: TURTLE_PACK_FOODS,
   });
 
