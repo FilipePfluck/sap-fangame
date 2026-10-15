@@ -1,4 +1,5 @@
 import { StaticPet, Trigger } from "@/lib/types";
+import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Bison: Readonly<StaticPet> = {
   name: "Bison",
@@ -7,7 +8,7 @@ export const Bison: Readonly<StaticPet> = {
   baseAttack: 4,
   baseHealth: 4,
   isToken: false,
-  ability: {
+  abilities: createAbilityMap({
     trigger: Trigger.end_turn,
     fn: (ctx) => {
       const firstBisonIndex = ctx.board.findIndex((p) => p?.type === "Bison");
@@ -19,7 +20,7 @@ export const Bison: Readonly<StaticPet> = {
       ctx.self.attack += 2 * ctx.level;
       ctx.self.health += 2 * ctx.level;
     },
-  },
+  }),
   description: (level: number) =>
     `End turn: If this has a level 3 friend, gain +${2 * level} attack and +${2 * level} health. Works for 1 Bison.`,
 };

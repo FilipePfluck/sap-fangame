@@ -1,6 +1,7 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { pickRandom } from "@/lib/utils/random";
 import { livingPets } from "@/lib/utils/combat";
+import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Ant: Readonly<StaticPet> = {
   name: "Ant",
@@ -9,7 +10,7 @@ export const Ant: Readonly<StaticPet> = {
   baseAttack: 2,
   baseHealth: 2,
   isToken: false,
-  ability: {
+  abilities: createAbilityMap({
     trigger: Trigger.faint,
     fn: (ctx) => {
       const friends = livingPets(ctx.team).filter((friend) => friend !== ctx.self);
@@ -18,7 +19,7 @@ export const Ant: Readonly<StaticPet> = {
       target.attack += ctx.level;
       target.health += ctx.level;
     },
-  },
+  }),
   description: (level: number) =>
     `Faint: Give one random friend +${level} attack and +${level} health.`,
 };
