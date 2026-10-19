@@ -11,9 +11,10 @@ export type PetInstance = {
   // start of the next turn (e.g. Horse's shop buff).
   tempAttack?: number;
   tempHealth?: number;
-  foodTriggersThisTurn?: number;
-  friendBuysThisTurn?: number;
-  friendAheadFaintsThisTurn?: number;
+  triggerCountsThisTurn?: Partial<Record<Trigger, number>>;
+  // Friends swallowed this battle (Whale), each already at the level it will
+  // be released at.
+  swallowedPets?: PetInstance[];
 };
 
 export type ShopPet = {
@@ -53,20 +54,40 @@ export type BattleStep = {
   description: string;
 };
 
+export type SummonOptions = {
+  // Summon at the front of the opposing team instead of the summoner's own.
+  onEnemyTeam?: boolean;
+  // Skip friends' "friend summoned" abilities for this summon.
+  skipsFriendSummoned?: boolean;
+  // Keep the summon queued until its team has room, instead of flinging it.
+  waitsForSpace?: boolean;
+};
+
+export type SummonRequest = SummonOptions & {
+  pet: PetInstance;
+  afterIndex: number;
+};
+
+// Ability contexts carry only data. Anything an ability *does* with that data
+// lives on BattleActions / ShopActions (lib/game/ability-actions), which are
+// instantiated from the context.
 export type BattleAbilityContext = {
   self: PetInstance;
   selfIndex: number;
   team: PetInstance[];
   enemyTeam: PetInstance[];
   level: number;
-  summon: (pet: PetInstance, afterIndex: number) => void;
+  // Summons the ability asked for, placed by whatever fired it.
+  summonRequests: SummonRequest[];
+  // Pets the ability damaged; their "hurt" abilities fire once it finishes.
+  hurtPets: PetInstance[];
   summonedIndex?: number;
-  triggerCount: number;
+  // Where the fainted friend stood, for "friend faints" abilities.
+  faintedIndex?: number;
   petRegistry: Record<string, StaticPet>;
-  dealAbilityDamage: (target: PetInstance, damage: number) => number;
-  grantExperience: (target: PetInstance, amount: number) => void;
-  friendAteFood: (fedPet: PetInstance) => void;
   inShop?: boolean;
+  // True when the ability is being repeated for the same event (Tiger).
+  isRepeat?: boolean;
 };
 
 export type FoodAbilityContext = {
@@ -74,6 +95,7 @@ export type FoodAbilityContext = {
   fedPet: PetInstance;
   friends: PetInstance[];
   level: number;
+  foodGroup?: FoodType["foodGroup"];
 };
 
 export type ShopAbilityContext = {
@@ -82,9 +104,10 @@ export type ShopAbilityContext = {
   board: (PetInstance | null)[];
   shop: ShopState;
   level: number;
-  goldGain: (amount: number) => void;
-  addShopFood: (foodName: string) => void;
-  grantExperience: (target: PetInstance, amount: number) => void;
+  gold: { delta: number };
+  // Items stocked by the abilities firing together, so a batch never evicts
+  // itself.
+  justStocked: Set<object>;
   lastBattleResult?: "WIN" | "DRAW" | "LOSS";
   boughtPet?: StaticPet;
 };
@@ -106,6 +129,8 @@ export enum Trigger {
   friend_ate_food,
   friend_bought,
   friend_ahead_faints,
+  friend_hurt,
+  friend_faints,
 }
 
 export type Ability =
@@ -124,7 +149,11 @@ export type Ability =
   | { trigger: Trigger.friend_ahead_faints; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: Trigger.friend_ate_food; fn: (ctx: FoodAbilityContext) => void }
   | { trigger: Trigger.friend_bought; fn: (ctx: ShopAbilityContext) => void }
-  | { trigger: Trigger.knock_out; fn: (ctx: BattleAbilityContext) => void };
+  | { trigger: Trigger.knock_out; fn: (ctx: BattleAbilityContext) => void }
+  | { trigger: Trigger.friend_hurt; fn: (ctx: BattleAbilityContext) => void }
+  | { trigger: Trigger.friend_faints; fn: (ctx: BattleAbilityContext) => void };
+
+export type AbilityData = Pick<Ability, "trigger">;
 
 export type StaticPet = {
   name: string;
@@ -133,9 +162,17 @@ export type StaticPet = {
   baseAttack: number;
   baseHealth: number;
   isToken: boolean;
-  ability: Ability | null;
+  abilities: Map<Trigger, Ability>;
   innatePerk?: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null;
+  // Pet types this pet's abilities never activate on (e.g. Fly ignores a
+  // fainting Zombie Fly).
+  doesNotActivate?: string[];
   description: string | ((level: number) => string);
+};
+
+export type PetData = Omit<StaticPet, "abilities" | "description"> & {
+  abilities: AbilityData[];
+  description: string;
 };
 
 export type FoodApplyContext = {
@@ -148,6 +185,7 @@ export type FoodType = {
   name: string;
   sprite: string;
   tier: number;
+  foodGroup?: "apple";
   perk?: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null;
   isToken: boolean;
   cost?: number;
@@ -185,6 +223,7 @@ export interface OffensivePerk extends BasePerkType {
 export interface DefensivePerk extends BasePerkType {
   blocksFor: number,
   minimumDamageTaken: number,
+  blocksAllDamage?: boolean,
   blocksAbilityDamage: boolean,
   blocksDirectDamage: boolean,
 }

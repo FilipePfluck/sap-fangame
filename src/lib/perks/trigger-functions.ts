@@ -3,6 +3,7 @@ import { mushroomEffect } from "@/lib/perks/mushroom";
 import { honeyEffect } from "@/lib/perks/honey";
 import { breadEffect } from "@/lib/perks/bread";
 import { cakeEffect } from "@/lib/perks/cake";
+import { chiliEffect } from "@/lib/perks/chili";
 
 // Used for routing perk calls to their triggers.  Cannot be placed directly on the perk data itself, as it
 // functions present on the perk directly causes issues with serialization.
@@ -19,6 +20,10 @@ export function triggerEffect(
 
     case "Cake":
       cakeEffect({ self: args["self"] });
+      return {};
+
+    case "Chili":
+      chiliEffect(args["ctx"]);
       return {};
 
     case "Honey":
