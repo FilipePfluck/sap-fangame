@@ -42,6 +42,8 @@ import { Melon } from "@/lib/foods/melon";
 import { Peanut } from "@/lib/foods/peanut";
 import { Coconut } from "@/lib/foods/coconut";
 
+// TODO - Move token foods (apples, milks, Coconut) to their own registry: they
+// come from pet abilities, not the shop, which will matter for pack building.
 export const TURTLE_PACK_FOODS: FoodType[] = [
   BreadCrumbs,
   Apple,

@@ -13,6 +13,8 @@ export const Gorilla: Readonly<StaticPet> = {
     trigger: Trigger.hurt,
     fn: (ctx) => {
       if (!tryIncrementTriggerCount(ctx.self, Trigger.hurt, ctx.level)) return;
+      // TODO - Gain the perk through a "gain perk" action that fires
+      // friend-ate-food triggers (e.g. Rabbit), instead of setting it directly.
       ctx.self.perk = { ...CoconutPerk };
     },
   }),

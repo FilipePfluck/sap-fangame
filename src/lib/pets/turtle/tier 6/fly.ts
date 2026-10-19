@@ -34,6 +34,7 @@ export const Fly: Readonly<StaticPet> = {
       );
     },
   }),
+  doesNotActivate: [ZombieFly.name],
   description: (level: number) =>
     `Friend faints: Summon one ${ZombieFly.baseAttack * level}/${ZombieFly.baseHealth * level} Zombie Fly in its place. Works 3 times per turn.`,
 };

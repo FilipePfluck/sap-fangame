@@ -1,7 +1,7 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { pickRandom } from "@/lib/utils/random";
 import { createAbilityMap } from "@/lib/pets/ability";
-import { xpForLevel } from "@/lib/game/board";
+import { getMinimumXpFor } from "@/lib/game/board";
 import { BattleActions } from "@/lib/game/ability-actions";
 
 const SUMMONED_TIER = 3;
@@ -27,7 +27,7 @@ export const Spider: Readonly<StaticPet> = {
           attack: 2 * ctx.level,
           health: 2 * ctx.level,
           perk: null,
-          xp: xpForLevel(ctx.level),
+          xp: getMinimumXpFor(ctx.level),
           level: ctx.level,
         },
         ctx.selfIndex

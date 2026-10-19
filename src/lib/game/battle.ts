@@ -42,8 +42,8 @@ function compactTeam(team: (PetInstance | null)[]): PetInstance[] {
   return compactApiBoard(team).map(clonePetInstance);
 }
 
-// Fires `ability` for `pet`, then repeats it once more at level 1 if a
-// Tiger sits directly behind (skipped on the repeat itself). Any summons the
+// Fires `ability` for `pet`, then repeats it once more at the Tiger's level if
+// a Tiger sits directly behind (skipped on the repeat itself). Any summons the
 // ability asks for are appended to `summonRequests` for the caller to place;
 // callers whose trigger never summons pass a throwaway array.
 // TODO - Tiger support makes this function grow with every new trigger. Options:
@@ -74,23 +74,13 @@ function fireAbilityOn(
     isRepeat: levelOverride !== undefined,
   };
   ability.fn(ctx);
-
-  // Hurt abilities wait for the ability that dealt the damage to finish, so
-  // e.g. both hits of a level 2 Elephant land before a Gorilla gains Coconut.
-  for (const hurtPet of byCurrentAttack(ctx.hurtPets, (hurt) => hurt.attack)) {
-    const hurtTeam = team.includes(hurtPet) ? team : enemyTeam;
-    const otherTeam = hurtTeam === team ? enemyTeam : team;
-    fireHurt(hurtPet, hurtTeam, otherTeam, petRegistry);
-  }
+  fireQueuedHurts(ctx);
 
   // Looked up again, since the ability may have moved `pet` (e.g. Whale
   // swallowing the friend ahead).
   const currentIndex = team.indexOf(pet);
-  if (
-    levelOverride === undefined &&
-    currentIndex >= 0 &&
-    team[currentIndex + 1]?.type === "Tiger"
-  ) {
+  const tiger = currentIndex >= 0 ? team[currentIndex + 1] : undefined;
+  if (levelOverride === undefined && tiger?.type === "Tiger") {
     fireAbilityOn(
       ability,
       pet,
@@ -100,8 +90,19 @@ function fireAbilityOn(
       petRegistry,
       summonRequests,
       event,
-      1
+      tiger.level
     );
+  }
+}
+
+// Hurt abilities wait for the ability that dealt the damage to finish, so
+// e.g. both hits of a level 2 Elephant land before a Gorilla gains Coconut.
+function fireQueuedHurts(ctx: BattleAbilityContext): void {
+  const { team, enemyTeam, petRegistry } = ctx;
+  for (const hurtPet of byCurrentAttack(ctx.hurtPets, (hurt) => hurt.attack)) {
+    const hurtTeam = team.includes(hurtPet) ? team : enemyTeam;
+    const otherTeam = hurtTeam === team ? enemyTeam : team;
+    fireHurt(hurtPet, hurtTeam, otherTeam, petRegistry);
   }
 }
 
@@ -208,10 +209,11 @@ function fireFriendFaints(
   enemyTeam: PetInstance[],
   petRegistry: Record<string, StaticPet>
 ): SummonRequest[] {
-  const notActivated = petRegistry[fainted.type]?.doesNotActivatePet ?? [];
   const listeners = team.flatMap((friend) => {
     if (friend === fainted || friend.health <= 0) return [];
-    if (notActivated.includes(friend.type)) return [];
+    if (petRegistry[friend.type]?.doesNotActivate?.includes(fainted.type)) {
+      return [];
+    }
     const ability = getAbility(petRegistry[friend.type], Trigger.friend_faints);
     return ability ? [{ friend, ability }] : [];
   });
@@ -442,7 +444,7 @@ function fireSingleTrigger(
   fireAbilityOn(ability, pet, index, team, enemyTeam, petRegistry, []);
 }
 
-// Fires `pet`'s after-attack perk (Chili), then "hurt" for a pet it damaged.
+// Fires `pet`'s after-attack perk (Chili), then "hurt" for any pet it damaged.
 function fireAfterAttackPerk(
   pet: PetInstance,
   team: PetInstance[],
@@ -451,8 +453,18 @@ function fireAfterAttackPerk(
 ): void {
   if (!isTriggerPerk(pet.perk) || pet.perk.trigger !== Trigger.after_attack)
     return;
-  const { hurtPet } = triggerEffect(pet.perk, { self: pet, enemyTeam });
-  if (hurtPet) fireHurt(hurtPet, enemyTeam, team, petRegistry);
+  const ctx: BattleAbilityContext = {
+    self: pet,
+    selfIndex: team.indexOf(pet),
+    team,
+    enemyTeam,
+    level: pet.level,
+    summonRequests: [],
+    hurtPets: [],
+    petRegistry,
+  };
+  triggerEffect(pet.perk, { self: pet, ctx });
+  fireQueuedHurts(ctx);
 }
 
 type FriendAheadJob = {

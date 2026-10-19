@@ -206,8 +206,7 @@ export class Board {
   }
 }
 
-// The least XP a pet of `level` can have.
-export function xpForLevel(level: number): number {
+export function getMinimumXpFor(level: number): number {
   if (level >= 3) return MAX_PET_EXPERIENCE;
   if (level === 2) return 2;
   return 0;

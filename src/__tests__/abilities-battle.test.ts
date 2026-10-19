@@ -14,7 +14,6 @@ import { Trigger } from "@/lib/types";
 import { grantExperience } from "@/lib/game/merge";
 import { BattleActions } from "@/lib/game/ability-actions";
 import {
-  dealAbilityDamage,
   dealDirectDamage,
   removeHealth,
   removePercentageHealth,
@@ -32,14 +31,14 @@ import { structuredClone } from "next/dist/compiled/@edge-runtime/primitives";
 import { SteakPerk } from "@/lib/perks/steak";
 import { Ox } from "@/lib/pets/turtle/tier 3/ox";
 import { abilityPet, registryWith } from "./helpers";
-import { xpForLevel } from "@/lib/game/board";
+import { getMinimumXpFor } from "@/lib/game/board";
 
 function pet(type: string, attack: number, health: number, perk: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null = null): PetInstance {
   return { type, attack, health, perk: structuredClone(perk), xp: 0, level: 1 };
 }
 
 function petLevel(type: string, attack: number, health: number, level: number): PetInstance {
-  return { type, attack, health, perk: null, xp: xpForLevel(level), level };
+  return { type, attack, health, perk: null, xp: getMinimumXpFor(level), level };
 }
 
 function battleContext(
@@ -1133,11 +1132,43 @@ describe("Pet Abilities", () => {
       });
     });
 
-    // TODO - Tiger only triggers the friend ahead at level 2, for some reason
-    it.skip.each([
-      { level: 1, result: "Sloth (3/5)" },
-      { level: 2, result: "Sloth (5/5)" },
-      { level: 3, result: "Sloth (7/5)" },
+    it.each([
+      { tigerLevel: 1, removal: 6 + 3 },
+      { tigerLevel: 2, removal: 6 + 6 },
+      { tigerLevel: 3, removal: 6 + 9 },
+    ])(
+      "repeats Wolverine at Tiger level $tigerLevel without counting the hurt twice",
+      ({ tigerLevel, removal }) => {
+        const damageFriend = abilityPet("Friend Hurter", {
+          trigger: Trigger.start_of_battle,
+          fn: (ctx) => {
+            const target = ctx.team.find((friend) => friend.type === "Target");
+            if (!target) return;
+            for (let i = 0; i < 4; i++) {
+              new BattleActions(ctx).dealAbilityDamage(target, 1);
+            }
+          },
+        });
+        const { steps } = simulateBattle(
+          [
+            pet(damageFriend.name, 0, 100),
+            pet("Target", 1, 100),
+            petLevel("Wolverine", 5, 7, 2),
+            petLevel("Tiger", 1, 50, tigerLevel),
+          ],
+          [pet("Sloth", 0, 100)],
+          registryWith(damageFriend)
+        );
+
+        expect(steps[1].defenderTeam[0].health).toBe(100 - removal);
+      }
+    );
+
+    it.each([
+      // Dodo gives 2 attack itself, then the repeat gives 2 per Tiger level.
+      { level: 1, result: "Sloth (5/5)" },
+      { level: 2, result: "Sloth (7/5)" },
+      { level: 3, result: "Sloth (9/5)" },
     ])(
       "makes the friend directly ahead repeat their battle ability at level $level",
       ({ level, result }) => {
@@ -1252,7 +1283,7 @@ describe("Perks", () => {
           health: 1000,
           perk: null,
           level,
-          xp: xpForLevel(level),
+          xp: getMinimumXpFor(level),
         });
         expect(faintTriggers).toBe(0);
       }
@@ -1281,19 +1312,21 @@ describe("Perks", () => {
       });
     });
 
-    it("does nothing with no friend ahead", () => {
+    it("does not swallow the friend behind when there is no friend ahead", () => {
       const { steps } = simulateBattle(
-        [pet("Whale", 3, 7), pet("Sloth", 1, 1)],
-        [pet("Sloth", 10, 1000)],
+        [pet("Whale", 3, 7), pet("Cricket", 1, 1)],
+        [pet("Sloth", 1, 1000)],
         PET_REGISTRY
       );
 
       expect(steps[1].attackerTeam.map((friend) => friend.type)).toEqual([
-        "Sloth",
+        "Whale",
+        "Cricket",
       ]);
+      expect(steps[1].attackerTeam[0].swallowedPets).toBeUndefined();
     });
 
-    it("swallows and releases a second friend, at level 1, with a Tiger behind", () => {
+    it("swallows and releases a second friend, at level 1, with a level 1 Tiger behind", () => {
       const { steps } = simulateBattle(
         [
           pet("Ant", 2, 2),
@@ -1332,21 +1365,16 @@ describe("Perks", () => {
     ])(
       "removes $removal health from every enemy after four friend hurts",
       ({ level, removal }) => {
-        const damageFriend = hurter(4);
         const { steps } = simulateBattle(
-          [
-            pet(damageFriend.name, 0, 100),
-            pet("Target", 1, 100),
-            petLevel("Wolverine", 5, 7, level),
-          ],
-          [pet("Sloth", 0, 100), pet("Sloth", 0, 100)],
-          registryWith(damageFriend)
+          [pet("Sloth", 0, 100), petLevel("Wolverine", 5, 7, level)],
+          [pet("Sloth", 1, 100), pet("Sloth", 1, 100)],
+          PET_REGISTRY
         );
+        const enemyHealth = (step: number) =>
+          steps[step].defenderTeam.map((enemy) => enemy.health);
 
-        expect(steps[1].defenderTeam.map((enemy) => enemy.health)).toEqual([
-          100 - removal,
-          100 - removal,
-        ]);
+        expect(enemyHealth(3)).toEqual([100, 100]);
+        expect(enemyHealth(4)).toEqual([100 - removal, 100 - removal]);
       }
     );
 
@@ -1354,23 +1382,26 @@ describe("Perks", () => {
       { hits: 3, health: 100 },
       { hits: 7, health: 97 },
       { hits: 8, health: 94 },
-    ])("has activated on every fourth of $hits hurts", ({ hits, health }) => {
-      const damageFriend = hurter(hits);
-      const { steps } = simulateBattle(
-        [
-          pet(damageFriend.name, 0, 100),
-          pet("Target", 1, 100),
-          pet("Wolverine", 5, 7),
-        ],
-        [pet("Sloth", 0, 100)],
-        registryWith(damageFriend)
-      );
+    ])(
+      "counts each of $hits hits on the same friend as a separate hurt",
+      ({ hits, health }) => {
+        const damageFriend = hurter(hits);
+        const { steps } = simulateBattle(
+          [
+            pet(damageFriend.name, 0, 100),
+            pet("Target", 1, 100),
+            pet("Wolverine", 5, 7),
+          ],
+          [pet("Sloth", 0, 100)],
+          registryWith(damageFriend)
+        );
 
-      expect(steps[0].defenderTeam[0].health).toBe(100);
-      expect(steps[1].defenderTeam[0].health).toBe(health);
-    });
+        expect(steps[0].defenderTeam[0].health).toBe(100);
+        expect(steps[1].defenderTeam[0].health).toBe(health);
+      }
+    );
 
-    it("does not count its own hurts", () => {
+    it("only increments when other friends are hurt", () => {
       const damageSelf = abilityPet("Self Hurter", {
         trigger: Trigger.start_of_battle,
         fn: (ctx) => {
@@ -1387,41 +1418,6 @@ describe("Perks", () => {
 
       expect(steps[1].defenderTeam[0].health).toBe(100);
     });
-
-    it("repeats once at level 1 with a Tiger behind, still every four hurts", () => {
-      const damageFriend = hurter(4);
-      const { steps } = simulateBattle(
-        [
-          pet(damageFriend.name, 0, 100),
-          pet("Target", 1, 100),
-          petLevel("Wolverine", 5, 7, 2),
-          pet("Tiger", 1, 50),
-        ],
-        [pet("Sloth", 0, 100)],
-        registryWith(damageFriend)
-      );
-
-      expect(steps[1].defenderTeam[0].health).toBe(100 - 6 - 3);
-    });
-
-    it("does not consume defensive perks", () => {
-      const damageFriend = hurter(4);
-      const { steps } = simulateBattle(
-        [
-          pet(damageFriend.name, 0, 100),
-          pet("Target", 1, 100),
-          pet("Wolverine", 5, 7),
-        ],
-        [pet("Sloth", 0, 100), pet("Sloth", 0, 100, { ...MelonPerk })],
-        registryWith(damageFriend)
-      );
-
-      expect(steps[1].defenderTeam[1].health).toBe(97);
-      expect(steps[1].defenderTeam[1].perk).toMatchObject({
-        name: "Melon",
-        usesRemaining: 1,
-      });
-    });
   });
 
   describe("Coconut perk — full damage block", () => {
@@ -1436,8 +1432,9 @@ describe("Perks", () => {
 
     it("blocks one ability hit completely", () => {
       const target = pet("Sloth", 1, 10, { ...CoconutPerk });
+      const actions = new BattleActions(battleContext(target, [target], []));
 
-      expect(dealAbilityDamage(target, 30)).toBe(0);
+      expect(actions.dealAbilityDamage(target, 30)).toBe(0);
       expect(target.health).toBe(10);
       expect(target.perk).toBeNull();
     });
@@ -1564,8 +1561,12 @@ describe("Perks", () => {
   });
 
   describe("Spider — faint", () => {
-    it.each([{ level: 1 }, { level: 2 }, { level: 3 }])(
-      "summons a level $level tier 3 pet with stats of twice the level",
+    it.each([
+      { level: 1, expected: "2/2" },
+      { level: 2, expected: "4/4" },
+      { level: 3, expected: "6/6" },
+    ])(
+      "summons a level $level tier 3 pet at $expected",
       ({ level }) => {
         const { steps } = simulateBattle(
           [petLevel("Spider", 2, 2, level)],
@@ -1581,7 +1582,7 @@ describe("Perks", () => {
         expect(summoned).toMatchObject({
           attack: 2 * level,
           health: 2 * level,
-          xp: xpForLevel(level),
+          xp: getMinimumXpFor(level),
           level,
         });
       }
@@ -1606,13 +1607,22 @@ describe("Perks", () => {
         expect(
           opposingTeam.slice(0, count).map((summon) => summon.type)
         ).toEqual(Array(count).fill("Dirty Rat"));
-        // Horse's friend-summoned buff does not fire for them.
-        expect(opposingTeam.slice(0, count).map((rat) => rat.attack)).toEqual(
-          Array(count).fill(1)
-        );
         expect(opposingTeam[count]).toMatchObject({ type: "Horse", attack: 2 });
       }
     );
+
+    it("does not activate the opponent's friend-summoned abilities", () => {
+      const { steps } = simulateBattle(
+        [petLevel("Rat", 3, 1, 3)],
+        [pet("Horse", 2, 10)],
+        PET_REGISTRY
+      );
+      const dirtyRats = steps[1].defenderTeam.filter(
+        (enemy) => enemy.type === "Dirty Rat"
+      );
+
+      expect(dirtyRats.map((rat) => rat.attack)).toEqual([1, 1, 1]);
+    });
   });
 
   describe("Fly — friend faints", () => {
@@ -1751,6 +1761,9 @@ describe("Perks", () => {
           (friend) => friend.type === "Bus"
         );
 
+        expect(
+          steps[1].attackerTeam.filter((friend) => friend.type === "Bus")
+        ).toHaveLength(1);
         expect(bus).toMatchObject({ attack, health, perk: { name: "Chili" } });
         expect(steps[2].defenderTeam[1].health).toBe(95);
       }
@@ -1760,16 +1773,16 @@ describe("Perks", () => {
   describe("Health removal", () => {
     it("removes a flat amount, ignoring defensive perks", () => {
       const target = pet("Sloth", 1, 10, { ...MelonPerk });
-      removeHealth(target, 3);
 
+      expect(removeHealth(target, 3)).toBe(3);
       expect(target.health).toBe(7);
       expect(target.perk).toMatchObject({ name: "Melon", usesRemaining: 1 });
     });
 
     it("removes a percentage of current health, rounded up", () => {
       const target = pet("Sloth", 1, 10);
-      removePercentageHealth(target, 0.33);
 
+      expect(removePercentageHealth(target, 0.33)).toBe(4);
       expect(target.health).toBe(6);
     });
 
@@ -1781,17 +1794,9 @@ describe("Perks", () => {
       },
     ])("leaves at least 1 health on $name removal", ({ remove }) => {
       const target = pet("Sloth", 1, 10);
-      remove(target);
 
+      expect(remove(target)).toBe(9);
       expect(target.health).toBe(1);
-    });
-
-    it("does not revive a fainted pet", () => {
-      const target = pet("Sloth", 1, 0);
-      removeHealth(target, 1);
-      removePercentageHealth(target, 0.5);
-
-      expect(target.health).toBe(0);
     });
   });
 

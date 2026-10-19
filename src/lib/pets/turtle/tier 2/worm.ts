@@ -19,7 +19,7 @@ export const Worm: Readonly<StaticPet> = {
   abilities: createAbilityMap({
     trigger: Trigger.start_of_turn,
     fn: (ctx) => {
-      new ShopActions(ctx).addShopFood(APPLE_BY_LEVEL[ctx.level - 1], DISCOUNT);
+      new ShopActions(ctx).stockShopFood(APPLE_BY_LEVEL[ctx.level - 1], DISCOUNT);
     },
   }),
   description: (level: number) =>

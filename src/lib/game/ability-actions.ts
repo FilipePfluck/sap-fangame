@@ -1,4 +1,6 @@
 import {
+  DOES_NOT_DECAY,
+  isDefensivePerk,
   type BattleAbilityContext,
   type FoodType,
   type PetInstance,
@@ -7,7 +9,6 @@ import {
 } from "@/lib/types";
 import { triggerFriendAteFood } from "@/lib/game/food";
 import { stockFood } from "@/lib/game/shop";
-import { dealAbilityDamage } from "@/lib/utils/combat";
 
 // Ability contexts carry only data; these classes are what an ability
 // instantiates from its context when it needs to act on that data.
@@ -15,16 +16,26 @@ import { dealAbilityDamage } from "@/lib/utils/combat";
 export class BattleActions {
   constructor(private readonly ctx: BattleAbilityContext) {}
 
-  // Returns the actual (post-mitigation) damage dealt. In battle, a pet that
-  // loses health is queued to fire its "hurt" ability once this one finishes.
+  // The only way ability damage is dealt. Garlic/Melon/Coconut reduce it;
+  // returns the actual damage dealt. In battle, a pet that loses health is
+  // queued to fire its "hurt" ability once this ability finishes.
+  // TODO - Ability damage in the shop (e.g. a Pilled Badger hitting Camel)
+  // doesn't fire hurt abilities yet.
   dealAbilityDamage(target: PetInstance, damage: number): number {
-    if (this.ctx.inShop) return dealAbilityDamage(target, damage);
-    if (target.health <= 0) return 0;
+    if (!this.ctx.inShop && target.health <= 0) return 0;
 
-    const healthBefore = target.health;
-    const dealt = dealAbilityDamage(target, damage);
-    if (target.health < healthBefore) this.ctx.hurtPets.push(target);
-    return dealt;
+    const perk = target.perk;
+    if (isDefensivePerk(perk) && perk.blocksAbilityDamage) {
+      damage = perk.blocksAllDamage
+        ? 0
+        : Math.max(damage - perk.blocksFor, perk.minimumDamageTaken);
+      if (perk.usesRemaining !== DOES_NOT_DECAY) perk.usesRemaining -= 1;
+      if (perk.usesRemaining === 0) target.perk = null;
+    }
+
+    target.health -= damage;
+    if (!this.ctx.inShop && damage > 0) this.ctx.hurtPets.push(target);
+    return damage;
   }
 
   // Queues a summon; whatever fired the ability places it afterwards.
@@ -48,8 +59,15 @@ export class ShopActions {
     this.ctx.gold.delta += amount;
   }
 
+  // Adds a food to the shop without removing any (beyond making room).
   // `discount` is the gold knocked off the food's price.
-  addShopFood(food: FoodType, discount = 0): void {
+  stockShopFood(food: FoodType, discount = 0): void {
     stockFood(this.ctx.shop, food, this.ctx.justStocked, discount);
+  }
+
+  // Empties the food shop, frozen items included, then stocks `foods`.
+  replaceShopFood(foods: FoodType[]): void {
+    this.ctx.shop.shopFoods = [];
+    for (const food of foods) this.stockShopFood(food);
   }
 }

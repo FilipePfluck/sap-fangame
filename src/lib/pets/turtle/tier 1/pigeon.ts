@@ -16,7 +16,7 @@ export const Pigeon: Readonly<StaticPet> = {
     fn: (ctx) => {
       const actions = new ShopActions(ctx);
       for (let i = 0; i < ctx.level; i++) {
-        actions.addShopFood(BreadCrumbs);
+        actions.stockShopFood(BreadCrumbs);
       }
     },
   }),

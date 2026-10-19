@@ -8,7 +8,9 @@ import {
 } from "@/lib/types";
 import { getAbility } from "@/lib/pets/ability";
 
-export function serializePetData(pet: StaticPet, level: number): PetData {
+// The client-facing data for a pet at `level`: plain JSON values only, with
+// each ability reduced to its trigger and the description resolved.
+export function toPetData(pet: StaticPet, level: number): PetData {
   const { abilities, description, ...data } = pet;
   return {
     ...data,

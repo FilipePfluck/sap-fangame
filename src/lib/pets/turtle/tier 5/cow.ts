@@ -18,11 +18,8 @@ export const Cow: Readonly<StaticPet> = {
   abilities: createAbilityMap({
     trigger: Trigger.buy,
     fn: (ctx) => {
-      const actions = new ShopActions(ctx);
-      ctx.shop.shopFoods = [];
-      for (let i = 0; i < MILKS_STOCKED; i++) {
-        actions.addShopFood(MILK_BY_LEVEL[ctx.level - 1]);
-      }
+      const milk = MILK_BY_LEVEL[ctx.level - 1];
+      new ShopActions(ctx).replaceShopFood(Array(MILKS_STOCKED).fill(milk));
     },
   }),
   description: (level: number) =>

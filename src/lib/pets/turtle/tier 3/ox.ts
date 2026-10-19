@@ -7,6 +7,8 @@ import {
 
 const TRIGGER_LIMIT = 1;
 
+// TODO - The real ability is "Gain Melon perk and +1 attack. Works 1 / 2 / 3
+// times per turn"; this one scales the attack with level instead.
 export const Ox: Readonly<StaticPet> = {
   name: "Ox",
   sprite: "/sap/Ox.webp",

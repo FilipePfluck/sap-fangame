@@ -164,9 +164,9 @@ export type StaticPet = {
   isToken: boolean;
   abilities: Map<Trigger, Ability>;
   innatePerk?: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null;
-  // Pet types whose abilities this pet never activates (e.g. a fainting Zombie
-  // Fly does not activate Fly).
-  doesNotActivatePet?: string[];
+  // Pet types this pet's abilities never activate on (e.g. Fly ignores a
+  // fainting Zombie Fly).
+  doesNotActivate?: string[];
   description: string | ((level: number) => string);
 };
 

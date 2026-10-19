@@ -4,7 +4,7 @@ import {
   incrementTriggerCount,
   tryIncrementTriggerCount,
 } from "@/lib/pets/ability";
-import { serializePetData } from "@/lib/game/pet";
+import { toPetData } from "@/lib/game/pet";
 import {
   Trigger,
   type Ability,
@@ -29,7 +29,7 @@ describe("pet ability data", () => {
     expect(abilities.get(Trigger.faint)).toBe(faintAbility);
   });
 
-  it("serializes ability triggers without serializing runtime functions", () => {
+  it("PetData includes only JSON-parseable data", () => {
     const pet: StaticPet = {
       name: "Test Pet",
       sprite: "/test.webp",
@@ -44,7 +44,7 @@ describe("pet ability data", () => {
       description: (level) => `Ability at level ${level}.`,
     };
 
-    const data = serializePetData(pet, 2);
+    const data = toPetData(pet, 2);
 
     expect(data).toMatchObject({
       name: "Test Pet",
@@ -66,7 +66,7 @@ describe("pet trigger counts", () => {
     level: 1,
   });
 
-  it("activates every Nth trigger with a modulus check", () => {
+  it("activates on every fourth trigger", () => {
     const pet = makePet();
     const activations: number[] = [];
     for (let i = 1; i <= 9; i++) {

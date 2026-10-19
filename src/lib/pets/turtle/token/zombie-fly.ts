@@ -8,6 +8,5 @@ export const ZombieFly: Readonly<StaticPet> = {
   baseHealth: 4,
   isToken: true,
   abilities: new Map(),
-  doesNotActivatePet: ["Fly"],
   description: "No ability.",
 };

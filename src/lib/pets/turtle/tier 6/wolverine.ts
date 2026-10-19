@@ -18,7 +18,8 @@ export const Wolverine: Readonly<StaticPet> = {
   abilities: createAbilityMap({
     trigger: Trigger.friend_hurt,
     fn: (ctx) => {
-      // A repeat is the same friend being hurt, so it isn't counted again.
+      // Every hurt counts, including several on the same friend. Only a Tiger
+      // repeat skips counting: it replays the hurt that was just counted.
       const friendsHurt = ctx.isRepeat
         ? getTriggerCount(ctx.self, Trigger.friend_hurt)
         : incrementTriggerCount(ctx.self, Trigger.friend_hurt);

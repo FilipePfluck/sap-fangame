@@ -25,7 +25,7 @@ import { HoneyPerk } from "@/lib/perks/honey";
 import { MelonPerk } from "@/lib/perks/melon";
 import { Ox } from "@/lib/pets/turtle/tier 3/ox";
 import { abilityPet, registryWith } from "./helpers";
-import { xpForLevel } from "@/lib/game/board";
+import { getMinimumXpFor } from "@/lib/game/board";
 
 function makePet(type: string, level = 1): PetInstance {
   return {
@@ -33,7 +33,7 @@ function makePet(type: string, level = 1): PetInstance {
     attack: 1,
     health: 1,
     perk: null,
-    xp: xpForLevel(level),
+    xp: getMinimumXpFor(level),
     level,
   };
 }
@@ -1559,20 +1559,34 @@ describe("Seagull — friend summoned", () => {
 
 describe("Jerboa — eats Apple", () => {
   it.each([
-    { level: 1, food: Apple, expected: 2 },
-    { level: 2, food: BetterApple, expected: 3 },
-    { level: 3, food: BestApple, expected: 4 },
+    { level: 1, expected: 2 },
+    { level: 2, expected: 3 },
+    { level: 3, expected: 4 },
   ])(
-    "buffs a friend by +$level/+$level for $food.name",
-    ({ level, food, expected }) => {
+    "gives friends +$level/+$level at level $level",
+    ({ level, expected }) => {
       const result = applyFoodEffect(
-        food,
+        Apple,
         makeBoard([makePet("Jerboa", level), makePet("Ant")]),
         0,
         PET_REGISTRY
       );
 
       expect(result[1]).toMatchObject({ attack: expected, health: expected });
+    }
+  );
+
+  it.each([{ food: Apple }, { food: BetterApple }, { food: BestApple }])(
+    "activates when it eats $food.name",
+    ({ food }) => {
+      const result = applyFoodEffect(
+        food,
+        makeBoard([makePet("Jerboa"), makePet("Ant")]),
+        0,
+        PET_REGISTRY
+      );
+
+      expect(result[1]).toMatchObject({ attack: 2, health: 2 });
     }
   );
 

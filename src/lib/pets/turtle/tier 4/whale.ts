@@ -1,7 +1,7 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { createAbilityMap } from "@/lib/pets/ability";
 import { BattleActions } from "@/lib/game/ability-actions";
-import { xpForLevel } from "@/lib/game/board";
+import { getMinimumXpFor } from "@/lib/game/board";
 
 export const Whale: Readonly<StaticPet> = {
   name: "Whale",
@@ -30,7 +30,7 @@ export const Whale: Readonly<StaticPet> = {
             attack: friend.attack,
             health: friend.health,
             perk: null,
-            xp: xpForLevel(ctx.level),
+            xp: getMinimumXpFor(ctx.level),
             level: ctx.level,
           },
         ];

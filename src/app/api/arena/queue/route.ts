@@ -13,6 +13,8 @@ export async function POST() {
 
   const shop = generateShop({
     turn: 1,
+    // TODO - Use a dedicated Pack once players can choose one; ALL_PETS keeps
+    // every pet testable until then.
     pack: ALL_PETS,
     foodTypes: TURTLE_PACK_FOODS,
   });

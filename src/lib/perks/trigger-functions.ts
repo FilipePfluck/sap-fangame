@@ -12,7 +12,6 @@ export function triggerEffect(
   { ...args }
 ): {
   summonRequest?: PetInstance;
-  hurtPet?: PetInstance;
 } {
   switch (perk.name) {
     case "Bread":
@@ -24,7 +23,8 @@ export function triggerEffect(
       return {};
 
     case "Chili":
-      return { hurtPet: chiliEffect({ enemyTeam: args["enemyTeam"] }) };
+      chiliEffect(args["ctx"]);
+      return {};
 
     case "Honey":
       return { summonRequest: honeyEffect() };
