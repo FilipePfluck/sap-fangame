@@ -9,7 +9,7 @@ import { orderByAttack, pickN } from "@/lib/utils/random";
 import { grantExperience } from "@/lib/game/merge";
 import { MAX_PET_EXPERIENCE } from "@/lib/game/rules";
 import { Board } from "@/lib/game/board";
-import { getAbility } from "@/lib/pets/ability";
+import { getAbility, tryIncrementTriggerCount } from "@/lib/pets/ability";
 
 // Whether the player has to pick a pet to feed this food to.
 export function needsTarget(food: FoodType): boolean {
@@ -39,9 +39,13 @@ export function feedError(
 }
 
 // TODO - Give food effects defaults (e.g. attack = 0) instead of handling undefined here
-function applyStandardEffect(food: FoodType, pet: PetInstance): PetInstance {
-  const attackBonus = food.effect.attack ?? 0;
-  const healthBonus = food.effect.health ?? 0;
+function applyStandardEffect(
+  food: FoodType,
+  pet: PetInstance,
+  multiplier = 1
+): PetInstance {
+  const attackBonus = (food.effect.attack ?? 0) * multiplier;
+  const healthBonus = (food.effect.health ?? 0) * multiplier;
   const updatedPet: PetInstance = {
     ...pet,
     attack: pet.attack + attackBonus,
@@ -57,6 +61,29 @@ function applyStandardEffect(food: FoodType, pet: PetInstance): PetInstance {
   if ("experience" in food.effect)
     grantExperience(updatedPet, food.effect.experience ?? 0);
   return updatedPet;
+}
+
+// How many times over this food's attack/health applies: 1 plus the level of
+// each Cat with uses left this turn, each of which spends one. Foods without
+// attack/health (Chocolate, perks) neither multiply nor spend a use.
+function consumeFoodMultiplier(
+  food: FoodType,
+  board: ApiBoard,
+  petRegistry: Record<string, StaticPet>
+): number {
+  if (!food.effect.attack && !food.effect.health) return 1;
+  let multiplier = 1;
+  for (const pet of board) {
+    const boost = pet && petRegistry[pet.type]?.foodStatMultiplier;
+    if (
+      boost &&
+      pet.health > 0 &&
+      tryIncrementTriggerCount(pet, Trigger.food_bought, boost.usesPerTurn)
+    ) {
+      multiplier += pet.level;
+    }
+  }
+  return multiplier;
 }
 
 // Board positions the food acts on: the chosen one, or a random selection of
@@ -121,11 +148,13 @@ export function applyFoodEffect(
     return food.applyEffect({ board: newBoard, boardPosition, petRegistry });
   }
 
+  // One purchase spends one use, however many pets it feeds (Sushi).
+  const multiplier = consumeFoodMultiplier(food, newBoard, petRegistry);
   for (const i of pickTargets(food, new Board(newBoard), boardPosition)) {
     const pet = newBoard[i];
     if (pet) {
       if (isMaxedExperienceTarget(food, pet)) continue;
-      const fedPet = applyStandardEffect(food, pet);
+      const fedPet = applyStandardEffect(food, pet, multiplier);
       newBoard[i] = fedPet;
       if (!food.skipsFriendAteFood) {
         triggerFriendAteFood(newBoard, fedPet, petRegistry, food.foodGroup);

@@ -131,6 +131,8 @@ export enum Trigger {
   friend_ahead_faints,
   friend_hurt,
   friend_faints,
+  // Shop food bought (counted for Cat's uses per turn).
+  food_bought,
 }
 
 export type Ability =
@@ -167,6 +169,9 @@ export type StaticPet = {
   // Pet types this pet's abilities never activate on (e.g. Fly ignores a
   // fainting Zombie Fly).
   doesNotActivate?: string[];
+  // While on the team, each level adds one more helping of shop food
+  // attack/health, for the first `usesPerTurn` foods each turn (Cat).
+  foodStatMultiplier?: { usesPerTurn: number };
   description: string | ((level: number) => string);
 };
 

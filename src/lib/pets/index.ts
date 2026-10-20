@@ -60,6 +60,7 @@ export { Deer } from "./turtle/tier 4/deer";
 export { Cow } from "./turtle/tier 5/cow";
 export { Gorilla } from "./turtle/tier 6/gorilla";
 export { Fly } from "./turtle/tier 6/fly";
+export { Cat } from "./turtle/tier 6/cat";
 export { Bus } from "./turtle/token/bus";
 export { DirtyRat } from "./turtle/token/dirty-rat";
 export { ZombieFly } from "./turtle/token/zombie-fly";
@@ -129,6 +130,7 @@ import { Deer } from "./turtle/tier 4/deer";
 import { Cow } from "./turtle/tier 5/cow";
 import { Gorilla } from "./turtle/tier 6/gorilla";
 import { Fly } from "./turtle/tier 6/fly";
+import { Cat } from "./turtle/tier 6/cat";
 import { Bus } from "./turtle/token/bus";
 import { DirtyRat } from "./turtle/token/dirty-rat";
 import { ZombieFly } from "./turtle/token/zombie-fly";
@@ -199,6 +201,7 @@ export const TURTLE_PACK_PETS = [
   Cow,
   Gorilla,
   Fly,
+  Cat,
   Bus,
   DirtyRat,
   ZombieFly,
