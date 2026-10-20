@@ -15,6 +15,7 @@ import { friendSummonedCandidates } from "@/lib/game/friend-summoned";
 import { friendAheadAbility } from "@/lib/game/pet";
 import { getAbility } from "@/lib/pets/ability";
 import { triggerEffect } from "@/lib/perks/trigger-functions";
+import { addLevelUpReward } from "@/lib/game/shop";
 
 // TODO - Order shop abilities through a shared queue manager (supporting dynamic
 // updates) and remove the per-function orderByAttack sorting below.
@@ -86,6 +87,58 @@ export function fireShopAbility(
     createShopContext(pet, petIndex, newBoard, newShop, gold, new Set())
   );
   return { board: newBoard, shop: newShop, goldDelta: gold.delta };
+}
+
+export type LevelUpOptions = {
+  turn: number;
+  rewardPool: StaticPet[];
+  petRegistry: Record<string, StaticPet>;
+};
+
+// The one place a shop level-up is resolved (buying into a merge, merging,
+// food experience): the pet fires its level-up ability at its old level,
+// then a level-up reward is stocked unless `earnsReward` is false (merging
+// two level-2 pets).
+export function resolveLevelUp(
+  board: (PetInstance | null)[],
+  shop: ShopState,
+  index: number,
+  oldLevel: number,
+  { turn, rewardPool, petRegistry }: LevelUpOptions,
+  earnsReward = true
+): ShopAbilityResult {
+  const result = fireShopAbility(
+    Trigger.level_up,
+    { ...board[index]!, level: oldLevel },
+    index,
+    board,
+    shop,
+    petRegistry
+  );
+  if (earnsReward) {
+    result.shop = addLevelUpReward(result.shop, turn, rewardPool);
+  }
+  return result;
+}
+
+// Resolves every pet that leveled up from experience between `before` and
+// `after` (food, Flounder), matching pets by board position.
+export function resolveExperienceLevelUps(
+  before: (PetInstance | null)[],
+  after: (PetInstance | null)[],
+  shop: ShopState,
+  options: LevelUpOptions
+): ShopAbilityResult {
+  let result: ShopAbilityResult = { board: [...after], shop, goldDelta: 0 };
+  for (let i = 0; i < after.length; i++) {
+    const oldLevel = before[i]?.level;
+    const pet = result.board[i];
+    if (!pet || oldLevel === undefined || pet.level <= oldLevel) continue;
+
+    const leveled = resolveLevelUp(result.board, result.shop, i, oldLevel, options);
+    result = { ...leveled, goldDelta: result.goldDelta + leveled.goldDelta };
+  }
+  return result;
 }
 
 // Fires a board-wide trigger ("start-of-turn" / "end-turn") for every pet on

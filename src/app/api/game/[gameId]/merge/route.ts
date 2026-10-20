@@ -2,12 +2,12 @@ import { auth } from "@/auth";
 import { prisma, toPrismaJson } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { mergePets, mergeError, levelUpRewardEarned } from "@/lib/game/merge";
-import { addLevelUpReward, applyFrozenFlags } from "@/lib/game/shop";
+import { applyFrozenFlags } from "@/lib/game/shop";
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
-import { fireShopAbility } from "@/lib/game/shop-ability";
+import { resolveLevelUp } from "@/lib/game/shop-ability";
 import { z } from "zod";
-import { ApiBoard, ShopState, Trigger } from "@/lib/types";
+import { ApiBoard, ShopState } from "@/lib/types";
 
 const MergeSchema = z.object({
   from: z.number().int().min(0).max(4),
@@ -74,15 +74,21 @@ export async function POST(
   let extraGold = 0;
 
   if (didLevelUp) {
-    const petAtOldLevel = { ...merged, level: preMergeLevel };
-    const result = fireShopAbility(Trigger.level_up, petAtOldLevel, to, currentBoard, currentShop, PET_REGISTRY);
+    const result = resolveLevelUp(
+      currentBoard,
+      currentShop,
+      to,
+      preMergeLevel,
+      {
+        turn: state.turn.turnNumber,
+        rewardPool: SHOP_PET_POOL,
+        petRegistry: PET_REGISTRY,
+      },
+      levelUpRewardEarned(petFrom, petTo)
+    );
     currentBoard = result.board;
     currentShop = result.shop;
     extraGold = result.goldDelta;
-  }
-
-  if (levelUpRewardEarned(petFrom, petTo)) {
-    currentShop = addLevelUpReward(currentShop, state.turn.turnNumber, SHOP_PET_POOL);
   }
 
   const boardState = await prisma.boardState.create({

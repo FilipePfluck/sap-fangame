@@ -2,12 +2,13 @@ import { auth } from "@/auth";
 import { prisma, toPrismaJson } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
-import { addLevelUpReward, applyFrozenFlags } from "@/lib/game/shop";
+import { applyFrozenFlags } from "@/lib/game/shop";
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import {
   fireShopAbility,
   fireShopFriendBought,
   fireShopFriendSummoned,
+  resolveLevelUp,
 } from "@/lib/game/shop-ability";
 import { getPetCost } from "@/lib/game/costs";
 import { createPet } from "@/lib/game/pet";
@@ -133,24 +134,21 @@ export async function POST(
   extraGold += friendBoughtResult.goldDelta;
 
   if (response.levelUpReward) {
-    // TODO: Update pet abilities to fire based on previous level
-    const levelUpResult = fireShopAbility(
-      Trigger.level_up,
-      newBoardData[boardPosition]!,
-      boardPosition,
+    const levelUpResult = resolveLevelUp(
       newBoardData,
       currentShop,
-      PET_REGISTRY
-    )
+      boardPosition,
+      // The level of the pet it merged into.
+      state.board[boardPosition]!.level,
+      {
+        turn: state.turn.turnNumber,
+        rewardPool: SHOP_PET_POOL,
+        petRegistry: PET_REGISTRY,
+      }
+    );
     newBoardData = levelUpResult.board;
     currentShop = levelUpResult.shop;
     extraGold += levelUpResult.goldDelta;
-
-    currentShop = addLevelUpReward(
-      currentShop,
-      state.turn.turnNumber,
-      SHOP_PET_POOL
-    );
   }
 
   const boardState = await prisma.boardState.create({

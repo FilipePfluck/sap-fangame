@@ -7,6 +7,7 @@ import {
   type StaticPet,
 } from "@/lib/types";
 import { getAbility } from "@/lib/pets/ability";
+import { getMinimumXpFor } from "@/lib/game/board";
 
 // The client-facing data for a pet at `level`: plain JSON values only, with
 // each ability reduced to its trigger and the description resolved.
@@ -46,4 +47,21 @@ export function createPet(def: StaticPet, tempHealthBonus = 0): PetInstance {
     xp: 0,
     level: 1,
   };
+}
+
+// Turns `pet` into `into` in place: still the same pet (stats, perk,
+// position) at the same level, but with no experience beyond that level.
+// Then fires the new form's "transformed" ability.
+export function transformPet(
+  pet: PetInstance,
+  into: StaticPet,
+  friends: PetInstance[]
+): void {
+  pet.type = into.name;
+  pet.xp = getMinimumXpFor(pet.level);
+  getAbility(into, Trigger.transformed)?.fn({
+    self: pet,
+    friends,
+    level: pet.level,
+  });
 }

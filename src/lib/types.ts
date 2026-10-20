@@ -101,6 +101,13 @@ export type FoodAbilityContext = {
   foodGroup?: FoodType["foodGroup"];
 };
 
+export type TransformedAbilityContext = {
+  self: PetInstance;
+  // The board's living pets, in board order (self included).
+  friends: PetInstance[];
+  level: number;
+};
+
 export type ShopAbilityContext = {
   self: PetInstance;
   selfIndex: number;
@@ -136,6 +143,7 @@ export enum Trigger {
   friend_faints,
   // Shop food bought (counted for Cat's uses per turn).
   food_bought,
+  transformed,
 }
 
 export type Ability =
@@ -156,7 +164,8 @@ export type Ability =
   | { trigger: Trigger.friend_bought; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.knock_out; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: Trigger.friend_hurt; fn: (ctx: BattleAbilityContext) => void }
-  | { trigger: Trigger.friend_faints; fn: (ctx: BattleAbilityContext) => void };
+  | { trigger: Trigger.friend_faints; fn: (ctx: BattleAbilityContext) => void }
+  | { trigger: Trigger.transformed; fn: (ctx: TransformedAbilityContext) => void };
 
 export type AbilityData = Pick<Ability, "trigger">;
 

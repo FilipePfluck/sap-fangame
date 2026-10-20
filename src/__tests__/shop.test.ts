@@ -20,12 +20,22 @@ const MULTI_TIER_FOODS = [TIER1_FOOD, TIER2_FOOD];
 describe("generateShop", () => {
   it("keeps SAP Other pets separate from the Turtle pack and in the shop pool", () => {
     const sapOtherNames = SAP_OTHER_PETS.map((pet) => pet.name);
-    expect(sapOtherNames).toEqual(["Seagull", "Alpaca", "Jerboa", "Sugar Glider"]);
+    expect(sapOtherNames).toEqual([
+      "Seagull",
+      "Alpaca",
+      "Jerboa",
+      "Sugar Glider",
+      "Flounder",
+      "Adult Flounder",
+    ]);
     expect(
       TURTLE_PACK_PETS.some((pet) => sapOtherNames.includes(pet.name))
     ).toBe(false);
+    const shopableNames = SAP_OTHER_PETS.filter((pet) => !pet.isToken).map(
+      (pet) => pet.name
+    );
     expect(SHOP_PET_POOL.map((pet) => pet.name)).toEqual(
-      expect.arrayContaining(sapOtherNames)
+      expect.arrayContaining(shopableNames)
     );
   });
 
