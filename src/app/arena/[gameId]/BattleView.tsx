@@ -3,19 +3,13 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { BattleStep, PetData } from "@/lib/types";
+import type { ApiBoard, BattleStep, PetData } from "@/lib/types";
 import { PET_SPRITES, FOOD_SPRITES } from "@/lib/sprites";
 import { PET_REGISTRY, getPetDescription } from "@/lib/pets";
 import { FOOD_REGISTRY } from "@/lib/foods";
 import { startGame } from "@/app/actions/game";
 import Tooltip from "./Tooltip";
-
-type BattleData = {
-  opponentTeam: PetData[];
-  opponentName: string | null;
-  result: "WIN" | "DRAW" | "LOSS";
-  steps: BattleStep[];
-};
+import { BattleData } from "@/app/arena/[gameId]/GameClient";
 
 type BattleViewProps = {
   battleData: BattleData;
@@ -46,34 +40,27 @@ export default function BattleView({ battleData, gameWon, onBackToShop }: Battle
   function getAttackerAnim(index: number): string {
     if (!prevStep || stepIndex === 0) return "";
     // Front pet (index 0) is attacking this step
-    if (index === 0 && prevStep.attackerTeam.length > 0) return "animate-sap-attack";
+    if (index === 0 && prevStep.summary.playerTeam.length > 0) return "animate-sap-attack";
     return "";
   }
 
   function getDefenderAnim(index: number): string {
     if (!prevStep || stepIndex === 0) return "";
-    if (index === 0 && prevStep.defenderTeam.length > 0) return "animate-sap-attack";
+    if (index === 0 && prevStep.summary.opposingTeam.length > 0) return "animate-sap-attack";
     return "";
   }
 
   function wasFainting(
-    prevTeam: PetData[],
-    currentTeam: PetData[]
+    prevTeam: ApiBoard,
+    currentTeam: ApiBoard
   ): AnimatingPet[] {
     if (!prevStep) return [];
     // Pets that existed in prev step but are gone now
     const fainted = prevTeam.slice(currentTeam.length);
-    return fainted.map((pet) => ({ pet, animClass: "animate-sap-faint" }));
+    return fainted
+      .filter(pet => pet !== null)
+      .map(pet => ({ pet, animClass: "animate-sap-faint" }));
   }
-
-  const faintedAttackers = wasFainting(
-    prevStep?.attackerTeam ?? [],
-    currentStep.attackerTeam
-  );
-  const faintedDefenders = wasFainting(
-    prevStep?.defenderTeam ?? [],
-    currentStep.defenderTeam
-  );
 
   const resultColor =
     battleData.result === "WIN"
@@ -82,24 +69,61 @@ export default function BattleView({ battleData, gameWon, onBackToShop }: Battle
       ? "text-red-500"
       : "text-zinc-400";
 
+  const playerTeam = currentStep.summary.playerTeam
+    .filter(pet => pet !== null)
+    .map((pet, i) => (
+      <PetCard
+        key={i}
+        pet={pet}
+        facing="right"
+        animClass={getAttackerAnim(i)}
+      />));
+
+  const faintedAttackers = wasFainting(
+    prevStep?.summary.playerTeam ?? [],
+    currentStep.summary.playerTeam
+  );
+
+  const playerFaintedTeam = faintedAttackers.map(({ pet, animClass }, i) => (
+    <PetCard
+      key={`faint-a-${i}`}
+      pet={pet}
+      facing="right"
+      animClass={animClass}
+    />
+  ));
+
+  const opposingTeam = currentStep.summary.opposingTeam
+    .filter((pet) => pet !== null)
+    .map((pet, i) => (
+      <PetCard key={i} pet={pet} facing="left" animClass={getDefenderAnim(i)} />
+    ));
+
+  const faintedDefenders = wasFainting(
+    prevStep?.summary?.opposingTeam ?? [],
+    currentStep.summary.opposingTeam
+  );
+
+  const opposingFaintedTeam = faintedDefenders.map(({ pet, animClass }, i) => (
+    <PetCard
+      key={`faint-d-${i}`}
+      pet={pet}
+      facing="left"
+      animClass={animClass}
+    />
+  ));
+
   return (
     <div className="flex flex-col items-center gap-8 w-full">
-      <h2 className="text-lg font-semibold text-zinc-500 dark:text-zinc-400">Battle</h2>
+      <h2 className="text-lg font-semibold text-zinc-500 dark:text-zinc-400">
+        Battle
+      </h2>
 
       <div className="flex items-center justify-center gap-8">
         {/* Player team — facing right (sprite art faces left, so it is mirrored) */}
         <div className="flex flex-row-reverse gap-2">
-          {currentStep.attackerTeam.map((pet, i) => (
-            <PetCard
-              key={i}
-              pet={pet}
-              facing="right"
-              animClass={getAttackerAnim(i)}
-            />
-          ))}
-          {faintedAttackers.map(({ pet, animClass }, i) => (
-            <PetCard key={`faint-a-${i}`} pet={pet} facing="right" animClass={animClass} />
-          ))}
+          {playerTeam}
+          {playerFaintedTeam}
         </div>
 
         <span className="text-2xl font-bold text-zinc-400">VS</span>
@@ -110,27 +134,19 @@ export default function BattleView({ battleData, gameWon, onBackToShop }: Battle
             {battleData.opponentName ?? "Ghost"}
           </span>
           <div className="flex flex-row gap-2">
-            {currentStep.defenderTeam.map((pet, i) => (
-              <PetCard
-                key={i}
-                pet={pet}
-                facing="left"
-                animClass={getDefenderAnim(i)}
-              />
-            ))}
-            {faintedDefenders.map(({ pet, animClass }, i) => (
-              <PetCard key={`faint-d-${i}`} pet={pet} facing="left" animClass={animClass} />
-            ))}
+            {opposingTeam}
+            {opposingFaintedTeam}
           </div>
         </div>
       </div>
 
       {/* Step description */}
       <p className="text-sm text-zinc-500 dark:text-zinc-400 h-6">
-        {currentStep.description}
+        {currentStep.summary.description}
       </p>
 
       {/* Result */}
+      {/* TODO - Extract to separate component */}
       {done && (
         <div className="text-center">
           {gameWon ? (
@@ -155,7 +171,9 @@ export default function BattleView({ battleData, gameWon, onBackToShop }: Battle
             </>
           ) : (
             <>
-              <p className={`text-4xl font-bold ${resultColor}`}>{battleData.result}</p>
+              <p className={`text-4xl font-bold ${resultColor}`}>
+                {battleData.result}
+              </p>
               <button
                 onClick={onBackToShop}
                 className="mt-4 px-6 py-2 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-200 transition-colors"

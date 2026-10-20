@@ -52,10 +52,34 @@ export type ShopState = {
 };
 
 export type BattleStep = {
-  attackerTeam: PetData[];
-  defenderTeam: PetData[];
-  description: string;
+  round: number;
+  summary: {
+    description: string;
+    playerTeam: ApiBoard;
+    opposingTeam: ApiBoard;
+  };
+  actions: BattleAction[]
 };
+
+export type BattleAction = {
+  sourceIndex: number;
+  targetIndex: number;
+  value: number;
+  type: ActionType;
+}
+
+enum ActionType {
+  DirectDamage,
+  IndirectDamage,
+  HealthRemoval,
+  Summon,
+  // SummonPerk should display the perk responsible for summoning, rather than the pet
+  SummonPerk,
+  ApplyExperience,
+  ApplyAilment,
+  ApplyPerk,
+  ActivateAbility,
+}
 
 export type BattleAbilityContext = {
   self: PetData;

@@ -1,5 +1,6 @@
 import {
-  BattleAbilityContext,
+  ApiBoard,
+  BattleAbilityContext, BattleAction,
   BattleStep,
   PetData,
   StaticPet,
@@ -93,8 +94,7 @@ function fireAbilityOn(
       return dealt;
     },
     grantExperience,
-    friendAteFood: (fedPet) =>
-      triggerFriendAteFood(team, fedPet, petRegistry),
+    friendAteFood: (fedPet) => triggerFriendAteFood(team, fedPet, petRegistry),
   };
   ability.fn(ctx);
 
@@ -179,9 +179,11 @@ function queueFaintPerkSummon(
   faintedIndex: number,
   pendingSummons: PendingSummon[]
 ): void {
-  if (!isTriggerPerk(fainted.perk) || fainted.perk.trigger !== Trigger.faint) return;
+  if (!isTriggerPerk(fainted.perk) || fainted.perk.trigger !== Trigger.faint)
+    return;
   const { summonRequest } = triggerEffect(fainted.perk, { self: fainted });
-  if (summonRequest) pendingSummons.push({ pet: summonRequest, afterIndex: faintedIndex });
+  if (summonRequest)
+    pendingSummons.push({ pet: summonRequest, afterIndex: faintedIndex });
 }
 
 // Summons with no room left on the team are flung.
@@ -234,7 +236,15 @@ function handleFaint(
 ): void {
   const fainted = team[faintedIndex];
   const pendingSummons: PendingSummon[] = [];
-  fireFaintAbility(fainted, faintedIndex, team, enemyTeam, petRegistry, counts, pendingSummons);
+  fireFaintAbility(
+    fainted,
+    faintedIndex,
+    team,
+    enemyTeam,
+    petRegistry,
+    counts,
+    pendingSummons
+  );
   queueFaintPerkSummon(fainted, faintedIndex, pendingSummons);
   fireFriendAheadFaints(faintedIndex, team, enemyTeam, petRegistry, counts);
   team.splice(faintedIndex, 1);
@@ -384,7 +394,11 @@ function queueFriendAheadAttacks(
     const attackerIndex = team.indexOf(attackingPet);
     if (attackerIndex === -1) continue;
     const pet = team[attackerIndex + 1];
-    const fn = friendAheadAbility(pet, Trigger.friend_ahead_attacks, petRegistry);
+    const fn = friendAheadAbility(
+      pet,
+      Trigger.friend_ahead_attacks,
+      petRegistry
+    );
     if (fn) candidates.push({ pet, team, enemyTeam, ability: { fn } });
   }
   return candidates;
@@ -415,8 +429,8 @@ function fireFriendAheadAttacks(
 }
 
 export function simulateBattle(
-  playerTeam: (PetData | null)[],
-  opponentTeam: (PetData | null)[],
+  playerTeam: ApiBoard,
+  opponentTeam: ApiBoard,
   petRegistry: Record<string, StaticPet> = {}
 ): BattleSimulationResult {
   const attacker: PetData[] = compactTeam(playerTeam);
@@ -424,21 +438,27 @@ export function simulateBattle(
   const steps: BattleStep[] = [];
   const triggerCounts = new WeakMap<PetData, number>();
 
-  steps.push({
-    attackerTeam: attacker.map(clonePet),
-    defenderTeam: defender.map(clonePet),
-    description: "Battle start",
-  });
+  const battleStartStep: BattleStep = {
+    round: 0,
+    summary: {
+      description: "Battle start",
+      playerTeam: attacker.map(clonePet),
+      opposingTeam: defender.map(clonePet),
+    },
+    actions: []
+  };
 
   // Start-of-battle abilities fire across both teams, highest attack first
   fireStartOfBattlePhase(attacker, defender, petRegistry, triggerCounts);
   handleDeathsPhase(attacker, defender, petRegistry, triggerCounts);
 
-  let rounds = 0;
+  steps.push(battleStartStep);
+
+  let round = 0;
   const MAX_ROUNDS = 50;
 
-  while (attacker.length > 0 && defender.length > 0 && rounds < MAX_ROUNDS) {
-    rounds++;
+  while (attacker.length > 0 && defender.length > 0 && round < MAX_ROUNDS) {
+    round++;
     const atkFront = attacker[0];
     const defFront = defender[0];
 
@@ -572,9 +592,13 @@ export function simulateBattle(
     }
 
     steps.push({
-      attackerTeam: attacker.map(clonePet),
-      defenderTeam: defender.map(clonePet),
-      description,
+      round,
+      summary: {
+        description,
+        playerTeam: attacker.map(clonePet),
+        opposingTeam: defender.map(clonePet),
+      },
+      actions: [],
     });
   }
 
