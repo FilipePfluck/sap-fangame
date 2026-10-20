@@ -67,6 +67,7 @@ export { ZombieFly } from "./turtle/token/zombie-fly";
 export { Seagull } from "./SAPOther/seagull";
 export { Alpaca } from "./SAPOther/alpaca";
 export { Jerboa } from "./SAPOther/jerboa";
+export { SugarGlider } from "./SAPOther/sugar-glider";
 
 import { Sloth } from "./turtle/token/sloth";
 import { Duck } from "./turtle/tier 1/duck";
@@ -137,6 +138,7 @@ import { ZombieFly } from "./turtle/token/zombie-fly";
 import { Seagull } from "./SAPOther/seagull";
 import { Alpaca } from "./SAPOther/alpaca";
 import { Jerboa } from "./SAPOther/jerboa";
+import { SugarGlider } from "./SAPOther/sugar-glider";
 import type { StaticPet } from "@/lib/types";
 
 export const TURTLE_PACK_PETS = [
@@ -208,7 +210,7 @@ export const TURTLE_PACK_PETS = [
 ];
 
 // Pets from outside the Turtle pack.
-export const SAP_OTHER_PETS = [Seagull, Alpaca, Jerboa];
+export const SAP_OTHER_PETS = [Seagull, Alpaca, Jerboa, SugarGlider];
 
 export const ALL_PETS = [...TURTLE_PACK_PETS, ...SAP_OTHER_PETS];
 

@@ -32,6 +32,9 @@ export type ShopFood = {
   frozen: boolean;
   // Gold knocked off this item's price (set by abilities); see lib/game/costs.
   discount?: number;
+  // Attack/health this food gives is multiplied by this (Sugar Glider's
+  // Cupcakes). Cat adds to it; see lib/game/food.
+  multiplier?: number;
 };
 
 export type BuyResponse = {

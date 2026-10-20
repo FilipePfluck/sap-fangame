@@ -67,7 +67,13 @@ export async function POST(
     return Response.json({ error: "Not enough gold" }, { status: 400 });
   }
 
-  const newBoard = applyFoodEffect(foodDef, state.board, boardPosition, PET_REGISTRY);
+  const newBoard = applyFoodEffect(
+    foodDef,
+    state.board,
+    boardPosition,
+    PET_REGISTRY,
+    shopFood.multiplier
+  );
 
   const newShopFoods = [...shopNow.shopFoods];
   newShopFoods.splice(shopPosition, 1);

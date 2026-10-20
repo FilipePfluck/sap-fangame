@@ -63,16 +63,16 @@ function applyStandardEffect(
   return updatedPet;
 }
 
-// How many times over this food's attack/health applies: 1 plus the level of
-// each Cat with uses left this turn, each of which spends one. Foods without
-// attack/health (Chocolate, perks) neither multiply nor spend a use.
-function consumeFoodMultiplier(
+// Extra multiples of this food's attack/health from Cats: the level of each
+// one with uses left this turn, each of which spends one. Foods without
+// attack/health (Chocolate, perks) get no bonus and spend no use.
+function consumeCatBonus(
   food: FoodType,
   board: ApiBoard,
   petRegistry: Record<string, StaticPet>
 ): number {
-  if (!food.effect.attack && !food.effect.health) return 1;
-  let multiplier = 1;
+  if (!food.effect.attack && !food.effect.health) return 0;
+  let bonus = 0;
   for (const pet of board) {
     const boost = pet && petRegistry[pet.type]?.foodStatMultiplier;
     if (
@@ -80,10 +80,10 @@ function consumeFoodMultiplier(
       pet.health > 0 &&
       tryIncrementTriggerCount(pet, Trigger.food_bought, boost.usesPerTurn)
     ) {
-      multiplier += pet.level;
+      bonus += pet.level;
     }
   }
-  return multiplier;
+  return bonus;
 }
 
 // Board positions the food acts on: the chosen one, or a random selection of
@@ -135,7 +135,9 @@ export function applyFoodEffect(
   food: FoodType,
   board: ApiBoard,
   boardPosition: number | undefined,
-  petRegistry: Record<string, StaticPet>
+  petRegistry: Record<string, StaticPet>,
+  // The shop item's own multiplier (ShopFood.multiplier).
+  foodMultiplier = 1
 ): ApiBoard {
   const newBoard = new Board(board).clone().pets;
   if (food.applyEffect) {
@@ -149,7 +151,8 @@ export function applyFoodEffect(
   }
 
   // One purchase spends one use, however many pets it feeds (Sushi).
-  const multiplier = consumeFoodMultiplier(food, newBoard, petRegistry);
+  const multiplier =
+    foodMultiplier + consumeCatBonus(food, newBoard, petRegistry);
   for (const i of pickTargets(food, new Board(newBoard), boardPosition)) {
     const pet = newBoard[i];
     if (pet) {

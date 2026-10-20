@@ -8,7 +8,7 @@ import {
   type SummonOptions,
 } from "@/lib/types";
 import { triggerFriendAteFood } from "@/lib/game/food";
-import { stockFood } from "@/lib/game/shop";
+import { stockFood, type StockFoodOptions } from "@/lib/game/shop";
 
 // Ability contexts carry only data; these classes are what an ability
 // instantiates from its context when it needs to act on that data.
@@ -60,9 +60,10 @@ export class ShopActions {
   }
 
   // Adds a food to the shop without removing any (beyond making room).
-  // `discount` is the gold knocked off the food's price.
-  stockShopFood(food: FoodType, discount = 0): void {
-    stockFood(this.ctx.shop, food, this.ctx.justStocked, discount);
+  // `discount` is the gold knocked off the food's price; `multiplier` scales
+  // its attack/health.
+  stockShopFood(food: FoodType, options?: StockFoodOptions): void {
+    stockFood(this.ctx.shop, food, this.ctx.justStocked, options);
   }
 
   // Empties the food shop, frozen items included, then stocks `foods`.
