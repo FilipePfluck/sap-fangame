@@ -2,14 +2,7 @@ import { describe, it, expect } from "vitest";
 import { simulateBattle } from "@/lib/game/battle";
 import { PET_REGISTRY } from "@/lib/pets";
 import { petToString } from "@/lib/utils/flavor-text";
-import type {
-  BasePerkType,
-  BattleAbilityContext,
-  DefensivePerk,
-  OffensivePerk,
-  PetInstance,
-  TriggerPerk,
-} from "@/lib/types";
+import type { BattleAbilityContext, PetInstance } from "@/lib/types";
 import { Trigger } from "@/lib/types";
 import { grantExperience } from "@/lib/game/merge";
 import { BattleActions } from "@/lib/game/ability-actions";
@@ -27,19 +20,10 @@ import { PeanutPerk } from "@/lib/perks/peanut";
 import { HoneyPerk } from "@/lib/perks/honey";
 import { MeatBonePerk } from "@/lib/perks/meat-bone";
 import { MushroomPerk } from "@/lib/perks/mushroom";
-import { structuredClone } from "next/dist/compiled/@edge-runtime/primitives";
 import { SteakPerk } from "@/lib/perks/steak";
 import { Ox } from "@/lib/pets/turtle/tier 3/ox";
-import { abilityPet, registryWith } from "./helpers";
+import { abilityPet, pet, registryWith } from "./helpers";
 import { getMinimumXpFor } from "@/lib/game/board";
-
-function pet(type: string, attack: number, health: number, perk: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null = null): PetInstance {
-  return { type, attack, health, perk: structuredClone(perk), xp: 0, level: 1 };
-}
-
-function petLevel(type: string, attack: number, health: number, level: number): PetInstance {
-  return { type, attack, health, perk: null, xp: getMinimumXpFor(level), level };
-}
 
 function battleContext(
   self: PetInstance,
@@ -68,8 +52,8 @@ describe("Pet Abilities", () => {
       "gains +$expectedAttack attack at level $level after attack damage",
       ({ level, expectedAttack }) => {
         const { steps } = simulateBattle(
-          [petLevel("Peacock", 2, 5, level)],
-          [pet("Sloth", 1, 20)],
+          [pet({ type: "Peacock", attack: 2, health: 5, level })],
+          [pet({ type: "Sloth", attack: 1, health: 20 })],
           PET_REGISTRY
         );
 
@@ -79,8 +63,8 @@ describe("Pet Abilities", () => {
 
     it("triggers for ability damage", () => {
       const { steps } = simulateBattle(
-        [pet("Mosquito", 2, 2)],
-        [pet("Peacock", 2, 5)],
+        [pet({ type: "Mosquito", attack: 2, health: 2 })],
+        [pet({ type: "Peacock", attack: 2, health: 5 })],
         PET_REGISTRY
       );
 
@@ -89,8 +73,8 @@ describe("Pet Abilities", () => {
 
     it("does not trigger when damage is fully blocked", () => {
       const { steps } = simulateBattle(
-        [pet("Sloth", 1, 10)],
-        [pet("Peacock", 2, 5, MelonPerk)],
+        [pet({ type: "Sloth", attack: 1, health: 10 })],
+        [pet({ type: "Peacock", attack: 2, health: 5, perk: MelonPerk })],
         PET_REGISTRY
       );
 
@@ -99,8 +83,8 @@ describe("Pet Abilities", () => {
 
     it("does not trigger when health is removed", () => {
       const { steps } = simulateBattle(
-        [pet("Skunk", 3, 5)],
-        [pet("Sloth", 1, 5), pet("Peacock", 2, 10)],
+        [pet({ type: "Skunk", attack: 3, health: 5 })],
+        [pet({ type: "Sloth", attack: 1, health: 5 }), pet({ type: "Peacock", attack: 2, health: 10 })],
         PET_REGISTRY
       );
 
@@ -116,8 +100,8 @@ describe("Pet Abilities", () => {
       { level: 3, expected: "Kangaroo (5/5)" },
     ])("gains +$level/+$level when its friend ahead attacks at level $level", ({ level, expected }) => {
       const { steps } = simulateBattle(
-        [pet("Sloth", 1, 10), petLevel("Kangaroo", 2, 2, level)],
-        [pet("Sloth", 1, 100)],
+        [pet({ type: "Sloth", attack: 1, health: 10 }), pet({ type: "Kangaroo", attack: 2, health: 2, level })],
+        [pet({ type: "Sloth", attack: 1, health: 100 })],
         PET_REGISTRY
       );
 
@@ -126,8 +110,8 @@ describe("Pet Abilities", () => {
 
     it("does not trigger from its own attack when a friend is behind", () => {
       const { steps } = simulateBattle(
-        [petLevel("Kangaroo", 2, 2, 1), pet("Sloth", 1, 10)],
-        [pet("Sloth", 1, 100)],
+        [pet({ type: "Kangaroo", attack: 2, health: 2, level: 1 }), pet({ type: "Sloth", attack: 1, health: 10 })],
+        [pet({ type: "Sloth", attack: 1, health: 100 })],
         PET_REGISTRY
       );
 
@@ -142,8 +126,8 @@ describe("Pet Abilities", () => {
       { level: 3, expectedHealth: 7 },
     ])("deals 1 damage at level $level to the friend behind", ({ level, expectedHealth }) => {
       const { steps } = simulateBattle(
-        [petLevel("Elephant", 3, 7, level), pet("Sloth", 1, 10)],
-        [pet("Sloth", 1, 100)],
+        [pet({ type: "Elephant", attack: 3, health: 7, level }), pet({ type: "Sloth", attack: 1, health: 10 })],
+        [pet({ type: "Sloth", attack: 1, health: 100 })],
         PET_REGISTRY
       );
 
@@ -153,11 +137,11 @@ describe("Pet Abilities", () => {
     it("targets only the nearest friend behind", () => {
       const { steps } = simulateBattle(
         [
-          petLevel("Elephant", 3, 7, 2),
-          pet("Sloth", 1, 10),
-          pet("Sloth", 1, 10),
+          pet({ type: "Elephant", attack: 3, health: 7, level: 2 }),
+          pet({ type: "Sloth", attack: 1, health: 10 }),
+          pet({ type: "Sloth", attack: 1, health: 10 }),
         ],
-        [pet("Sloth", 1, 100)],
+        [pet({ type: "Sloth", attack: 1, health: 100 })],
         PET_REGISTRY
       );
 
@@ -168,11 +152,11 @@ describe("Pet Abilities", () => {
     it("retargets a living friend if the first one faints", () => {
       const { steps } = simulateBattle(
         [
-          petLevel("Elephant", 3, 7, 2),
-          pet("Sloth", 1, 1),
-          pet("Sloth", 1, 10),
+          pet({ type: "Elephant", attack: 3, health: 7, level: 2 }),
+          pet({ type: "Sloth", attack: 1, health: 1 }),
+          pet({ type: "Sloth", attack: 1, health: 10 }),
         ],
-        [pet("Sloth", 1, 100)],
+        [pet({ type: "Sloth", attack: 1, health: 100 })],
         PET_REGISTRY
       );
 
@@ -188,8 +172,8 @@ describe("Pet Abilities", () => {
       { level: 3, bonus: 24 },
     ])("gives all living pets +$bonus health at level $level", ({ level, bonus }) => {
       const { steps } = simulateBattle(
-        [petLevel("Armadillo", 4, 8, level), pet("Sloth", 1, 20)],
-        [pet("Sloth", 1, 20)],
+        [pet({ type: "Armadillo", attack: 4, health: 8, level }), pet({ type: "Sloth", attack: 1, health: 20 })],
+        [pet({ type: "Sloth", attack: 1, health: 20 })],
         PET_REGISTRY
       );
 
@@ -199,10 +183,10 @@ describe("Pet Abilities", () => {
     });
 
     it("does not buff pets at zero or negative health", () => {
-      const armadillo = pet("Armadillo", 4, 8);
-      const deadFriend = pet("Sloth", 1, 0);
-      const overkilledFriend = pet("Sloth", 1, -3);
-      const livingFriend = pet("Sloth", 1, 10);
+      const armadillo = pet({ type: "Armadillo", attack: 4, health: 8 });
+      const deadFriend = pet({ type: "Sloth", attack: 1, health: 0 });
+      const overkilledFriend = pet({ type: "Sloth", attack: 1, health: -3 });
+      const livingFriend = pet({ type: "Sloth", attack: 1, health: 10 });
       const ability = PET_REGISTRY.Armadillo.abilities.get(Trigger.start_of_battle);
       if (!ability || ability.trigger !== Trigger.start_of_battle) {
         throw new Error("Expected Armadillo start-of-battle ability");
@@ -225,10 +209,10 @@ describe("Pet Abilities", () => {
       { level: 2, damage: 4, expectedHealth: 6 },
       { level: 3, damage: 6, expectedHealth: 4 },
     ])("deals $damage damage to every living pet on both teams at level $level", ({ level, expectedHealth }) => {
-      const hedgehog = petLevel("Hedgehog", 4, 0, level);
-      const livingFriend = pet("Sloth", 1, 10);
-      const deadFriend = pet("Sloth", 1, 0);
-      const enemy = pet("Sloth", 1, 10);
+      const hedgehog = pet({ type: "Hedgehog", attack: 4, health: 0, level });
+      const livingFriend = pet({ type: "Sloth", attack: 1, health: 10 });
+      const deadFriend = pet({ type: "Sloth", attack: 1, health: 0 });
+      const enemy = pet({ type: "Sloth", attack: 1, health: 10 });
       const ability = PET_REGISTRY.Hedgehog.abilities.get(Trigger.faint);
       if (!ability || ability.trigger !== Trigger.faint)
         throw new Error("Expected faint ability");
@@ -247,8 +231,8 @@ describe("Pet Abilities", () => {
       { level: 2, expected: ["Sloth (3/7)", "Sloth (3/7)", "Sloth (1/5)", "Sloth (1/5)"] },
       { level: 3, expected: ["Sloth (4/8)", "Sloth (4/8)", "Sloth (1/5)", "Sloth (1/5)"] },
     ])("gives the two nearest friends behind +$level/+$level at level $level", ({ level, expected }) => {
-      const flamingo = petLevel("Flamingo", 3, 0, level);
-      const friends = [pet("Sloth", 1, 5), pet("Sloth", 1, 5), pet("Sloth", 1, 5), pet("Sloth", 1, 5)];
+      const flamingo = pet({ type: "Flamingo", attack: 3, health: 0, level });
+      const friends = [pet({ type: "Sloth", attack: 1, health: 5 }), pet({ type: "Sloth", attack: 1, health: 5 }), pet({ type: "Sloth", attack: 1, health: 5 }), pet({ type: "Sloth", attack: 1, health: 5 })];
       const ability = PET_REGISTRY.Flamingo.abilities.get(Trigger.faint);
       if (!ability || ability.trigger !== Trigger.faint) throw new Error("Expected faint ability");
 
@@ -258,11 +242,11 @@ describe("Pet Abilities", () => {
     });
 
     it("skips pending faints and buffs the nearest living friends behind", () => {
-      const flamingo = pet("Flamingo", 3, 0);
-      const deadFriend = pet("Sloth", 1, 0);
-      const firstFriend = pet("Sloth", 1, 5);
-      const secondFriend = pet("Sloth", 1, 5);
-      const thirdFriend = pet("Sloth", 1, 5);
+      const flamingo = pet({ type: "Flamingo", attack: 3, health: 0 });
+      const deadFriend = pet({ type: "Sloth", attack: 1, health: 0 });
+      const firstFriend = pet({ type: "Sloth", attack: 1, health: 5 });
+      const secondFriend = pet({ type: "Sloth", attack: 1, health: 5 });
+      const thirdFriend = pet({ type: "Sloth", attack: 1, health: 5 });
       const team = [flamingo, deadFriend, firstFriend, secondFriend, thirdFriend];
       const ability = PET_REGISTRY.Flamingo.abilities.get(Trigger.faint);
       if (!ability || ability.trigger !== Trigger.faint) throw new Error("Expected faint ability");
@@ -283,8 +267,8 @@ describe("Pet Abilities", () => {
       { level: 3, ability: "+3/+6", result: "Sloth (4/16)" },
     ])("gives the nearest friend behind $ability when damaged at level $level", ({ level, result }) => {
       const { steps } = simulateBattle(
-        [petLevel("Camel", 3, 3, level), pet("Sloth", 1, 10)],
-        [pet("Sloth", 1, 100)],
+        [pet({ type: "Camel", attack: 3, health: 3, level }), pet({ type: "Sloth", attack: 1, health: 10 })],
+        [pet({ type: "Sloth", attack: 1, health: 100 })],
         PET_REGISTRY
       );
 
@@ -292,9 +276,9 @@ describe("Pet Abilities", () => {
     });
 
     it("skips a pending faint to buff the nearest living friend behind", () => {
-      const camel = pet("Camel", 3, 3);
-      const deadFriend = pet("Sloth", 1, 0);
-      const livingFriend = pet("Sloth", 1, 10);
+      const camel = pet({ type: "Camel", attack: 3, health: 3 });
+      const deadFriend = pet({ type: "Sloth", attack: 1, health: 0 });
+      const livingFriend = pet({ type: "Sloth", attack: 1, health: 10 });
       const ability = PET_REGISTRY.Camel.abilities.get(Trigger.hurt);
       if (!ability || ability.trigger !== Trigger.hurt) throw new Error("Expected hurt ability");
 
@@ -312,8 +296,8 @@ describe("Pet Abilities", () => {
       { level: 3, damage: 9, expectedHealth: 8 },
     ])("deals $damage ability damage to an enemy after taking a hit at level $level", ({ level, expectedHealth }) => {
       const { steps } = simulateBattle(
-        [petLevel("Blowfish", 3, 6, level)],
-        [pet("Sloth", 1, 20)],
+        [pet({ type: "Blowfish", attack: 3, health: 6, level })],
+        [pet({ type: "Sloth", attack: 1, health: 20 })],
         PET_REGISTRY
       );
 
@@ -328,8 +312,8 @@ describe("Pet Abilities", () => {
       { level: 3, ram: "Ram (6/6)" },
     ])("summons two $ram at level $level", ({ level, ram }) => {
       const { steps } = simulateBattle(
-        [petLevel("Sheep", 2, 2, level)],
-        [pet("Sloth", 2, 2)],
+        [pet({ type: "Sheep", attack: 2, health: 2, level })],
+        [pet({ type: "Sloth", attack: 2, health: 2 })],
         PET_REGISTRY
       );
 
@@ -339,13 +323,13 @@ describe("Pet Abilities", () => {
     it("flings the second Ram when the team has room for only one summon", () => {
       const { steps } = simulateBattle(
         [
-          pet("Sheep", 2, 1),
-          pet("Sloth", 1, 10),
-          pet("Sloth", 1, 10),
-          pet("Sloth", 1, 10),
-          pet("Sloth", 1, 10),
+          pet({ type: "Sheep", attack: 2, health: 1 }),
+          pet({ type: "Sloth", attack: 1, health: 10 }),
+          pet({ type: "Sloth", attack: 1, health: 10 }),
+          pet({ type: "Sloth", attack: 1, health: 10 }),
+          pet({ type: "Sloth", attack: 1, health: 10 }),
         ],
-        [pet("Sloth", 2, 10)],
+        [pet({ type: "Sloth", attack: 2, health: 10 })],
         PET_REGISTRY
       );
 
@@ -360,8 +344,8 @@ describe("Pet Abilities", () => {
       { level: 2, perks: ["Melon", "Melon", null, null] },
       { level: 3, perks: ["Melon", "Melon", "Melon", null] },
     ])("gives Melon to the $level nearest friends behind at level $level", ({ level, perks }) => {
-      const turtle = petLevel("Turtle", 2, 0, level);
-      const friends = [pet("Sloth", 1, 5), pet("Sloth", 1, 5), pet("Sloth", 1, 5), pet("Sloth", 1, 5)];
+      const turtle = pet({ type: "Turtle", attack: 2, health: 0, level });
+      const friends = [pet({ type: "Sloth", attack: 1, health: 5 }), pet({ type: "Sloth", attack: 1, health: 5 }), pet({ type: "Sloth", attack: 1, health: 5 }), pet({ type: "Sloth", attack: 1, health: 5 })];
       const ability = PET_REGISTRY.Turtle.abilities.get(Trigger.faint);
       if (!ability || ability.trigger !== Trigger.faint) throw new Error("Expected faint ability");
 
@@ -371,10 +355,10 @@ describe("Pet Abilities", () => {
     });
 
     it("skips pending faints when giving Melon", () => {
-      const turtle = pet("Turtle", 2, 0);
-      const deadFriend = pet("Sloth", 1, 0);
-      const firstFriend = pet("Sloth", 1, 5);
-      const secondFriend = pet("Sloth", 1, 5);
+      const turtle = pet({ type: "Turtle", attack: 2, health: 0 });
+      const deadFriend = pet({ type: "Sloth", attack: 1, health: 0 });
+      const firstFriend = pet({ type: "Sloth", attack: 1, health: 5 });
+      const secondFriend = pet({ type: "Sloth", attack: 1, health: 5 });
       const ability = PET_REGISTRY.Turtle.abilities.get(Trigger.faint);
       if (!ability || ability.trigger !== Trigger.faint) throw new Error("Expected faint ability");
 
@@ -392,8 +376,8 @@ describe("Pet Abilities", () => {
       { level: 3, expected: ["Chick (3/1)", "Chick (3/1)", "Chick (3/1)"] },
     ])("summons $level Chick tokens with half its attack at level $level", ({ level, expected }) => {
       const { steps } = simulateBattle(
-        [petLevel("Rooster", 6, 4, level)],
-        [pet("Sloth", 4, 100)],
+        [pet({ type: "Rooster", attack: 6, health: 4, level })],
+        [pet({ type: "Sloth", attack: 4, health: 100 })],
         PET_REGISTRY
       );
 
@@ -402,8 +386,8 @@ describe("Pet Abilities", () => {
 
     it("rounds half its attack down", () => {
       const { steps } = simulateBattle(
-        [pet("Rooster", 5, 4)],
-        [pet("Sloth", 4, 100)],
+        [pet({ type: "Rooster", attack: 5, health: 4 })],
+        [pet({ type: "Sloth", attack: 4, health: 100 })],
         PET_REGISTRY
       );
 
@@ -412,8 +396,8 @@ describe("Pet Abilities", () => {
 
     it("does not summon a Chick with 0 attack", () => {
       const { steps } = simulateBattle(
-        [pet("Rooster", 1, 1)],
-        [pet("Sloth", 4, 100)],
+        [pet({ type: "Rooster", attack: 1, health: 1 })],
+        [pet({ type: "Sloth", attack: 4, health: 100 })],
         PET_REGISTRY
       );
 
@@ -423,9 +407,9 @@ describe("Pet Abilities", () => {
 
   describe("Mammoth — faint", () => {
     it("buffs living friends but not itself or pending faints", () => {
-      const mammoth = pet("Mammoth", 4, 0);
-      const deadFriend = pet("Sloth", 1, 0);
-      const livingFriend = pet("Sloth", 1, 10);
+      const mammoth = pet({ type: "Mammoth", attack: 4, health: 0 });
+      const deadFriend = pet({ type: "Sloth", attack: 1, health: 0 });
+      const livingFriend = pet({ type: "Sloth", attack: 1, health: 10 });
       const ability = PET_REGISTRY.Mammoth.abilities.get(Trigger.faint);
       if (!ability || ability.trigger !== Trigger.faint) throw new Error("Expected faint ability");
 
@@ -444,8 +428,8 @@ describe("Pet Abilities", () => {
       { level: 3, result: "Ox (4/3)" },
     ])("gains Melon and +$level attack when its friend ahead faints at level $level", ({ level, result }) => {
       const { steps } = simulateBattle(
-        [pet("Sloth", 1, 1), petLevel("Ox", 1, 3, level)],
-        [pet("Sloth", 1, 100)],
+        [pet({ type: "Sloth", attack: 1, health: 1 }), pet({ type: "Ox", attack: 1, health: 3, level })],
+        [pet({ type: "Sloth", attack: 1, health: 100 })],
         registryWith(Ox)
       );
 
@@ -455,8 +439,8 @@ describe("Pet Abilities", () => {
 
     it("does not trigger when a friend further ahead faints", () => {
       const { steps } = simulateBattle(
-        [pet("Sloth", 1, 1), pet("Sloth", 1, 10), pet("Ox", 1, 3)],
-        [pet("Sloth", 1, 100)],
+        [pet({ type: "Sloth", attack: 1, health: 1 }), pet({ type: "Sloth", attack: 1, health: 10 }), pet({ type: "Ox", attack: 1, health: 3 })],
+        [pet({ type: "Sloth", attack: 1, health: 100 })],
         registryWith(Ox)
       );
 
@@ -466,8 +450,8 @@ describe("Pet Abilities", () => {
 
     it("works once per turn in battle", () => {
       const { steps } = simulateBattle(
-        [pet("Sloth", 1, 1, HoneyPerk), pet("Ox", 1, 3)],
-        [pet("Sloth", 1, 100)],
+        [pet({ type: "Sloth", attack: 1, health: 1, perk: HoneyPerk }), pet({ type: "Ox", attack: 1, health: 3 })],
+        [pet({ type: "Sloth", attack: 1, health: 100 })],
         registryWith(Ox)
       );
 
@@ -477,13 +461,13 @@ describe("Pet Abilities", () => {
     it("does not trigger in battle after triggering in the shop that turn", () => {
       const { steps } = simulateBattle(
         [
-          pet("Sloth", 1, 1),
+          pet({ type: "Sloth", attack: 1, health: 1 }),
           {
-            ...pet("Ox", 1, 3),
+            ...pet({ type: "Ox", attack: 1, health: 3 }),
             triggerCountsThisTurn: { [Trigger.friend_ahead_faints]: 1 },
           },
         ],
-        [pet("Sloth", 1, 100)],
+        [pet({ type: "Sloth", attack: 1, health: 100 })],
         registryWith(Ox)
       );
 
@@ -498,8 +482,8 @@ describe("Pet Abilities", () => {
       { level: 3, damage: 15, expectedHealth: 184 },
     ])("deals $damage damage to a random enemy at level $level", ({ level, expectedHealth }) => {
       const { steps } = simulateBattle(
-        [pet("Sloth", 1, 100), petLevel("Snake", 8, 3, level)],
-        [pet("Sloth", 1, 200)],
+        [pet({ type: "Sloth", attack: 1, health: 100 }), pet({ type: "Snake", attack: 8, health: 3, level })],
+        [pet({ type: "Sloth", attack: 1, health: 200 })],
         PET_REGISTRY
       );
 
@@ -508,8 +492,8 @@ describe("Pet Abilities", () => {
 
     it("deals damage at most five times", () => {
       const { steps } = simulateBattle(
-        [pet("Sloth", 1, 100), pet("Snake", 8, 3)],
-        [pet("Sloth", 1, 200)],
+        [pet({ type: "Sloth", attack: 1, health: 100 }), pet({ type: "Snake", attack: 8, health: 3 })],
+        [pet({ type: "Sloth", attack: 1, health: 200 })],
         PET_REGISTRY
       );
 
@@ -528,13 +512,13 @@ describe("Pet Abilities", () => {
     it("has only the triggers left over from the shop", () => {
       const { steps } = simulateBattle(
         [
-          pet("Triple Feeder", 1, 50),
+          pet({ type: "Triple Feeder", attack: 1, health: 50 }),
           {
-            ...pet("Rabbit", 1, 5),
+            ...pet({ type: "Rabbit", attack: 1, health: 5 }),
             triggerCountsThisTurn: { [Trigger.friend_ate_food]: 1 },
           },
         ],
-        [pet("Sloth", 1, 50)],
+        [pet({ type: "Sloth", attack: 1, health: 50 })],
         registryWith(tripleFeeder)
       );
 
@@ -543,12 +527,12 @@ describe("Pet Abilities", () => {
 
     it("does not carry battle triggers back to the shop", () => {
       const rabbit = {
-        ...pet("Rabbit", 1, 5),
+        ...pet({ type: "Rabbit", attack: 1, health: 5 }),
         triggerCountsThisTurn: { [Trigger.friend_ate_food]: 1 },
       };
       simulateBattle(
-        [pet("Triple Feeder", 1, 50), rabbit],
-        [pet("Sloth", 1, 50)],
+        [pet({ type: "Triple Feeder", attack: 1, health: 50 }), rabbit],
+        [pet({ type: "Sloth", attack: 1, health: 50 })],
         registryWith(tripleFeeder)
       );
 
@@ -566,8 +550,8 @@ describe("Pet Abilities", () => {
         },
       });
       const { steps } = simulateBattle(
-        [pet("Perk Giver", 1, 50), pet("Rabbit", 1, 5)],
-        [pet("Sloth", 1, 50)],
+        [pet({ type: "Perk Giver", attack: 1, health: 50 }), pet({ type: "Rabbit", attack: 1, health: 5 })],
+        [pet({ type: "Sloth", attack: 1, health: 50 })],
         registryWith(perkGiver)
       );
 
@@ -586,8 +570,8 @@ describe("Pet Abilities", () => {
         },
       });
       const { steps } = simulateBattle(
-        [pet("Experience Giver", 1, 50), petLevel("Sloth", 2, 2, 3)],
-        [pet("Sloth", 1, 50)],
+        [pet({ type: "Experience Giver", attack: 1, health: 50 }), pet({ type: "Sloth", attack: 2, health: 2, level: 3 })],
+        [pet({ type: "Sloth", attack: 1, health: 50 })],
         registryWith(experienceGiver)
       );
 
@@ -604,11 +588,11 @@ describe("Pet Abilities", () => {
     it("does not run a pending-faint Dog's friend-summoned ability", () => {
       const summoner = abilityPet("Summoner", {
         trigger: Trigger.start_of_battle,
-        fn: (ctx) => new BattleActions(ctx).summon(pet("Sloth", 1, 1), ctx.selfIndex),
+        fn: (ctx) => new BattleActions(ctx).summon(pet({ type: "Sloth", attack: 1, health: 1 }), ctx.selfIndex),
       });
       const { steps } = simulateBattle(
-        [pet(summoner.name, 1, 50), pet("Dog", 3, 0)],
-        [pet("Sloth", 1, 100)],
+        [pet({ type: summoner.name, attack: 1, health: 50 }), pet({ type: "Dog", attack: 3, health: 0 })],
+        [pet({ type: "Sloth", attack: 1, health: 100 })],
         registryWith(summoner)
       );
 
@@ -616,9 +600,9 @@ describe("Pet Abilities", () => {
     });
 
     it("Mosquito only selects enemies with health remaining", () => {
-      const deadEnemy = pet("Sloth", 1, 0);
-      const livingEnemy = pet("Sloth", 1, 10);
-      const mosquito = pet("Mosquito", 2, 2);
+      const deadEnemy = pet({ type: "Sloth", attack: 1, health: 0 });
+      const livingEnemy = pet({ type: "Sloth", attack: 1, health: 10 });
+      const mosquito = pet({ type: "Mosquito", attack: 2, health: 2 });
       const ability = PET_REGISTRY.Mosquito.abilities.get(Trigger.start_of_battle);
       if (!ability || ability.trigger !== Trigger.start_of_battle) throw new Error("Expected Mosquito start-of-battle ability");
 
@@ -629,9 +613,9 @@ describe("Pet Abilities", () => {
     });
 
     it("Elephant skips a pending faint and targets the nearest living friend behind", () => {
-      const elephant = pet("Elephant", 3, 7);
-      const deadFriend = pet("Sloth", 1, 0);
-      const livingFriend = pet("Sloth", 1, 10);
+      const elephant = pet({ type: "Elephant", attack: 3, health: 7 });
+      const deadFriend = pet({ type: "Sloth", attack: 1, health: 0 });
+      const livingFriend = pet({ type: "Sloth", attack: 1, health: 10 });
       const team = [elephant, deadFriend, livingFriend];
       const ability = PET_REGISTRY.Elephant.abilities.get(Trigger.after_attack);
       if (!ability || ability.trigger !== Trigger.after_attack) throw new Error("Expected Elephant after-attack ability");
@@ -652,8 +636,8 @@ describe("Pet Abilities", () => {
       "deals 1 random damage to $level random enemy at level $level at start of battle",
       ({ level, expected }) => {
         const { result } = simulateBattle(
-          [petLevel("Mosquito", 2, 2, level)],
-          [pet("Sloth", 2, 1), pet("Sloth", 2, 1), pet("Sloth", 2, 1)],
+          [pet({ type: "Mosquito", attack: 2, health: 2, level })],
+          [pet({ type: "Sloth", attack: 2, health: 1 }), pet({ type: "Sloth", attack: 2, health: 1 }), pet({ type: "Sloth", attack: 2, health: 1 })],
           PET_REGISTRY
         );
 
@@ -665,8 +649,8 @@ describe("Pet Abilities", () => {
     it("does not deal damage to own team", () => {
       // Single Mosquito vs single strong Sloth. Start-of-battle only hits enemy.
       const { result } = simulateBattle(
-        [pet("Mosquito", 2, 2)],
-        [pet("Sloth", 2, 10)],
+        [pet({ type: "Mosquito", attack: 2, health: 2 })],
+        [pet({ type: "Sloth", attack: 2, health: 10 })],
         PET_REGISTRY
       );
       // Sloth has 10 health, Mosquito deals 1 (leaves 9), then combat: Mosquito is 2/2, Sloth 2/9.
@@ -686,8 +670,8 @@ describe("Pet Abilities", () => {
       "buffs only remaining friend for +$level/+$level on faint at level $level",
       ({ level, result }) => {
         const { steps } = simulateBattle(
-          [petLevel("Ant", 1, 1, level), pet("Sloth", 1, 1)],
-          [pet("Sloth", 5, 5)],
+          [pet({ type: "Ant", attack: 1, health: 1, level }), pet({ type: "Sloth", attack: 1, health: 1 })],
+          [pet({ type: "Sloth", attack: 5, health: 5 })],
           PET_REGISTRY
         );
 
@@ -698,8 +682,8 @@ describe("Pet Abilities", () => {
     it("no-op when no friends remain", () => {
       // Solo Ant vs stronger opponent — no friends to buff, should not crash.
       const { result } = simulateBattle(
-        [pet("Ant", 2, 2)],
-        [pet("Sloth", 5, 5)],
+        [pet({ type: "Ant", attack: 2, health: 2 })],
+        [pet({ type: "Sloth", attack: 5, health: 5 })],
         PET_REGISTRY
       );
       expect(result).toBe("LOSS");
@@ -715,8 +699,8 @@ describe("Pet Abilities", () => {
       "at level $level summons a $level/$level Zombie Cricket",
       ({ level, result }) => {
         const { steps } = simulateBattle(
-          [petLevel("Cricket", 1, 1, level)],
-          [pet("Sloth", 1, 1)],
+          [pet({ type: "Cricket", attack: 1, health: 1, level })],
+          [pet({ type: "Sloth", attack: 1, health: 1 })],
           PET_REGISTRY
         );
 
@@ -732,8 +716,8 @@ describe("Pet Abilities", () => {
       { level: 3, ability: "+6/+3", result: "Dog (9/5)" },
     ])("gains $ability when a friend is summoned at level $level", ({ level, result }) => {
       const { steps } = simulateBattle(
-        [pet("Cricket", 1, 1), petLevel("Dog", 3, 2, level)],
-        [pet("Sloth", 1, 10)],
+        [pet({ type: "Cricket", attack: 1, health: 1 }), pet({ type: "Dog", attack: 3, health: 2, level })],
+        [pet({ type: "Sloth", attack: 1, health: 10 })],
         PET_REGISTRY
       );
 
@@ -748,8 +732,8 @@ describe("Pet Abilities", () => {
       { level: 3, ability: "+9/+3", result: "Zombie Cricket (10/4)" },
     ])("gives the summoned friend $ability at level $level", ({ level, result }) => {
       const { steps } = simulateBattle(
-        [pet("Cricket", 1, 1), petLevel("Turkey", 3, 4, level)],
-        [pet("Sloth", 1, 10)],
+        [pet({ type: "Cricket", attack: 1, health: 1 }), pet({ type: "Turkey", attack: 3, health: 4, level })],
+        [pet({ type: "Sloth", attack: 1, health: 10 })],
         PET_REGISTRY
       );
 
@@ -768,8 +752,8 @@ describe("Pet Abilities", () => {
         // NOTE: Test can fail due to Cricket being incorrectly implemented
         // Sloth kills Cricket, Cricket summons 1/1 Zombie Cricket, test confirms Horse provides an appropriate buff
         const { steps } = simulateBattle(
-          [pet("Cricket", 1, 1), petLevel("Horse", 2, 1, level)],
-          [pet("Sloth", 2, 10)],
+          [pet({ type: "Cricket", attack: 1, health: 1 }), pet({ type: "Horse", attack: 2, health: 1, level })],
+          [pet({ type: "Sloth", attack: 2, health: 10 })],
           PET_REGISTRY
         );
 
@@ -788,8 +772,8 @@ describe("Pet Abilities", () => {
       "gives $ability of its attack to the nearest friend ahead at level $level",
       ({ level, result }) => {
         const { steps } = simulateBattle(
-          [pet("Sloth", 1, 5), pet("Ant", 1, 5), petLevel("Dodo", 4, 2, level)],
-          [pet("Sloth", 1, 50)],
+          [pet({ type: "Sloth", attack: 1, health: 5 }), pet({ type: "Ant", attack: 1, health: 5 }), pet({ type: "Dodo", attack: 4, health: 2, level })],
+          [pet({ type: "Sloth", attack: 1, health: 50 })],
           PET_REGISTRY
         );
 
@@ -811,11 +795,11 @@ describe("Pet Abilities", () => {
         // NOTE: Test can fail due to Dolphin being incorrectly implemented
         // Test checks if Dolphin targets Badger, and Badger kills adjacent units to guarantee a DRAW
 
-        const friendAhead = pet("Sloth", 1, allyHealth);
-        const friendBehind = pet("Sloth", 1, allyHealth);
+        const friendAhead = pet({ type: "Sloth", attack: 1, health: allyHealth });
+        const friendBehind = pet({ type: "Sloth", attack: 1, health: allyHealth });
         const { result } = simulateBattle(
-          [friendBehind, petLevel("Badger", 6, 1, level), friendAhead],
-          [pet("Dolphin", 1, 1)],
+          [friendBehind, pet({ type: "Badger", attack: 6, health: 1, level }), friendAhead],
+          [pet({ type: "Dolphin", attack: 1, health: 1 })],
           PET_REGISTRY
         );
 
@@ -826,8 +810,8 @@ describe("Pet Abilities", () => {
     // TODO - Consider changing to verify if enemy is hit, once logic is implemented
     it("deals splash damage to closest friend behind on faint", () => {
       const { result, steps } = simulateBattle(
-        [pet("Badger", 6, 1), pet("Sloth", 1, 5), pet("Sloth", 1, 5)],
-        [pet("Sloth", 5, 1)],
+        [pet({ type: "Badger", attack: 6, health: 1 }), pet({ type: "Sloth", attack: 1, health: 5 }), pet({ type: "Sloth", attack: 1, health: 5 })],
+        [pet({ type: "Sloth", attack: 5, health: 1 })],
         PET_REGISTRY
       );
       // Badger (6/1) and the enemy Sloth (5/1) trade and both die.
@@ -837,8 +821,8 @@ describe("Pet Abilities", () => {
     });
 
     it("hits the front enemy when it is at the front of its team", () => {
-      const badger = pet("Badger", 6, 0);
-      const enemy = pet("Sloth", 1, 10);
+      const badger = pet({ type: "Badger", attack: 6, health: 0 });
+      const enemy = pet({ type: "Sloth", attack: 1, health: 10 });
       const ability = PET_REGISTRY.Badger.abilities.get(Trigger.faint);
       if (!ability || ability.trigger !== Trigger.faint) throw new Error("Expected Badger faint ability");
 
@@ -848,12 +832,12 @@ describe("Pet Abilities", () => {
     });
 
     it("skips pending faints", () => {
-      const deadFriendAhead = pet("Sloth", 1, 0);
-      const badger = pet("Badger", 6, 0);
-      const deadFriendBehind = pet("Sloth", 1, 0);
-      const livingFriendBehind = pet("Sloth", 1, 10);
-      const deadEnemyFront = pet("Sloth", 1, 0);
-      const livingEnemyBehind = pet("Sloth", 1, 10);
+      const deadFriendAhead = pet({ type: "Sloth", attack: 1, health: 0 });
+      const badger = pet({ type: "Badger", attack: 6, health: 0 });
+      const deadFriendBehind = pet({ type: "Sloth", attack: 1, health: 0 });
+      const livingFriendBehind = pet({ type: "Sloth", attack: 1, health: 10 });
+      const deadEnemyFront = pet({ type: "Sloth", attack: 1, health: 0 });
+      const livingEnemyBehind = pet({ type: "Sloth", attack: 1, health: 10 });
       const team = [deadFriendAhead, badger, deadFriendBehind, livingFriendBehind];
       const ability = PET_REGISTRY.Badger.abilities.get(Trigger.faint);
       if (!ability || ability.trigger !== Trigger.faint) throw new Error("Expected Badger faint ability");
@@ -877,8 +861,8 @@ describe("Pet Abilities", () => {
       "deals 4 damage to the lowest-health enemy before combat begins, $level times at level $level",
       ({ level, result }) => {
         const { steps } = simulateBattle(
-          [petLevel("Dolphin", 4, 3, level)],
-          [pet("Sloth", 1, 49), pet("Sloth", 1, 50)],
+          [pet({ type: "Dolphin", attack: 4, health: 3, level })],
+          [pet({ type: "Sloth", attack: 1, health: 49 }), pet({ type: "Sloth", attack: 1, health: 50 })],
           PET_REGISTRY
         );
 
@@ -888,8 +872,8 @@ describe("Pet Abilities", () => {
 
     it("repeats the hit `level` times, re-targeting whichever enemy is currently lowest health", () => {
       const { result } = simulateBattle(
-        [petLevel("Dolphin", 1, 1, 2)],
-        [pet("Sloth", 1, 4), pet("Sloth", 1, 4)],
+        [pet({ type: "Dolphin", attack: 1, health: 1, level: 2 })],
+        [pet({ type: "Sloth", attack: 1, health: 4 }), pet({ type: "Sloth", attack: 1, health: 4 })],
         PET_REGISTRY
       );
       // Level 2 hits the lowest-health enemy twice: the first Sloth dies, then
@@ -907,8 +891,8 @@ describe("Pet Abilities", () => {
       "reduces the highest-health enemy's health by $effect at level $level, rounded up",
       ({ level, result }) => {
         const { steps } = simulateBattle(
-          [petLevel("Skunk", 3, 5, level)],
-          [pet("Sloth", 1, 10)],
+          [pet({ type: "Skunk", attack: 3, health: 5, level })],
+          [pet({ type: "Sloth", attack: 1, health: 10 })],
           PET_REGISTRY
         );
 
@@ -918,8 +902,8 @@ describe("Pet Abilities", () => {
 
     it("cannot reduce a pet's health below 1", () => {
       const { steps } = simulateBattle(
-        [pet("Skunk", 3, 5)],
-        [pet("Sloth", 1, 1)],
+        [pet({ type: "Skunk", attack: 3, health: 5 })],
+        [pet({ type: "Sloth", attack: 1, health: 1 })],
         PET_REGISTRY
       );
       expect(steps[1].description).toContain("Sloth (1/1)");
@@ -935,8 +919,8 @@ describe("Pet Abilities", () => {
       "gains health equal to $effect of its healthiest friend's health at level $level",
       ({ level, result }) => {
         const { steps } = simulateBattle(
-          [petLevel("Crab", 4, 1, level), pet("Sloth", 1, 20)],
-          [pet("Sloth", 1, 50)],
+          [pet({ type: "Crab", attack: 4, health: 1, level }), pet({ type: "Sloth", attack: 1, health: 20 })],
+          [pet({ type: "Sloth", attack: 1, health: 50 })],
           PET_REGISTRY
         );
 
@@ -946,8 +930,8 @@ describe("Pet Abilities", () => {
 
     it("no-op when there are no friends", () => {
       const { steps } = simulateBattle(
-        [pet("Crab", 4, 1)],
-        [pet("Sloth", 1, 50)],
+        [pet({ type: "Crab", attack: 4, health: 1 })],
+        [pet({ type: "Sloth", attack: 1, health: 50 })],
         PET_REGISTRY
       );
       expect(steps[1].description).toContain("Crab (4/1)");
@@ -961,8 +945,8 @@ describe("Pet Abilities", () => {
       { level: 3, expected: "WIN" },
     ])("snipes %level pets at level $level", ({ level, expected }) => {
       const { result } = simulateBattle(
-        [petLevel("Leopard", 2, 2, level)],
-        [pet("Sloth", 2, 1), pet("Sloth", 2, 1), pet("Sloth", 2, 1)],
+        [pet({ type: "Leopard", attack: 2, health: 2, level })],
+        [pet({ type: "Sloth", attack: 2, health: 1 }), pet({ type: "Sloth", attack: 2, health: 1 }), pet({ type: "Sloth", attack: 2, health: 1 })],
         PET_REGISTRY
       );
 
@@ -971,8 +955,8 @@ describe("Pet Abilities", () => {
 
     it("snipes deal 50% of attack damage", () => {
       const { steps } = simulateBattle(
-        [pet("Leopard", 10, 4)],
-        [pet("Sloth", 1, 10)],
+        [pet({ type: "Leopard", attack: 10, health: 4 })],
+        [pet({ type: "Sloth", attack: 1, health: 10 })],
         PET_REGISTRY
       );
 
@@ -987,8 +971,8 @@ describe("Pet Abilities", () => {
       { level: 3, ability: "+12/+6", result: "Boar (22/12)" },
     ])("gains $ability before attack at level $level", ({ level, result }) => {
       const { steps } = simulateBattle(
-        [petLevel("Boar", 10, 6, level)],
-        [pet("Sloth", 1, 100)],
+        [pet({ type: "Boar", attack: 10, health: 6, level })],
+        [pet({ type: "Sloth", attack: 1, health: 100 })],
         PET_REGISTRY
       );
 
@@ -997,8 +981,8 @@ describe("Pet Abilities", () => {
 
     it("retriggers", () => {
       const { steps } = simulateBattle(
-        [pet("Boar", 10, 6)],
-        [pet("Sloth", 1, 100)],
+        [pet({ type: "Boar", attack: 10, health: 6 })],
+        [pet({ type: "Sloth", attack: 1, health: 100 })],
         PET_REGISTRY
       );
 
@@ -1016,8 +1000,8 @@ describe("Pet Abilities", () => {
       { level: 3, ability: "+9/+9", result: "Hippo (13/15)" },
     ])("gains $ability per knock-out at level $level", ({ level, result }) => {
       const { steps } = simulateBattle(
-        [petLevel("Hippo", 4, 7, level)],
-        [pet("Sloth", 1, 1)],
+        [pet({ type: "Hippo", attack: 4, health: 7, level })],
+        [pet({ type: "Sloth", attack: 1, health: 1 })],
         PET_REGISTRY
       );
 
@@ -1026,13 +1010,13 @@ describe("Pet Abilities", () => {
 
     it("is capped at 3 triggers per battle", () => {
       const { steps } = simulateBattle(
-        [pet("Hippo", 4, 7)],
+        [pet({ type: "Hippo", attack: 4, health: 7 })],
         [
-          pet("Sloth", 1, 1),
-          pet("Sloth", 1, 1),
-          pet("Sloth", 1, 1),
-          pet("Sloth", 1, 1),
-          pet("Sloth", 1, 1),
+          pet({ type: "Sloth", attack: 1, health: 1 }),
+          pet({ type: "Sloth", attack: 1, health: 1 }),
+          pet({ type: "Sloth", attack: 1, health: 1 }),
+          pet({ type: "Sloth", attack: 1, health: 1 }),
+          pet({ type: "Sloth", attack: 1, health: 1 }),
         ],
         PET_REGISTRY
       );
@@ -1054,8 +1038,8 @@ describe("Pet Abilities", () => {
       "deals $ability_damage damage to next non-tier 1 enemy at level $level",
       ({ level }) => {
         const { steps } = simulateBattle(
-          [petLevel("Rhino", 6, 7, level)],
-          [pet("Sloth", 1, 1), pet("Dodo", 1, 50)],
+          [pet({ type: "Rhino", attack: 6, health: 7, level })],
+          [pet({ type: "Sloth", attack: 1, health: 1 }), pet({ type: "Dodo", attack: 1, health: 50 })],
           PET_REGISTRY
         );
 
@@ -1077,8 +1061,8 @@ describe("Pet Abilities", () => {
       "deals $ability_damage damage to next non-tier 1 enemy at level $level",
       ({ level }) => {
         const { steps } = simulateBattle(
-          [petLevel("Rhino", 6, 7, level)],
-          [pet("Sloth", 1, 1), pet("Sloth", 1, 50)],
+          [pet({ type: "Rhino", attack: 6, health: 7, level })],
+          [pet({ type: "Sloth", attack: 1, health: 1 }), pet({ type: "Sloth", attack: 1, health: 50 })],
           PET_REGISTRY
         );
 
@@ -1092,8 +1076,8 @@ describe("Pet Abilities", () => {
       "deals 8 damage to the last enemy, repeated %i times at level $level",
       (level) => {
         const { steps } = simulateBattle(
-          [petLevel("Crocodile", 8, 4, level)],
-          [pet("Sloth", 1, 30), pet("Sloth", 1, 30)],
+          [pet({ type: "Crocodile", attack: 8, health: 4, level })],
+          [pet({ type: "Sloth", attack: 1, health: 30 }), pet({ type: "Sloth", attack: 1, health: 30 })],
           PET_REGISTRY
         );
 
@@ -1103,8 +1087,8 @@ describe("Pet Abilities", () => {
 
     it("deals repeated damage separately", () => {
       const { steps } = simulateBattle(
-        [petLevel("Crocodile", 8, 4, 2)],
-        [pet("Sloth", 1, 20), pet("Sloth", 1, 8)],
+        [pet({ type: "Crocodile", attack: 8, health: 4, level: 2 })],
+        [pet({ type: "Sloth", attack: 1, health: 20 }), pet({ type: "Sloth", attack: 1, health: 8 })],
         PET_REGISTRY
       );
 
@@ -1120,8 +1104,8 @@ describe("Pet Abilities", () => {
   describe("Tiger — ability repeat", () => {
     it("repeats a friend's Faint ability before that friend is removed", () => {
       const { steps } = simulateBattle(
-        [pet("Ant", 1, 1), petLevel("Tiger", 6, 4, 1)],
-        [pet("Sloth", 1, 100)],
+        [pet({ type: "Ant", attack: 1, health: 1 }), pet({ type: "Tiger", attack: 6, health: 4, level: 1 })],
+        [pet({ type: "Sloth", attack: 1, health: 100 })],
         PET_REGISTRY
       );
 
@@ -1151,12 +1135,12 @@ describe("Pet Abilities", () => {
         });
         const { steps } = simulateBattle(
           [
-            pet(damageFriend.name, 0, 100),
-            pet("Target", 1, 100),
-            petLevel("Wolverine", 5, 7, 2),
-            petLevel("Tiger", 1, 50, tigerLevel),
+            pet({ type: damageFriend.name, attack: 0, health: 100 }),
+            pet({ type: "Target", attack: 1, health: 100 }),
+            pet({ type: "Wolverine", attack: 5, health: 7, level: 2 }),
+            pet({ type: "Tiger", attack: 1, health: 50, level: tigerLevel }),
           ],
-          [pet("Sloth", 0, 100)],
+          [pet({ type: "Sloth", attack: 0, health: 100 })],
           registryWith(damageFriend)
         );
 
@@ -1174,11 +1158,11 @@ describe("Pet Abilities", () => {
       ({ level, result }) => {
         const { steps } = simulateBattle(
           [
-            pet("Sloth", 1, 5),
-            pet("Dodo", 4, 2),
-            petLevel("Tiger", 6, 4, level),
+            pet({ type: "Sloth", attack: 1, health: 5 }),
+            pet({ type: "Dodo", attack: 4, health: 2 }),
+            pet({ type: "Tiger", attack: 6, health: 4, level }),
           ],
-          [pet("Sloth", 1, 50)],
+          [pet({ type: "Sloth", attack: 1, health: 50 })],
           PET_REGISTRY
         );
 
@@ -1193,8 +1177,8 @@ describe("Perks", () => {
     it("summons a 1/1 Bee when a Honey-perked pet faints", () => {
       // Sloth with Honey 1/1 vs Sloth 2/2. Sloth takes 2 → faints. Honey triggers: Bee (1/1) appears.
       // Bee (1/1) vs Sloth (2/1). Sloth takes 1 → dies. Bee takes 2 → dies. DRAW.
-      const honeySloth = pet("Sloth", 1, 1, HoneyPerk);
-      const opponent = pet("Sloth", 2, 2);
+      const honeySloth = pet({ type: "Sloth", attack: 1, health: 1, perk: HoneyPerk });
+      const opponent = pet({ type: "Sloth", attack: 2, health: 2 });
 
       const { result, steps } = simulateBattle(
         [honeySloth],
@@ -1211,13 +1195,13 @@ describe("Perks", () => {
     it("flings Honey's Bee when Cricket's Zombie Cricket fills the last slot", () => {
       const { steps } = simulateBattle(
         [
-          pet("Cricket", 1, 1, HoneyPerk),
-          pet("Sloth", 1, 10),
-          pet("Sloth", 1, 10),
-          pet("Sloth", 1, 10),
-          pet("Sloth", 1, 10),
+          pet({ type: "Cricket", attack: 1, health: 1, perk: HoneyPerk }),
+          pet({ type: "Sloth", attack: 1, health: 10 }),
+          pet({ type: "Sloth", attack: 1, health: 10 }),
+          pet({ type: "Sloth", attack: 1, health: 10 }),
+          pet({ type: "Sloth", attack: 1, health: 10 }),
         ],
-        [pet("Sloth", 2, 10)],
+        [pet({ type: "Sloth", attack: 2, health: 10 })],
         PET_REGISTRY
       );
 
@@ -1227,8 +1211,8 @@ describe("Perks", () => {
     });
 
     it("does not mutate input teams", () => {
-      const honeySloth: PetInstance = pet("Sloth", 1, 1, HoneyPerk);
-      const opponent = pet("Sloth", 2, 2);
+      const honeySloth: PetInstance = pet({ type: "Sloth", attack: 1, health: 1, perk: HoneyPerk });
+      const opponent = pet({ type: "Sloth", attack: 2, health: 2 });
       simulateBattle([honeySloth], [opponent], PET_REGISTRY);
       expect(honeySloth.health).toBe(1);
       expect(opponent.health).toBe(2);
@@ -1237,10 +1221,10 @@ describe("Perks", () => {
 
   describe("Peanut perk — lethal on hit", () => {
     it("knocks out any pet it deals damage to in combat", () => {
-      const scorpion = pet("Scorpion", 1, 3, PeanutPerk);
+      const scorpion = pet({ type: "Scorpion", attack: 1, health: 3, perk: PeanutPerk });
       const { result, steps } = simulateBattle(
         [scorpion],
-        [pet("Sloth", 1, 100)],
+        [pet({ type: "Sloth", attack: 1, health: 100 })],
         PET_REGISTRY
       );
       expect(result).toBe("WIN");
@@ -1248,8 +1232,8 @@ describe("Perks", () => {
     });
 
     it("Peanut requires damage to kill", () => {
-      const scorpion = pet("Scorpion", 1, 3, PeanutPerk);
-      const melonSloth: PetInstance = pet("Sloth", 1, 3, MelonPerk);
+      const scorpion = pet({ type: "Scorpion", attack: 1, health: 3, perk: PeanutPerk });
+      const melonSloth: PetInstance = pet({ type: "Sloth", attack: 1, health: 3, perk: MelonPerk });
       const { steps } = simulateBattle([scorpion], [melonSloth], PET_REGISTRY);
 
       // Scorpion's 1 dmg is fully blocked (min(20,1)=1) — Sloth takes 0, so it
@@ -1267,10 +1251,10 @@ describe("Perks", () => {
           trigger: Trigger.faint,
           fn: () => faintTriggers++,
         });
-        const swallowed = pet("Swallow Target", 9, 1000, { ...MelonPerk });
+        const swallowed = pet({ type: "Swallow Target", attack: 9, health: 1000, perk: MelonPerk });
         const { steps } = simulateBattle(
-          [pet("Sloth", 1, 1), swallowed, petLevel("Whale", 3, 7, level)],
-          [pet("Sloth", 10, 1000)],
+          [pet({ type: "Sloth", attack: 1, health: 1 }), swallowed, pet({ type: "Whale", attack: 3, health: 7, level })],
+          [pet({ type: "Sloth", attack: 10, health: 1000 })],
           registryWith(swallowTarget)
         );
 
@@ -1298,8 +1282,8 @@ describe("Perks", () => {
         },
       });
       const { steps } = simulateBattle(
-        [pet("Sloth", 1, 50), pet("Whale", 3, 7), pet(leveler.name, 1, 50)],
-        [pet("Sloth", 6, 1000)],
+        [pet({ type: "Sloth", attack: 1, health: 50 }), pet({ type: "Whale", attack: 3, health: 7 }), pet({ type: leveler.name, attack: 1, health: 50 })],
+        [pet({ type: "Sloth", attack: 6, health: 1000 })],
         registryWith(leveler)
       );
 
@@ -1314,8 +1298,8 @@ describe("Perks", () => {
 
     it("does not swallow the friend behind when there is no friend ahead", () => {
       const { steps } = simulateBattle(
-        [pet("Whale", 3, 7), pet("Cricket", 1, 1)],
-        [pet("Sloth", 1, 1000)],
+        [pet({ type: "Whale", attack: 3, health: 7 }), pet({ type: "Cricket", attack: 1, health: 1 })],
+        [pet({ type: "Sloth", attack: 1, health: 1000 })],
         PET_REGISTRY
       );
 
@@ -1329,12 +1313,12 @@ describe("Perks", () => {
     it("swallows and releases a second friend, at level 1, with a level 1 Tiger behind", () => {
       const { steps } = simulateBattle(
         [
-          pet("Ant", 2, 2),
-          pet("Fish", 2, 3),
-          petLevel("Whale", 3, 7, 2),
-          pet("Tiger", 1, 50),
+          pet({ type: "Ant", attack: 2, health: 2 }),
+          pet({ type: "Fish", attack: 2, health: 3 }),
+          pet({ type: "Whale", attack: 3, health: 7, level: 2 }),
+          pet({ type: "Tiger", attack: 1, health: 50 }),
         ],
-        [pet("Sloth", 100, 1000)],
+        [pet({ type: "Sloth", attack: 100, health: 1000 })],
         registryWith()
       );
 
@@ -1366,8 +1350,8 @@ describe("Perks", () => {
       "removes $removal health from every enemy after four friend hurts",
       ({ level, removal }) => {
         const { steps } = simulateBattle(
-          [pet("Sloth", 0, 100), petLevel("Wolverine", 5, 7, level)],
-          [pet("Sloth", 1, 100), pet("Sloth", 1, 100)],
+          [pet({ type: "Sloth", attack: 0, health: 100 }), pet({ type: "Wolverine", attack: 5, health: 7, level })],
+          [pet({ type: "Sloth", attack: 1, health: 100 }), pet({ type: "Sloth", attack: 1, health: 100 })],
           PET_REGISTRY
         );
         const enemyHealth = (step: number) =>
@@ -1388,11 +1372,11 @@ describe("Perks", () => {
         const damageFriend = hurter(hits);
         const { steps } = simulateBattle(
           [
-            pet(damageFriend.name, 0, 100),
-            pet("Target", 1, 100),
-            pet("Wolverine", 5, 7),
+            pet({ type: damageFriend.name, attack: 0, health: 100 }),
+            pet({ type: "Target", attack: 1, health: 100 }),
+            pet({ type: "Wolverine", attack: 5, health: 7 }),
           ],
-          [pet("Sloth", 0, 100)],
+          [pet({ type: "Sloth", attack: 0, health: 100 })],
           registryWith(damageFriend)
         );
 
@@ -1411,8 +1395,8 @@ describe("Perks", () => {
         },
       });
       const { steps } = simulateBattle(
-        [pet(damageSelf.name, 0, 100), pet("Wolverine", 5, 7)],
-        [pet("Sloth", 0, 100)],
+        [pet({ type: damageSelf.name, attack: 0, health: 100 }), pet({ type: "Wolverine", attack: 5, health: 7 })],
+        [pet({ type: "Sloth", attack: 0, health: 100 })],
         registryWith(damageSelf)
       );
 
@@ -1422,8 +1406,8 @@ describe("Perks", () => {
 
   describe("Coconut perk — full damage block", () => {
     it("blocks one direct hit completely", () => {
-      const attacker = pet("Sloth", 30, 10);
-      const target = pet("Sloth", 1, 10, { ...CoconutPerk });
+      const attacker = pet({ type: "Sloth", attack: 30, health: 10 });
+      const target = pet({ type: "Sloth", attack: 1, health: 10, perk: CoconutPerk });
 
       expect(dealDirectDamage(attacker, target)).toBe(0);
       expect(target.health).toBe(10);
@@ -1431,7 +1415,7 @@ describe("Perks", () => {
     });
 
     it("blocks one ability hit completely", () => {
-      const target = pet("Sloth", 1, 10, { ...CoconutPerk });
+      const target = pet({ type: "Sloth", attack: 1, health: 10, perk: CoconutPerk });
       const actions = new BattleActions(battleContext(target, [target], []));
 
       expect(actions.dealAbilityDamage(target, 30)).toBe(0);
@@ -1449,8 +1433,8 @@ describe("Perks", () => {
       "gains Coconut up to $level times per battle",
       ({ level, expectedActivationStep }) => {
         const { steps } = simulateBattle(
-          [petLevel("Gorilla", 7, 10, level)],
-          [pet("Sloth", 1, 100)],
+          [pet({ type: "Gorilla", attack: 7, health: 10, level })],
+          [pet({ type: "Sloth", attack: 1, health: 100 })],
           PET_REGISTRY
         );
 
@@ -1465,8 +1449,8 @@ describe("Perks", () => {
 
     it("resolves both level 2 Elephant hits before Gorilla activates Hurt", () => {
       const { steps } = simulateBattle(
-        [petLevel("Elephant", 3, 7, 2), petLevel("Gorilla", 7, 10, 2)],
-        [pet("Sloth", 1, 100)],
+        [pet({ type: "Elephant", attack: 3, health: 7, level: 2 }), pet({ type: "Gorilla", attack: 7, health: 10, level: 2 })],
+        [pet({ type: "Sloth", attack: 1, health: 100 })],
         PET_REGISTRY
       );
 
@@ -1479,9 +1463,9 @@ describe("Perks", () => {
 
   describe("Seagull — friend summoned", () => {
     it("shares its shop use limit with battle summons", () => {
-      const seagull = pet("Seagull", 4, 3, { ...MelonPerk });
+      const seagull = pet({ type: "Seagull", attack: 4, health: 3, perk: MelonPerk });
       const team = fireShopFriendSummoned(
-        [pet("Cricket", 2, 2), seagull, pet("Sloth", 1, 10)],
+        [pet({ type: "Cricket", attack: 2, health: 2 }), seagull, pet({ type: "Sloth", attack: 1, health: 10 })],
         2,
         PET_REGISTRY
       );
@@ -1492,7 +1476,7 @@ describe("Perks", () => {
 
       const { steps } = simulateBattle(
         team,
-        [pet("Sloth", 100, 100)],
+        [pet({ type: "Sloth", attack: 100, health: 100 })],
         PET_REGISTRY
       );
 
@@ -1507,7 +1491,7 @@ describe("Perks", () => {
         trigger: Trigger.start_of_battle,
         fn: (ctx) => {
           for (let i = 0; i < summons; i++) {
-            new BattleActions(ctx).summon(pet("Sloth", 1, 1), ctx.selfIndex);
+            new BattleActions(ctx).summon(pet({ type: "Sloth", attack: 1, health: 1 }), ctx.selfIndex);
           }
         },
       });
@@ -1521,8 +1505,8 @@ describe("Perks", () => {
       ({ level, expectedCount }) => {
         const tripleSummoner = summoner("Alpaca Test Summoner", 3);
         const { steps } = simulateBattle(
-          [pet(tripleSummoner.name, 100, 100), petLevel("Alpaca", 3, 7, level)],
-          [pet("Sloth", 0, 1000)],
+          [pet({ type: tripleSummoner.name, attack: 100, health: 100 }), pet({ type: "Alpaca", attack: 3, health: 7, level })],
+          [pet({ type: "Sloth", attack: 0, health: 1000 })],
           registryWith(tripleSummoner)
         );
         const summoned = steps[1].attackerTeam.filter(
@@ -1540,15 +1524,15 @@ describe("Perks", () => {
 
     it("carries its shop trigger use into battle", () => {
       const shopTeam = fireShopFriendSummoned(
-        [pet("Sloth", 1, 1), petLevel("Alpaca", 3, 7, 2)],
+        [pet({ type: "Sloth", attack: 1, health: 1 }), pet({ type: "Alpaca", attack: 3, health: 7, level: 2 })],
         0,
         PET_REGISTRY
       );
       const alpaca = shopTeam[1] as PetInstance;
       const doubleSummoner = summoner("Alpaca Carryover Summoner", 2);
       const { steps } = simulateBattle(
-        [pet(doubleSummoner.name, 100, 100), alpaca],
-        [pet("Sloth", 0, 1000)],
+        [pet({ type: doubleSummoner.name, attack: 100, health: 100 }), alpaca],
+        [pet({ type: "Sloth", attack: 0, health: 1000 })],
         registryWith(doubleSummoner)
       );
       const summoned = steps[1].attackerTeam.filter(
@@ -1569,8 +1553,8 @@ describe("Perks", () => {
       "summons a level $level tier 3 pet at $expected",
       ({ level }) => {
         const { steps } = simulateBattle(
-          [petLevel("Spider", 2, 2, level)],
-          [pet("Sloth", 3, 100)],
+          [pet({ type: "Spider", attack: 2, health: 2, level })],
+          [pet({ type: "Sloth", attack: 3, health: 100 })],
           PET_REGISTRY
         );
         const summoned = steps[1].attackerTeam[0];
@@ -1598,8 +1582,8 @@ describe("Perks", () => {
       "summons $count Dirty Rats at the front of the opposing team",
       ({ level, count }) => {
         const { steps } = simulateBattle(
-          [petLevel("Rat", 3, 1, level)],
-          [pet("Horse", 2, 10)],
+          [pet({ type: "Rat", attack: 3, health: 1, level })],
+          [pet({ type: "Horse", attack: 2, health: 10 })],
           PET_REGISTRY
         );
 
@@ -1613,8 +1597,8 @@ describe("Perks", () => {
 
     it("does not activate the opponent's friend-summoned abilities", () => {
       const { steps } = simulateBattle(
-        [petLevel("Rat", 3, 1, 3)],
-        [pet("Horse", 2, 10)],
+        [pet({ type: "Rat", attack: 3, health: 1, level: 3 })],
+        [pet({ type: "Horse", attack: 2, health: 10 })],
         PET_REGISTRY
       );
       const dirtyRats = steps[1].defenderTeam.filter(
@@ -1632,8 +1616,8 @@ describe("Perks", () => {
       { level: 3, stats: 12 },
     ])("summons a $stats/$stats Zombie Fly at level $level", ({ level, stats }) => {
       const { steps } = simulateBattle(
-        [pet("Sloth", 1, 1), petLevel("Fly", 4, 4, level)],
-        [pet("Sloth", 10, 100)],
+        [pet({ type: "Sloth", attack: 1, health: 1 }), pet({ type: "Fly", attack: 4, health: 4, level })],
+        [pet({ type: "Sloth", attack: 10, health: 100 })],
         PET_REGISTRY
       );
 
@@ -1647,13 +1631,13 @@ describe("Perks", () => {
     it("waits until Rooster's Chick leaves room, then summons a Zombie Fly", () => {
       const { steps } = simulateBattle(
         [
-          pet("Rooster", 6, 1),
-          pet("Fly", 4, 4),
-          pet("Sloth", 1, 1),
-          pet("Sloth", 1, 1),
-          pet("Sloth", 1, 1),
+          pet({ type: "Rooster", attack: 6, health: 1 }),
+          pet({ type: "Fly", attack: 4, health: 4 }),
+          pet({ type: "Sloth", attack: 1, health: 1 }),
+          pet({ type: "Sloth", attack: 1, health: 1 }),
+          pet({ type: "Sloth", attack: 1, health: 1 }),
         ],
-        [pet("Sloth", 10, 100)],
+        [pet({ type: "Sloth", attack: 10, health: 100 })],
         PET_REGISTRY
       );
 
@@ -1669,13 +1653,13 @@ describe("Perks", () => {
     it("works at most three times", () => {
       const { steps } = simulateBattle(
         [
-          pet("Sloth", 1, 1),
-          pet("Sloth", 1, 1),
-          pet("Sloth", 1, 1),
-          pet("Sloth", 1, 1),
-          pet("Fly", 4, 100),
+          pet({ type: "Sloth", attack: 1, health: 1 }),
+          pet({ type: "Sloth", attack: 1, health: 1 }),
+          pet({ type: "Sloth", attack: 1, health: 1 }),
+          pet({ type: "Sloth", attack: 1, health: 1 }),
+          pet({ type: "Fly", attack: 4, health: 100 }),
         ],
-        [pet("Sloth", 100, 1000)],
+        [pet({ type: "Sloth", attack: 100, health: 1000 })],
         PET_REGISTRY
       );
 
@@ -1693,8 +1677,8 @@ describe("Perks", () => {
         fn: () => listenerTriggers++,
       });
       const { steps } = simulateBattle(
-        [pet("Zombie Fly", 4, 4), pet("Fly", 4, 4), pet(listener.name, 1, 10)],
-        [pet("Sloth", 4, 4)],
+        [pet({ type: "Zombie Fly", attack: 4, health: 4 }), pet({ type: "Fly", attack: 4, health: 4 }), pet({ type: listener.name, attack: 1, health: 10 })],
+        [pet({ type: "Sloth", attack: 4, health: 4 })],
         registryWith(listener)
       );
 
@@ -1708,8 +1692,8 @@ describe("Perks", () => {
   describe("Chili perk — attack", () => {
     it("deals 5 ability damage to the second enemy during the attack", () => {
       const { steps } = simulateBattle(
-        [pet("Sloth", 1, 10, { ...ChiliPerk })],
-        [pet("Sloth", 1, 10), pet("Sloth", 1, 10)],
+        [pet({ type: "Sloth", attack: 1, health: 10, perk: ChiliPerk })],
+        [pet({ type: "Sloth", attack: 1, health: 10 }), pet({ type: "Sloth", attack: 1, health: 10 })],
         PET_REGISTRY
       );
 
@@ -1719,8 +1703,8 @@ describe("Perks", () => {
 
     it("uses ability-damage defenses", () => {
       const { steps } = simulateBattle(
-        [pet("Sloth", 1, 10, { ...ChiliPerk })],
-        [pet("Sloth", 1, 10), pet("Sloth", 1, 10, { ...GarlicPerk })],
+        [pet({ type: "Sloth", attack: 1, health: 10, perk: ChiliPerk })],
+        [pet({ type: "Sloth", attack: 1, health: 10 }), pet({ type: "Sloth", attack: 1, health: 10, perk: GarlicPerk })],
         PET_REGISTRY
       );
 
@@ -1735,8 +1719,8 @@ describe("Perks", () => {
         },
       });
       const { steps } = simulateBattle(
-        [pet("Sloth", 1, 10, { ...ChiliPerk })],
-        [pet("Sloth", 1, 10), pet("Hurt Listener", 1, 10)],
+        [pet({ type: "Sloth", attack: 1, health: 10, perk: ChiliPerk })],
+        [pet({ type: "Sloth", attack: 1, health: 10 }), pet({ type: "Hurt Listener", attack: 1, health: 10 })],
         registryWith(hurtPet)
       );
 
@@ -1753,8 +1737,8 @@ describe("Perks", () => {
       "summons one $attack/$health Bus with Chili at level $level",
       ({ level, attack, health }) => {
         const { steps } = simulateBattle(
-          [petLevel("Deer", 2, 2, level), pet("Rabbit", 1, 2)],
-          [pet("Sloth", 2, 100), pet("Sloth", 0, 100)],
+          [pet({ type: "Deer", attack: 2, health: 2, level }), pet({ type: "Rabbit", attack: 1, health: 2 })],
+          [pet({ type: "Sloth", attack: 2, health: 100 }), pet({ type: "Sloth", attack: 0, health: 100 })],
           PET_REGISTRY
         );
         const bus = steps[1].attackerTeam.find(
@@ -1772,7 +1756,7 @@ describe("Perks", () => {
 
   describe("Health removal", () => {
     it("removes a flat amount, ignoring defensive perks", () => {
-      const target = pet("Sloth", 1, 10, { ...MelonPerk });
+      const target = pet({ type: "Sloth", attack: 1, health: 10, perk: MelonPerk });
 
       expect(removeHealth(target, 3)).toBe(3);
       expect(target.health).toBe(7);
@@ -1780,7 +1764,7 @@ describe("Perks", () => {
     });
 
     it("removes a percentage of current health, rounded up", () => {
-      const target = pet("Sloth", 1, 10);
+      const target = pet({ type: "Sloth", attack: 1, health: 10 });
 
       expect(removePercentageHealth(target, 0.33)).toBe(4);
       expect(target.health).toBe(6);
@@ -1793,7 +1777,7 @@ describe("Perks", () => {
         remove: (target: PetInstance) => removePercentageHealth(target, 1),
       },
     ])("leaves at least 1 health on $name removal", ({ remove }) => {
-      const target = pet("Sloth", 1, 10);
+      const target = pet({ type: "Sloth", attack: 1, health: 10 });
 
       expect(remove(target)).toBe(9);
       expect(target.health).toBe(1);
@@ -1802,39 +1786,39 @@ describe("Perks", () => {
 
   describe("Garlic perk — damage reduction", () => {
     it("reduces incoming damage by 2", () => {
-      const garlicSloth = pet("Sloth", 1, 10, GarlicPerk);
-      const opposingSloth = pet("Sloth", 5, 5);
+      const garlicSloth = pet({ type: "Sloth", attack: 1, health: 10, perk: GarlicPerk });
+      const opposingSloth = pet({ type: "Sloth", attack: 5, health: 5 });
       const { steps } = simulateBattle([garlicSloth], [opposingSloth], PET_REGISTRY);
       expect(steps[1].attackerTeam[0].health).toBe(7); // 10 - (5-2)
     });
 
     it("does not increase damage for attackers with only 1 attack", () => {
-      const garlicSloth = pet("Sloth", 1, 10, GarlicPerk);
-      const { steps } = simulateBattle([garlicSloth], [pet("Sloth", 1, 5)], PET_REGISTRY);
+      const garlicSloth = pet({ type: "Sloth", attack: 1, health: 10, perk: GarlicPerk });
+      const { steps } = simulateBattle([garlicSloth], [pet({ type: "Sloth", attack: 1, health: 5 })], PET_REGISTRY);
       expect(steps[1].attackerTeam[0].health).toBe(9);
     });
   });
 
   describe("Melon perk — damage block", () => {
     it("blocks up to 20 damage on the first hit, then clears", () => {
-      const melonSloth = pet("Sloth", 1, 10, MelonPerk);
-      const { steps } = simulateBattle([melonSloth], [pet("Sloth", 5, 100)], PET_REGISTRY);
+      const melonSloth = pet({ type: "Sloth", attack: 1, health: 10, perk: MelonPerk });
+      const { steps } = simulateBattle([melonSloth], [pet({ type: "Sloth", attack: 5, health: 100 })], PET_REGISTRY);
       expect(steps[1].attackerTeam[0].health).toBe(10);
       expect(steps[1].attackerTeam[0].perk).toBeNull();
     });
 
     it("blocks exactly 20 and lets the remainder through on a bigger hit", () => {
-      const melonSloth = pet("Sloth", 1, 10, MelonPerk);
-      const normalSloth = pet("Sloth", 21, 100);
+      const melonSloth = pet({ type: "Sloth", attack: 1, health: 10, perk: MelonPerk });
+      const normalSloth = pet({ type: "Sloth", attack: 21, health: 100 });
 
       const { steps } = simulateBattle([melonSloth], [normalSloth], PET_REGISTRY);
       expect(steps[1].attackerTeam[0].health).toBe(9); // 10 - (21-20)
     });
 
     it("no longer blocks a second hit once used up", () => {
-      const melonSloth = pet("Sloth", 1, 30, MelonPerk);
+      const melonSloth = pet({ type: "Sloth", attack: 1, health: 30, perk: MelonPerk });
 
-      const { steps } = simulateBattle([melonSloth], [pet("Sloth", 5, 100)], PET_REGISTRY);
+      const { steps } = simulateBattle([melonSloth], [pet({ type: "Sloth", attack: 5, health: 100 })], PET_REGISTRY);
       expect(steps[1].attackerTeam[0].health).toBe(30); // round 1: blocked
       expect(steps[2].attackerTeam[0].health).toBe(25); // round 2: perk gone, takes 5
     });
@@ -1842,8 +1826,8 @@ describe("Perks", () => {
 
   describe("Peanut + Melon interaction", () => {
     it("a fully-blocked hit does not count as a Peanut kill", () => {
-      const scorpion = pet("Scorpion", 1, 3, PeanutPerk);
-      const melonSloth: PetInstance = pet("Sloth", 1, 10, MelonPerk);
+      const scorpion = pet({ type: "Scorpion", attack: 1, health: 3, perk: PeanutPerk });
+      const melonSloth: PetInstance = pet({ type: "Sloth", attack: 1, health: 10, perk: MelonPerk });
 
       const { steps } = simulateBattle([scorpion], [melonSloth], PET_REGISTRY);
       // Scorpion's 1 dmg is fully blocked (min(20,1)=1) — Sloth takes 0, so it
@@ -1854,8 +1838,8 @@ describe("Perks", () => {
 
   describe("Meat Bone", () => {
     it("increases base attack by +3", () => {
-      const meatBoneSloth = pet("Sloth", 1, 4, MeatBonePerk);
-      const opponent = pet("Sloth", 2, 8);
+      const meatBoneSloth = pet({ type: "Sloth", attack: 1, health: 4, perk: MeatBonePerk });
+      const opponent = pet({ type: "Sloth", attack: 2, health: 8 });
 
       const { result } = simulateBattle([meatBoneSloth], [opponent], PET_REGISTRY);
       expect(result).toBe("DRAW");
@@ -1864,16 +1848,16 @@ describe("Perks", () => {
 
   describe("Steak", () => {
     it("increases base attack by +20", () => {
-      const steakSloth = pet("Sloth", 1, 21, SteakPerk);
-      const opponent = pet("Sloth", 1, 21);
+      const steakSloth = pet({ type: "Sloth", attack: 1, health: 21, perk: SteakPerk });
+      const opponent = pet({ type: "Sloth", attack: 1, health: 21 });
 
       const { result } = simulateBattle([steakSloth], [opponent], PET_REGISTRY);
       expect(result).toBe("WIN");
     });
 
     it("is consumed after use", () => {
-      const steakSloth = pet("Sloth", 1, 21, SteakPerk);
-      const opponent = pet("Sloth", 1, 22);
+      const steakSloth = pet({ type: "Sloth", attack: 1, health: 21, perk: SteakPerk });
+      const opponent = pet({ type: "Sloth", attack: 1, health: 22 });
 
       const { steps } = simulateBattle([steakSloth], [opponent], PET_REGISTRY);
       expect(steps[0].attackerTeam[0].perk?.name).toBe("Steak");
@@ -1883,8 +1867,8 @@ describe("Perks", () => {
 
   describe("Mushroom", () => {
     it("summons the same pet as a 1/1", () => {
-      const mushroomSloth = pet("Sloth", 2, 2, MushroomPerk);
-      const opponent = pet("Sloth", 2, 3);
+      const mushroomSloth = pet({ type: "Sloth", attack: 2, health: 2, perk: MushroomPerk });
+      const opponent = pet({ type: "Sloth", attack: 2, health: 3 });
       const { result, steps } = simulateBattle([mushroomSloth], [opponent], PET_REGISTRY);
 
       // Bee (1/1) vs Sloth (2/1). They trade → DRAW.
@@ -1903,12 +1887,12 @@ describe("Engine Behavior", () => {
   // TODO - Implement test to ensure randomness between same trigger and attack
 
   it("Start of Battle resolves by attack, not board position", () => {
-    const frontDodo = petLevel("Dodo", 1, 5, 2);
-    const middleDodo = petLevel("Dodo", 12, 5, 2);
-    const backDodo = petLevel("Dodo", 8, 5, 2);
+    const frontDodo = pet({ type: "Dodo", attack: 1, health: 5, level: 2 });
+    const middleDodo = pet({ type: "Dodo", attack: 12, health: 5, level: 2 });
+    const backDodo = pet({ type: "Dodo", attack: 8, health: 5, level: 2 });
     const { steps } = simulateBattle(
-      [pet("Sloth", 0, 100), frontDodo, middleDodo, backDodo],
-      [pet("Sloth", 0, 100)],
+      [pet({ type: "Sloth", attack: 0, health: 100 }), frontDodo, middleDodo, backDodo],
+      [pet({ type: "Sloth", attack: 0, health: 100 })],
       PET_REGISTRY
     );
 
@@ -1923,13 +1907,13 @@ describe("Engine Behavior", () => {
   });
 
   it("Start of Battle dynamically updates based on attack order", () => {
-    const frontDodo = petLevel("Dodo", 8, 5, 2);
-    const middleDodo = petLevel("Dodo", 4, 5, 2);
-    const backDodo = petLevel("Dodo", 12, 5, 2);
+    const frontDodo = pet({ type: "Dodo", attack: 8, health: 5, level: 2 });
+    const middleDodo = pet({ type: "Dodo", attack: 4, health: 5, level: 2 });
+    const backDodo = pet({ type: "Dodo", attack: 12, health: 5, level: 2 });
 
     const { steps } = simulateBattle(
-      [pet("Sloth", 0, 100), frontDodo, middleDodo, backDodo],
-      [pet("Sloth", 0, 100)],
+      [pet({ type: "Sloth", attack: 0, health: 100 }), frontDodo, middleDodo, backDodo],
+      [pet({ type: "Sloth", attack: 0, health: 100 })],
       PET_REGISTRY
     );
 
@@ -1951,8 +1935,8 @@ describe("Engine Behavior", () => {
 
   it("Faint ability fires even when pet dies during the Start of Battle phase", () => {
     const { steps } = simulateBattle(
-      [pet("Sloth", 1, 5), pet("Badger", 6, 1)],
-      [pet("Dolphin", 4, 3)],
+      [pet({ type: "Sloth", attack: 1, health: 5 }), pet({ type: "Badger", attack: 6, health: 1 })],
+      [pet({ type: "Dolphin", attack: 4, health: 3 })],
       PET_REGISTRY
     );
     // Dolphin's start-of-battle hit (4 dmg) kills the low-health Badger
@@ -1964,8 +1948,8 @@ describe("Engine Behavior", () => {
   describe("Pending faints", () => {
     it("fires Start of Battle after its pet faints", () => {
       const { steps } = simulateBattle(
-        [pet("Dolphin", 4, 3)],
-        [pet("Mosquito", 2, 2), pet("Sloth", 1, 50)],
+        [pet({ type: "Dolphin", attack: 4, health: 3 })],
+        [pet({ type: "Mosquito", attack: 2, health: 2 }), pet({ type: "Sloth", attack: 1, health: 50 })],
         PET_REGISTRY
       );
 
@@ -1980,8 +1964,8 @@ describe("Engine Behavior", () => {
       });
 
       simulateBattle(
-        [pet("Elephant", 3, 7), pet("Listener", 1, 1)],
-        [pet("Sloth", 1, 100)],
+        [pet({ type: "Elephant", attack: 3, health: 7 }), pet({ type: "Listener", attack: 1, health: 1 })],
+        [pet({ type: "Sloth", attack: 1, health: 100 })],
         registryWith(listener)
       );
 
@@ -1996,8 +1980,8 @@ describe("Engine Behavior", () => {
       });
 
       simulateBattle(
-        [pet("Sloth", 1, 1), pet("Listener", 1, 1)],
-        [pet("Sloth", 5, 100)],
+        [pet({ type: "Sloth", attack: 1, health: 1 }), pet({ type: "Listener", attack: 1, health: 1 })],
+        [pet({ type: "Sloth", attack: 5, health: 100 })],
         registryWith(listener)
       );
 
@@ -2006,8 +1990,8 @@ describe("Engine Behavior", () => {
 
     it("fires Knock out when its pet faints in the same hit", () => {
       const { steps } = simulateBattle(
-        [pet("Rhino", 6, 1)],
-        [pet("Sloth", 1, 1), pet("Sloth", 1, 50)],
+        [pet({ type: "Rhino", attack: 6, health: 1 })],
+        [pet({ type: "Sloth", attack: 1, health: 1 }), pet({ type: "Sloth", attack: 1, health: 50 })],
         PET_REGISTRY
       );
 
@@ -2018,9 +2002,9 @@ describe("Engine Behavior", () => {
 
   // TODO - Implement skipping friends that already have the perk
   it.skip("skips giving Melon to friends with Melon", () => {
-    const turtle = pet("Turtle", 2, 0);
-    const melonFriend = pet("Sloth", 1, 5, MelonPerk);
-    const plainFriend = pet("Sloth", 1, 5);
+    const turtle = pet({ type: "Turtle", attack: 2, health: 0 });
+    const melonFriend = pet({ type: "Sloth", attack: 1, health: 5, perk: MelonPerk });
+    const plainFriend = pet({ type: "Sloth", attack: 1, health: 5 });
     const ability = PET_REGISTRY.Turtle.abilities.get(Trigger.faint);
     if (!ability || ability.trigger !== Trigger.faint) throw new Error("Expected faint ability");
 
@@ -2038,8 +2022,8 @@ describe("Engine Behavior", () => {
       });
 
       simulateBattle(
-        [pet("Mosquito", 2, 2)],
-        [pet("Hurt Listener", 1, 10)],
+        [pet({ type: "Mosquito", attack: 2, health: 2 })],
+        [pet({ type: "Hurt Listener", attack: 1, health: 10 })],
         registryWith(listener)
       );
 
@@ -2057,8 +2041,8 @@ describe("Engine Behavior", () => {
       });
 
       simulateBattle(
-        [pet("Fainter", 1, 1), pet("Listener", 1, 10)],
-        [pet("Sloth", 1, 100)],
+        [pet({ type: "Fainter", attack: 1, health: 1 }), pet({ type: "Listener", attack: 1, health: 10 })],
+        [pet({ type: "Sloth", attack: 1, health: 100 })],
         registryWith(fainter, listener)
       );
 
@@ -2073,8 +2057,8 @@ describe("Engine Behavior", () => {
       });
 
       simulateBattle(
-        [pet("Ant", 1, 1), pet("Listener", 1, 10)],
-        [pet("Sloth", 1, 100)],
+        [pet({ type: "Ant", attack: 1, health: 1 }), pet({ type: "Listener", attack: 1, health: 10 })],
+        [pet({ type: "Sloth", attack: 1, health: 100 })],
         registryWith(listener)
       );
 
@@ -2093,8 +2077,8 @@ describe("Engine Behavior", () => {
       const registry = registryWith(listener("Low"), listener("High"));
 
       simulateBattle(
-        [pet("Sloth", 1, 50), pet("Low", 1, 50)],
-        [pet("Sloth", 1, 50), pet("High", 9, 50)],
+        [pet({ type: "Sloth", attack: 1, health: 50 }), pet({ type: "Low", attack: 1, health: 50 })],
+        [pet({ type: "Sloth", attack: 1, health: 50 }), pet({ type: "High", attack: 9, health: 50 })],
         registry
       );
 
@@ -2114,8 +2098,8 @@ describe("Engine Behavior", () => {
       );
 
       simulateBattle(
-        [pet("After", 1, 10), pet("Ahead", 1, 10)],
-        [pet("Hurt", 1, 10)],
+        [pet({ type: "After", attack: 1, health: 10 }), pet({ type: "Ahead", attack: 1, health: 10 })],
+        [pet({ type: "Hurt", attack: 1, health: 10 })],
         registry
       );
 

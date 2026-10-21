@@ -4,40 +4,38 @@ import { PET_REGISTRY } from "@/lib/pets";
 import { Apple, Honey, Pill, Sushi } from "@/lib/foods";
 import { Chocolate } from "@/lib/foods/chocolate";
 import { Cupcake } from "@/lib/foods/cupcake";
-import { ApiBoard, FoodType, PetInstance } from "@/lib/types";
+import { ApiBoard, FoodType } from "@/lib/types";
 import { MeatBone } from "@/lib/foods/meat-bone";
 import { MeatBonePerk } from "@/lib/perks/meat-bone";
 import { HoneyPerk } from "@/lib/perks/honey";
 import { fireBoardShopAbility } from "@/lib/game/shop-ability";
 import { Trigger } from "@/lib/types";
+import { EMPTY_SHOP, pet } from "./helpers";
 
-function pet(type: string, attack = 2, health = 2): PetInstance {
-  return { type, attack, health, perk: null, xp: 0, level: 1 };
-}
 
 describe("applyFoodEffect", () => {
   it("applies the attack/health bonus to the targeted pet for standard foods", () => {
-    const board: ApiBoard = [pet("Ant"), pet("Fish"), null, null, null];
+    const board: ApiBoard = [pet({ type: "Ant" }), pet({ type: "Fish" }), null, null, null];
     const result = applyFoodEffect(Apple, board, 1, PET_REGISTRY);
-    expect(result[1]).toMatchObject({ attack: 3, health: 3 });
-    expect(result[0]).toMatchObject({ attack: 2, health: 2 });
+    expect(result[1]).toMatchObject({ attack: 2, health: 2 });
+    expect(result[0]).toMatchObject({ attack: 1, health: 1 });
   });
 
   it("sets the perk for perk foods", () => {
-    const board: ApiBoard = [pet("Ant"), null, null, null, null];
+    const board: ApiBoard = [pet({ type: "Ant" }), null, null, null, null];
     const result = applyFoodEffect(Honey, board, 0, PET_REGISTRY);
     expect(result[0]?.perk).toEqual(HoneyPerk);
     expect(result[0]?.perk).not.toBe(HoneyPerk);
   });
 
   it("does not mutate the input board for standard foods", () => {
-    const board: ApiBoard = [pet("Ant"), null, null, null, null];
+    const board: ApiBoard = [pet({ type: "Ant" }), null, null, null, null];
     applyFoodEffect(Apple, board, 0, PET_REGISTRY);
-    expect(board[0]).toMatchObject({ attack: 2, health: 2 });
+    expect(board[0]).toMatchObject({ attack: 1, health: 1 });
   });
 
   it("removes Cupcake's temporary stats at the start of next turn", () => {
-    const board: ApiBoard = [pet("Ant", 2, 2)];
+    const board: ApiBoard = [pet({ type: "Ant", attack: 2, health: 2 })];
     const fed = applyFoodEffect(Cupcake, board, 0, PET_REGISTRY);
     expect(fed[0]).toMatchObject({
       attack: 5,
@@ -49,7 +47,7 @@ describe("applyFoodEffect", () => {
     const nextTurn = fireBoardShopAbility(
       Trigger.start_of_turn,
       fed,
-      { shopPets: [], shopFoods: [] },
+      EMPTY_SHOP,
       PET_REGISTRY
     ).board;
 
@@ -59,7 +57,7 @@ describe("applyFoodEffect", () => {
   });
 
   it("Chocolate grants XP and matching attack/health, updating pet level", () => {
-    const board: ApiBoard = [pet("Ant", 2, 2)];
+    const board: ApiBoard = [pet({ type: "Ant", attack: 2, health: 2 })];
     const result = applyFoodEffect(Chocolate, board, 0, PET_REGISTRY);
 
     expect(result[0]).toMatchObject({
@@ -73,13 +71,13 @@ describe("applyFoodEffect", () => {
   it("Chocolate can advance a pet to level 2 or 3", () => {
     const levelTwo = applyFoodEffect(
       Chocolate,
-      [{ ...pet("Ant", 2, 2), xp: 1 }],
+      [pet({ type: "Ant", attack: 2, health: 2, xp: 1 })],
       0,
       PET_REGISTRY
     );
     const levelThree = applyFoodEffect(
       Chocolate,
-      [{ ...pet("Ant", 2, 2), xp: 4, level: 2 }],
+      [pet({ type: "Ant", attack: 2, health: 2, xp: 4, level: 2 })],
       0,
       PET_REGISTRY
     );
@@ -89,51 +87,51 @@ describe("applyFoodEffect", () => {
   });
 
   it("does not apply Chocolate to a pet at the XP cap", () => {
-    const board: ApiBoard = [{ ...pet("Ant", 2, 2), xp: 5, level: 3 }];
+    const board: ApiBoard = [pet({ type: "Ant", attack: 2, health: 2, xp: 5, level: 3 })];
 
     expect(feedError(Chocolate, board, 0)).toBe("Pet has reached max experience");
     expect(applyFoodEffect(Chocolate, board, 0, PET_REGISTRY)[0]).toEqual(board[0]);
   });
 
   it("uses the food's own applyEffect when present (Pill removes the pet)", () => {
-    const board: ApiBoard = [pet("Ant"), pet("Fish"), null, null, null];
+    const board: ApiBoard = [pet({ type: "Ant" }), pet({ type: "Fish" }), null, null, null];
     const result = applyFoodEffect(Pill, board, 0, PET_REGISTRY);
     expect(result[0]).toBeNull();
     expect(result[1]).not.toBeNull();
   });
 
   it("Sushi buffs three random pets, wherever boardPosition points", () => {
-    const board: ApiBoard = [pet("Ant"), pet("Fish"), pet("Pig"), pet("Cricket"), null];
+    const board: ApiBoard = [pet({ type: "Ant" }), pet({ type: "Fish" }), pet({ type: "Pig" }), pet({ type: "Cricket" }), null];
     const result = applyFoodEffect(Sushi, board, 4, PET_REGISTRY);
-    const buffed = result.filter((p) => p && p.attack === 3 && p.health === 3);
+    const buffed = result.filter((p) => p && p.attack === 2 && p.health === 2);
     expect(buffed).toHaveLength(3);
     expect(result[4]).toBeNull();
   });
 
   it("random-target foods buff every pet when fewer than asked for are on the board", () => {
-    const board: ApiBoard = [pet("Ant"), null, pet("Fish"), null, null];
+    const board: ApiBoard = [pet({ type: "Ant" }), null, pet({ type: "Fish" }), null, null];
     const result = applyFoodEffect(Sushi, board, 0, PET_REGISTRY);
-    expect(result.filter((p) => p && p.attack === 3)).toHaveLength(2);
+    expect(result.filter((p) => p && p.attack === 2)).toHaveLength(2);
   });
 
   it("random-target foods also apply perks to each target", () => {
     const perkFood: FoodType = { ...MeatBone, targeting: { random: 2 } };
-    const board: ApiBoard = [pet("Ant"), pet("Fish"), pet("Pig"), null, null];
+    const board: ApiBoard = [pet({ type: "Ant" }), pet({ type: "Fish" }), pet({ type: "Pig" }), null, null];
     const result = applyFoodEffect(perkFood, board, 0, PET_REGISTRY);
     expect(result.filter((p) => p?.perk?.name === MeatBonePerk.name)).toHaveLength(2);
   });
 
   it("leaves the input board's pets untouched for random-target foods", () => {
-    const board: ApiBoard = [pet("Ant"), pet("Fish"), pet("Pig"), null, null];
+    const board: ApiBoard = [pet({ type: "Ant" }), pet({ type: "Fish" }), pet({ type: "Pig" }), null, null];
     applyFoodEffect(Sushi, board, 0, PET_REGISTRY);
-    expect(board.every((p) => !p || (p.attack === 2 && p.health === 2))).toBe(true);
+    expect(board.every((p) => !p || (p.attack === 1 && p.health === 1))).toBe(true);
   });
 
   it("does not mutate the input board's pets for Pill either", () => {
-    const board: ApiBoard = [pet("Ant"), pet("Fish"), null, null, null];
+    const board: ApiBoard = [pet({ type: "Ant" }), pet({ type: "Fish" }), null, null, null];
     applyFoodEffect(Pill, board, 0, PET_REGISTRY);
-    expect(board[0]).toMatchObject({ attack: 2, health: 2 });
-    expect(board[1]).toMatchObject({ attack: 2, health: 2 });
+    expect(board[0]).toMatchObject({ attack: 1, health: 1 });
+    expect(board[1]).toMatchObject({ attack: 1, health: 1 });
     expect(board[2]).toBeNull();
     expect(board[3]).toBeNull();
     expect(board[4]).toBeNull();
@@ -149,7 +147,7 @@ describe("needsTarget", () => {
 });
 
 describe("feedError", () => {
-  const board: ApiBoard = [pet("Ant"), null, null, null, null];
+  const board: ApiBoard = [pet({ type: "Ant" }), null, null, null, null];
   const empty: ApiBoard = [null, null, null, null, null];
 
   it("requires an occupied chosen slot for chosen-target foods", () => {

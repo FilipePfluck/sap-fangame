@@ -18,25 +18,28 @@ const MULTI_TIER_PETS = [TIER1_PET, TIER2_PET];
 const MULTI_TIER_FOODS = [TIER1_FOOD, TIER2_FOOD];
 
 describe("generateShop", () => {
-  it("keeps SAP Other pets separate from the Turtle pack and in the shop pool", () => {
-    const sapOtherNames = SAP_OTHER_PETS.map((pet) => pet.name);
-    expect(sapOtherNames).toEqual([
-      "Seagull",
-      "Alpaca",
-      "Jerboa",
-      "Sugar Glider",
-      "Flounder",
-      "Adult Flounder",
-    ]);
-    expect(
-      TURTLE_PACK_PETS.some((pet) => sapOtherNames.includes(pet.name))
-    ).toBe(false);
-    const shopableNames = SAP_OTHER_PETS.filter((pet) => !pet.isToken).map(
-      (pet) => pet.name
+  it.each([
+    { tier: 1, names: ["Duck", "Beaver", "Pigeon", "Otter", "Pig", "Ant", "Mosquito", "Fish", "Cricket", "Horse"] },
+    { tier: 2, names: ["Snail", "Crab", "Swan", "Peacock", "Kangaroo", "Hedgehog", "Flamingo", "Worm", "Spider", "Rat"] },
+    { tier: 3, names: ["Dodo", "Badger", "Dolphin", "Elephant", "Rabbit", "Giraffe", "Camel", "Dog", "Sheep", "Ox"] },
+    { tier: 4, names: ["Skunk", "Hippo", "Bison", "Squirrel", "Penguin", "Blowfish", "Turtle", "Whale", "Deer"] },
+    { tier: 5, names: ["Scorpion", "Crocodile", "Rhino", "Armadillo", "Turkey", "Monkey", "Seal", "Rooster", "Cow"] },
+    { tier: 6, names: ["Leopard", "Boar", "Tiger", "Dragon", "Mammoth", "Snake", "Wolverine", "Gorilla", "Fly", "Cat"] },
+  ])("has exactly the Turtle pack's tier $tier pets", ({ tier, names }) => {
+    const tierPets = TURTLE_PACK_PETS.filter((pet) => !pet.isToken && pet.tier === tier);
+    expect(new Set(tierPets.map((pet) => pet.name))).toEqual(new Set(names));
+  });
+
+  it("has exactly the Turtle pack's tokens", () => {
+    const tokens = TURTLE_PACK_PETS.filter((pet) => pet.isToken);
+    expect(new Set(tokens.map((pet) => pet.name))).toEqual(
+      new Set(["Zombie Cricket", "Bee", "Ram", "Chick", "Bus", "Dirty Rat", "Zombie Fly"])
     );
-    expect(SHOP_PET_POOL.map((pet) => pet.name)).toEqual(
-      expect.arrayContaining(shopableNames)
-    );
+  });
+
+  it("includes SAP Other non-token pets in the shop pool", () => {
+    const shopableNames = SAP_OTHER_PETS.filter((pet) => !pet.isToken).map((pet) => pet.name);
+    expect(SHOP_PET_POOL.map((pet) => pet.name)).toEqual(expect.arrayContaining(shopableNames));
   });
 
   it("returns 3 pet slots and 1 food slot at turn 1", () => {

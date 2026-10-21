@@ -2,12 +2,8 @@ import { describe, it, expect } from "vitest";
 import { addLevelUpReward, getRewardTier, MAX_SHOP_SLOTS } from "@/lib/game/shop";
 import { levelUpRewardEarned } from "@/lib/game/merge";
 import { SHOP_PET_POOL } from "@/lib/pets";
-import type { PetInstance, ShopState } from "@/lib/types";
-
-const pet = (xp: number, level: number): PetInstance => ({
-  type: "Cricket", attack: 1, health: 1, perk: null, xp, level,
-});
-const emptyShop: ShopState = { shopPets: [], shopFoods: [] };
+import type { ShopState } from "@/lib/types";
+import { EMPTY_SHOP, pet } from "./helpers";
 
 describe("getRewardTier", () => {
   it("is one above the highest unlocked tier", () => {
@@ -22,7 +18,7 @@ describe("getRewardTier", () => {
 
 describe("addLevelUpReward", () => {
   it("adds two distinct next-tier pets sharing a chainId, unfrozen", () => {
-    const shop = addLevelUpReward(emptyShop, 5, SHOP_PET_POOL, "c1");
+    const shop = addLevelUpReward(EMPTY_SHOP, 5, SHOP_PET_POOL, "c1");
     expect(shop.shopPets).toHaveLength(2);
     expect(shop.shopPets.every((p) => p.chainId === "c1" && !p.frozen)).toBe(true);
     expect(shop.shopPets[0].type).not.toBe(shop.shopPets[1].type);
@@ -100,17 +96,17 @@ describe("addLevelUpReward", () => {
 
 describe("levelUpRewardEarned", () => {
   it("a merge that reaches 2 XP earns a reward", () => {
-    expect(levelUpRewardEarned(pet(1, 1), pet(0, 1))).toBe(true);
+    expect(levelUpRewardEarned(pet({ xp: 1, level: 1 }), pet({ xp: 0, level: 1 }))).toBe(true);
   });
   it("merging two level-2 pets does not, regardless of xp", () => {
-    expect(levelUpRewardEarned(pet(2, 2), pet(2, 2))).toBe(false);
-    expect(levelUpRewardEarned(pet(4, 2), pet(4, 2))).toBe(false);
+    expect(levelUpRewardEarned(pet({ xp: 2, level: 2 }), pet({ xp: 2, level: 2 }))).toBe(false);
+    expect(levelUpRewardEarned(pet({ xp: 4, level: 2 }), pet({ xp: 4, level: 2 }))).toBe(false);
   });
   it("level 2 + level 1 reaching 5 XP earns a reward", () => {
-    expect(levelUpRewardEarned(pet(4, 2), pet(0, 1))).toBe(true);
+    expect(levelUpRewardEarned(pet({ xp: 4, level: 2 }), pet({ xp: 0, level: 1 }))).toBe(true);
   });
   it("no reward when the merge does not level up", () => {
-    expect(levelUpRewardEarned(pet(0, 1), pet(0, 1))).toBe(false);
-    expect(levelUpRewardEarned(pet(2, 2), pet(0, 1))).toBe(false);
+    expect(levelUpRewardEarned(pet({ xp: 0, level: 1 }), pet({ xp: 0, level: 1 }))).toBe(false);
+    expect(levelUpRewardEarned(pet({ xp: 2, level: 2 }), pet({ xp: 0, level: 1 }))).toBe(false);
   });
 });
