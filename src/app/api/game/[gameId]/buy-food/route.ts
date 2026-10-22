@@ -2,13 +2,13 @@ import { auth } from "@/auth";
 import { prisma, toPrismaJson } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { FOOD_REGISTRY } from "@/lib/foods";
-import { PET_REGISTRY } from "@/lib/pets";
+import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
 import { applyFoodEffect, feedError } from "@/lib/game/food";
-import { applyFrozenFlags } from "@/lib/game/shop";
+import { applyFrozenFlags, getRewardTier } from "@/lib/game/shop";
+import { resolveExperienceLevelUps } from "@/lib/game/shop-ability";
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import { getFoodCost } from "@/lib/game/costs";
 import { z } from "zod";
-import type { ShopState } from "@/lib/types";
 
 const BuyFoodSchema = z.object({
   shopPosition: z.number().int().min(0).max(9),
@@ -67,12 +67,27 @@ export async function POST(
     return Response.json({ error: "Not enough gold" }, { status: 400 });
   }
 
-  const newBoard = applyFoodEffect(foodDef, state.board, boardPosition, PET_REGISTRY);
+  const fedBoard = applyFoodEffect(
+    foodDef,
+    state.board,
+    boardPosition,
+    PET_REGISTRY,
+    shopFood.multiplier
+  );
 
   const newShopFoods = [...shopNow.shopFoods];
   newShopFoods.splice(shopPosition, 1);
 
-  const newShop: ShopState = { shopPets: shopNow.shopPets, shopFoods: newShopFoods };
+  const { board: newBoard, shop: newShop, goldDelta } = resolveExperienceLevelUps(
+    state.board,
+    fedBoard,
+    { shopPets: shopNow.shopPets, shopFoods: newShopFoods },
+    {
+      rewardTier: getRewardTier(state.turn.turnNumber),
+      rewardPool: SHOP_PET_POOL,
+      petRegistry: PET_REGISTRY,
+    }
+  );
 
   const boardState = await prisma.boardState.create({
     data: {
@@ -80,7 +95,7 @@ export async function POST(
       turnId: state.turnId,
       boardState: toPrismaJson(newBoard),
       shopState: newShop,
-      goldRemaining: state.goldRemaining - cost,
+      goldRemaining: state.goldRemaining - cost + goldDelta,
     },
   });
 

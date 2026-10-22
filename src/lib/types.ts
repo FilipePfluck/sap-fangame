@@ -32,6 +32,8 @@ export type ShopFood = {
   frozen: boolean;
   // Gold knocked off this item's price (set by abilities); see lib/game/costs.
   discount?: number;
+  // See lib/game/food for exact behavior
+  multiplier?: number;
 };
 
 export type BuyResponse = {
@@ -98,6 +100,21 @@ export type FoodAbilityContext = {
   foodGroup?: FoodType["foodGroup"];
 };
 
+export type FoodBoughtAbilityContext = {
+  self: PetInstance;
+  level: number;
+  // The bought food and the multiplier on its attack/health, which abilities
+  // may raise (Cat).
+  purchase: { food: FoodType; multiplier: number };
+};
+
+export type TransformedAbilityContext = {
+  self: PetInstance;
+  // The board's living pets, in board order (self included).
+  friends: PetInstance[];
+  level: number;
+};
+
 export type ShopAbilityContext = {
   self: PetInstance;
   selfIndex: number;
@@ -131,6 +148,8 @@ export enum Trigger {
   friend_ahead_faints,
   friend_hurt,
   friend_faints,
+  food_bought,
+  transformed,
 }
 
 export type Ability =
@@ -151,7 +170,9 @@ export type Ability =
   | { trigger: Trigger.friend_bought; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.knock_out; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: Trigger.friend_hurt; fn: (ctx: BattleAbilityContext) => void }
-  | { trigger: Trigger.friend_faints; fn: (ctx: BattleAbilityContext) => void };
+  | { trigger: Trigger.friend_faints; fn: (ctx: BattleAbilityContext) => void }
+  | { trigger: Trigger.food_bought; fn: (ctx: FoodBoughtAbilityContext) => void }
+  | { trigger: Trigger.transformed; fn: (ctx: TransformedAbilityContext) => void };
 
 export type AbilityData = Pick<Ability, "trigger">;
 

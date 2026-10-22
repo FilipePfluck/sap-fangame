@@ -4,7 +4,10 @@ import {
   incrementTriggerCount,
   tryIncrementTriggerCount,
 } from "@/lib/pets/ability";
-import { toPetData } from "@/lib/game/pet";
+import { TransformPreserve, toPetData, transformPet } from "@/lib/game/pet";
+import { AdultFlounder } from "@/lib/pets/SAPOther/adult-flounder";
+import { HoneyPerk } from "@/lib/perks/honey";
+import { pet } from "@/__tests__/helpers";
 import {
   Trigger,
   type Ability,
@@ -98,5 +101,40 @@ describe("pet trigger counts", () => {
     incrementTriggerCount(pet, Trigger.hurt);
 
     expect(incrementTriggerCount(pet, Trigger.knock_out)).toBe(1);
+  });
+});
+
+describe("transformPet", () => {
+  function transform(preserve?: Map<TransformPreserve, boolean>): PetInstance {
+    const transformed = pet({ type: "Flounder", attack: 5, health: 6, perk: HoneyPerk, level: 2, xp: 3 });
+    transformPet(transformed, AdultFlounder, [], preserve);
+    return transformed;
+  }
+
+  it("keeps stats, perk, level and experience by default", () => {
+    expect(transform()).toMatchObject({
+      type: "Adult Flounder",
+      attack: 5,
+      health: 6,
+      perk: HoneyPerk,
+      level: 2,
+      xp: 3,
+    });
+  });
+
+  it("gives the new pet's base stats when stats aren't preserved", () => {
+    expect(transform(new Map([[TransformPreserve.stats, false]]))).toMatchObject({ attack: 2, health: 4 });
+  });
+
+  it("gives the new pet's innate perk when the perk isn't preserved", () => {
+    expect(transform(new Map([[TransformPreserve.perk, false]])).perk).toBeNull();
+  });
+
+  it("resets to level 1 with no experience when the level isn't preserved", () => {
+    expect(transform(new Map([[TransformPreserve.level, false]]))).toMatchObject({ level: 1, xp: 0 });
+  });
+
+  it("removes progress beyond its level when experience isn't preserved", () => {
+    expect(transform(new Map([[TransformPreserve.experience, false]]))).toMatchObject({ level: 2, xp: 2 });
   });
 });

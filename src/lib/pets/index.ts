@@ -60,12 +60,16 @@ export { Deer } from "./turtle/tier 4/deer";
 export { Cow } from "./turtle/tier 5/cow";
 export { Gorilla } from "./turtle/tier 6/gorilla";
 export { Fly } from "./turtle/tier 6/fly";
+export { Cat } from "./turtle/tier 6/cat";
 export { Bus } from "./turtle/token/bus";
 export { DirtyRat } from "./turtle/token/dirty-rat";
 export { ZombieFly } from "./turtle/token/zombie-fly";
 export { Seagull } from "./SAPOther/seagull";
 export { Alpaca } from "./SAPOther/alpaca";
 export { Jerboa } from "./SAPOther/jerboa";
+export { SugarGlider } from "./SAPOther/sugar-glider";
+export { Flounder } from "./SAPOther/flounder";
+export { AdultFlounder } from "./SAPOther/adult-flounder";
 
 import { Sloth } from "./turtle/token/sloth";
 import { Duck } from "./turtle/tier 1/duck";
@@ -129,12 +133,16 @@ import { Deer } from "./turtle/tier 4/deer";
 import { Cow } from "./turtle/tier 5/cow";
 import { Gorilla } from "./turtle/tier 6/gorilla";
 import { Fly } from "./turtle/tier 6/fly";
+import { Cat } from "./turtle/tier 6/cat";
 import { Bus } from "./turtle/token/bus";
 import { DirtyRat } from "./turtle/token/dirty-rat";
 import { ZombieFly } from "./turtle/token/zombie-fly";
 import { Seagull } from "./SAPOther/seagull";
 import { Alpaca } from "./SAPOther/alpaca";
 import { Jerboa } from "./SAPOther/jerboa";
+import { SugarGlider } from "./SAPOther/sugar-glider";
+import { Flounder } from "./SAPOther/flounder";
+import { AdultFlounder } from "./SAPOther/adult-flounder";
 import type { StaticPet } from "@/lib/types";
 
 export const TURTLE_PACK_PETS = [
@@ -199,13 +207,21 @@ export const TURTLE_PACK_PETS = [
   Cow,
   Gorilla,
   Fly,
+  Cat,
   Bus,
   DirtyRat,
   ZombieFly,
 ];
 
 // Pets from outside the Turtle pack.
-export const SAP_OTHER_PETS = [Seagull, Alpaca, Jerboa];
+export const SAP_OTHER_PETS = [
+  Seagull,
+  Alpaca,
+  Jerboa,
+  SugarGlider,
+  Flounder,
+  AdultFlounder,
+];
 
 export const ALL_PETS = [...TURTLE_PACK_PETS, ...SAP_OTHER_PETS];
 

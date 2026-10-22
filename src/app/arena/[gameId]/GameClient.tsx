@@ -270,7 +270,7 @@ export default function GameClient({
     // Random-target foods leave the board alone until the server picks the
     // pets, so the preview never shows the wrong ones.
     const optimisticBoard = needsTarget(foodDef)
-      ? applyFoodEffect(foodDef, apiBoard, boardPosition, PET_MAP)
+      ? applyFoodEffect(foodDef, apiBoard, boardPosition, PET_MAP, shopFood.multiplier)
       : apiBoard;
 
     const newShopFoods = [...shop.shopFoods];
@@ -672,11 +672,12 @@ export default function GameClient({
                     if (def?.perk) {
                       subtitle = "Perk";
                     } else if (def) {
-                      const a = def.effect.attack;
-                      const h = def.effect.health;
-                      if (a && h) subtitle = `+${a}/+${h}`;
-                      else if (a) subtitle = `+${a} atk`;
-                      else if (h) subtitle = `+${h} hp`;
+                      const multiplier = food.multiplier ?? 1;
+                      const attackBonus = (def.effect.attack ?? 0) * multiplier;
+                      const healthBonus = (def.effect.health ?? 0) * multiplier;
+                      if (attackBonus && healthBonus) subtitle = `+${attackBonus}/+${healthBonus}`;
+                      else if (attackBonus) subtitle = `+${attackBonus} atk`;
+                      else if (healthBonus) subtitle = `+${healthBonus} hp`;
                     }
                     return <ShopItem
                       key={i}

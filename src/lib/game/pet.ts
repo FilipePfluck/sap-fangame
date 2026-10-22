@@ -7,6 +7,7 @@ import {
   type StaticPet,
 } from "@/lib/types";
 import { getAbility } from "@/lib/pets/ability";
+import { getMinimumXpFor } from "@/lib/game/board";
 
 // The client-facing data for a pet at `level`: plain JSON values only, with
 // each ability reduced to its trigger and the description resolved.
@@ -46,4 +47,53 @@ export function createPet(def: StaticPet, tempHealthBonus = 0): PetInstance {
     xp: 0,
     level: 1,
   };
+}
+
+// What a transform keeps from the old pet; see transformPet.
+export enum TransformPreserve {
+  stats,
+  perk,
+  level,
+  experience,
+}
+
+const DEFAULT_TRANSFORM_PRESERVE: ReadonlyMap<TransformPreserve, boolean> =
+  new Map([
+    [TransformPreserve.stats, true],
+    [TransformPreserve.perk, true],
+    [TransformPreserve.level, true],
+    [TransformPreserve.experience, true],
+  ]);
+
+// Turns `pet` into `into` in place (same position), keeping whatever
+// `preserve` doesn't set to false, then fires the new form's "transformed"
+// ability. Dropping stats gives `into`'s base stats, dropping the perk gives
+// its innate perk, dropping the level resets to level 1 with no experience,
+// and dropping experience removes progress beyond the current level.
+export function transformPet(
+  pet: PetInstance,
+  into: StaticPet,
+  friends: PetInstance[],
+  preserve: ReadonlyMap<TransformPreserve, boolean> = new Map()
+): void {
+  const keeps = (part: TransformPreserve) =>
+    preserve.get(part) ?? DEFAULT_TRANSFORM_PRESERVE.get(part);
+
+  pet.type = into.name;
+  if (!keeps(TransformPreserve.stats)) {
+    pet.attack = into.baseAttack;
+    pet.health = into.baseHealth;
+    delete pet.tempAttack;
+    delete pet.tempHealth;
+  }
+  if (!keeps(TransformPreserve.perk)) pet.perk = into.innatePerk ?? null;
+  if (!keeps(TransformPreserve.level)) pet.level = 1;
+  if (!keeps(TransformPreserve.level) || !keeps(TransformPreserve.experience)) {
+    pet.xp = getMinimumXpFor(pet.level);
+  }
+  getAbility(into, Trigger.transformed)?.fn({
+    self: pet,
+    friends,
+    level: pet.level,
+  });
 }

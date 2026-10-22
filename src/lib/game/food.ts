@@ -39,9 +39,13 @@ export function feedError(
 }
 
 // TODO - Give food effects defaults (e.g. attack = 0) instead of handling undefined here
-function applyStandardEffect(food: FoodType, pet: PetInstance): PetInstance {
-  const attackBonus = food.effect.attack ?? 0;
-  const healthBonus = food.effect.health ?? 0;
+function applyStandardEffect(
+  food: FoodType,
+  pet: PetInstance,
+  multiplier = 1
+): PetInstance {
+  const attackBonus = (food.effect.attack ?? 0) * multiplier;
+  const healthBonus = (food.effect.health ?? 0) * multiplier;
   const updatedPet: PetInstance = {
     ...pet,
     attack: pet.attack + attackBonus,
@@ -57,6 +61,30 @@ function applyStandardEffect(food: FoodType, pet: PetInstance): PetInstance {
   if ("experience" in food.effect)
     grantExperience(updatedPet, food.effect.experience ?? 0);
   return updatedPet;
+}
+
+// Fires each living pet's "food bought" ability once per purchase, however
+// many pets the food feeds (Sushi). Returns the food's attack/health
+// multiplier after those abilities have raised it (Cat).
+function fireFoodBought(
+  food: FoodType,
+  board: ApiBoard,
+  petRegistry: Record<string, StaticPet>,
+  multiplier: number
+): number {
+  const purchase = { food, multiplier };
+  const listeners = board.flatMap((pet) => {
+    if (!pet || pet.health <= 0) return [];
+    const ability = getAbility(petRegistry[pet.type], Trigger.food_bought);
+    return ability ? [{ pet, ability }] : [];
+  });
+  for (const { pet, ability } of orderByAttack(
+    listeners,
+    (job) => job.pet.attack
+  )) {
+    ability.fn({ self: pet, level: pet.level, purchase });
+  }
+  return purchase.multiplier;
 }
 
 // Board positions the food acts on: the chosen one, or a random selection of
@@ -108,9 +136,12 @@ export function applyFoodEffect(
   food: FoodType,
   board: ApiBoard,
   boardPosition: number | undefined,
-  petRegistry: Record<string, StaticPet>
+  petRegistry: Record<string, StaticPet>,
+  // The shop item's own multiplier (ShopFood.multiplier).
+  multiplier = 1
 ): ApiBoard {
   const newBoard = new Board(board).clone().pets;
+  multiplier = fireFoodBought(food, newBoard, petRegistry, multiplier);
   if (food.applyEffect) {
     if (boardPosition === undefined) return newBoard;
 
@@ -125,7 +156,7 @@ export function applyFoodEffect(
     const pet = newBoard[i];
     if (pet) {
       if (isMaxedExperienceTarget(food, pet)) continue;
-      const fedPet = applyStandardEffect(food, pet);
+      const fedPet = applyStandardEffect(food, pet, multiplier);
       newBoard[i] = fedPet;
       if (!food.skipsFriendAteFood) {
         triggerFriendAteFood(newBoard, fedPet, petRegistry, food.foodGroup);

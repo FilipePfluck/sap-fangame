@@ -1,8 +1,10 @@
 import type { FoodType, PetInstance, ShopFood, ShopPet } from "@/lib/types";
 
-// Base gold price of a shop pet, and of any food that doesn't set its own
-// `cost`.
+// Base gold price of a shop pet.
 export const PET_COST = 3;
+
+// Base gold price of a food that doesn't set its own `cost`.
+export const FOOD_COST = 3;
 
 // Gold cost of a shop roll.
 export const ROLL_COST = 1;
@@ -20,7 +22,7 @@ export function getPetCost(pet: ShopPet): number {
 }
 
 export function getFoodCost(item: ShopFood, def: FoodType): number {
-  return discounted(def.cost ?? PET_COST, item);
+  return discounted(def.cost ?? FOOD_COST, item);
 }
 
 // Gold gained for selling a board pet. Same idea as the prices above: the

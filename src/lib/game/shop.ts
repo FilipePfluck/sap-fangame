@@ -150,11 +150,13 @@ export function freeShopSlots(
 
 // Stocks one food, evicting an unfrozen item if the shop is full. `justStocked`
 // tracks items added by the same ability so a batch never evicts itself.
+export type StockFoodOptions = Pick<ShopFood, "discount" | "multiplier">;
+
 export function stockFood(
   shop: ShopState,
   food: FoodType,
   justStocked: Set<object>,
-  discount = 0
+  { discount = 0, multiplier = 1 }: StockFoodOptions = {}
 ): void {
   freeShopSlots(shop, 1, "food", justStocked);
   if (totalSlots(shop) >= MAX_SHOP_SLOTS) return;
@@ -162,6 +164,7 @@ export function stockFood(
     type: food.name,
     frozen: false,
     ...(discount ? { discount } : {}),
+    ...(multiplier !== 1 ? { multiplier } : {}),
   };
   shop.shopFoods.push(item);
   justStocked.add(item);
@@ -173,11 +176,10 @@ export function stockFood(
 // it gets no chainId.
 export function addLevelUpReward(
   shop: ShopState,
-  turn: number,
+  tier: number,
   pack: StaticPet[],
   chainId: string = crypto.randomUUID()
 ): ShopState {
-  const tier = getRewardTier(turn);
   const candidates = pack.filter((p) => !p.isToken && p.tier === tier);
   const want = Math.min(2, candidates.length);
   if (want === 0) return shop;
