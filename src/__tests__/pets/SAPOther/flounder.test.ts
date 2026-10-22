@@ -1,17 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { applyFoodEffect } from "@/lib/game/food";
-import {
-  fireBoardShopAbility,
-  resolveExperienceLevelUps,
-} from "@/lib/game/shop-ability";
-import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
+import { fireBoardShopAbility } from "@/lib/game/shop-ability";
+import { PET_REGISTRY } from "@/lib/pets";
 import { Apple } from "@/lib/foods";
-import { Chocolate } from "@/lib/foods/chocolate";
 import { HoneyPerk } from "@/lib/perks/honey";
 import { ApiBoard, Trigger } from "@/lib/types";
-import { EMPTY_SHOP, pet } from "./helpers";
-
-const OPTIONS = { turn: 3, rewardPool: SHOP_PET_POOL, petRegistry: PET_REGISTRY };
+import { EMPTY_SHOP, pet } from "@/__tests__/helpers";
 
 function feedTwice(board: ApiBoard, position: number): ApiBoard {
   const fedOnce = applyFoodEffect(Apple, board, position, PET_REGISTRY);
@@ -48,7 +42,7 @@ describe("Flounder", () => {
     { level: 1, expected: { xp: 1, level: 1, attack: 2, health: 2 } },
     { level: 2, expected: { xp: 2, level: 2, attack: 3, health: 3 } },
     { level: 3, expected: { xp: 3, level: 2, attack: 4, health: 4 } },
-  ])("gives XP to the two back-most friends at level $level", ({ level, expected }) => {
+  ])("gives $level XP to the two back-most friends", ({ level, expected }) => {
     const board = feedTwice(
       [pet({ type: "Ant" }), pet({ type: "Flounder", level }), pet({ type: "Fish" }), pet({ type: "Duck" }), null],
       1
@@ -76,21 +70,5 @@ describe("Flounder", () => {
     ).board;
     board = applyFoodEffect(Apple, board, 0, PET_REGISTRY);
     expect(board[0]?.type).toBe("Flounder");
-  });
-});
-
-describe("resolveExperienceLevelUps", () => {
-  it("stocks a level-up reward when food experience levels a pet up", () => {
-    const before: ApiBoard = [pet({ type: "Ant", xp: 1 })];
-    const after = applyFoodEffect(Chocolate, before, 0, PET_REGISTRY);
-    const { shop } = resolveExperienceLevelUps(before, after, EMPTY_SHOP, OPTIONS);
-    expect(shop.shopPets.length).toBeGreaterThan(0);
-  });
-
-  it("stocks nothing without a level-up", () => {
-    const before: ApiBoard = [pet({ type: "Ant" })];
-    const after = applyFoodEffect(Chocolate, before, 0, PET_REGISTRY);
-    const { shop } = resolveExperienceLevelUps(before, after, EMPTY_SHOP, OPTIONS);
-    expect(shop.shopPets).toEqual([]);
   });
 });

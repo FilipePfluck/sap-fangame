@@ -1,6 +1,7 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { createAbilityMap } from "@/lib/pets/ability";
 import { grantExperience } from "@/lib/game/merge";
+import { Board } from "@/lib/game/board";
 
 const FRIENDS_GIVEN_EXPERIENCE = 2;
 
@@ -15,10 +16,10 @@ export const AdultFlounder: Readonly<StaticPet> = {
   abilities: createAbilityMap({
     trigger: Trigger.transformed,
     fn: (ctx) => {
-      const backMost = ctx.friends
-        .filter((pet) => pet !== ctx.self)
-        .slice(-FRIENDS_GIVEN_EXPERIENCE);
-      for (const friend of backMost) grantExperience(friend, ctx.level);
+      const friends = new Board(ctx.friends.filter((pet) => pet !== ctx.self));
+      for (const friend of friends.back(FRIENDS_GIVEN_EXPERIENCE)) {
+        grantExperience(friend, ctx.level);
+      }
     },
   }),
   description: (level: number) =>

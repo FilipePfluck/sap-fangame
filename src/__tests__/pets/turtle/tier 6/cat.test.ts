@@ -6,7 +6,7 @@ import { Apple, Sushi } from "@/lib/foods";
 import { Chocolate } from "@/lib/foods/chocolate";
 import { MeatBone } from "@/lib/foods/meat-bone";
 import { ApiBoard, Trigger } from "@/lib/types";
-import { EMPTY_SHOP, pet } from "./helpers";
+import { EMPTY_SHOP, pet } from "@/__tests__/helpers";
 
 describe("Cat", () => {
   it.each([

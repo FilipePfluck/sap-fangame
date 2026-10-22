@@ -176,11 +176,10 @@ export function stockFood(
 // it gets no chainId.
 export function addLevelUpReward(
   shop: ShopState,
-  turn: number,
+  tier: number,
   pack: StaticPet[],
   chainId: string = crypto.randomUUID()
 ): ShopState {
-  const tier = getRewardTier(turn);
   const candidates = pack.filter((p) => !p.isToken && p.tier === tier);
   const want = Math.min(2, candidates.length);
   if (want === 0) return shop;

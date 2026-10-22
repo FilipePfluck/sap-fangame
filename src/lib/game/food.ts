@@ -9,7 +9,7 @@ import { orderByAttack, pickN } from "@/lib/utils/random";
 import { grantExperience } from "@/lib/game/merge";
 import { MAX_PET_EXPERIENCE } from "@/lib/game/rules";
 import { Board } from "@/lib/game/board";
-import { getAbility, tryIncrementTriggerCount } from "@/lib/pets/ability";
+import { getAbility } from "@/lib/pets/ability";
 
 // Whether the player has to pick a pet to feed this food to.
 export function needsTarget(food: FoodType): boolean {
@@ -63,27 +63,28 @@ function applyStandardEffect(
   return updatedPet;
 }
 
-// Extra multiples of this food's attack/health from Cats: the level of each
-// one with uses left this turn, each of which spends one. Foods without
-// attack/health (Chocolate, perks) get no bonus and spend no use.
-function consumeCatBonus(
+// Fires each living pet's "food bought" ability once per purchase, however
+// many pets the food feeds (Sushi). Returns the food's attack/health
+// multiplier after those abilities have raised it (Cat).
+function fireFoodBought(
   food: FoodType,
   board: ApiBoard,
-  petRegistry: Record<string, StaticPet>
+  petRegistry: Record<string, StaticPet>,
+  multiplier: number
 ): number {
-  if (!food.effect.attack && !food.effect.health) return 0;
-  let bonus = 0;
-  for (const pet of board) {
-    const boost = pet && petRegistry[pet.type]?.foodStatMultiplier;
-    if (
-      boost &&
-      pet.health > 0 &&
-      tryIncrementTriggerCount(pet, Trigger.food_bought, boost.usesPerTurn)
-    ) {
-      bonus += pet.level;
-    }
+  const purchase = { food, multiplier };
+  const listeners = board.flatMap((pet) => {
+    if (!pet || pet.health <= 0) return [];
+    const ability = getAbility(petRegistry[pet.type], Trigger.food_bought);
+    return ability ? [{ pet, ability }] : [];
+  });
+  for (const { pet, ability } of orderByAttack(
+    listeners,
+    (job) => job.pet.attack
+  )) {
+    ability.fn({ self: pet, level: pet.level, purchase });
   }
-  return bonus;
+  return purchase.multiplier;
 }
 
 // Board positions the food acts on: the chosen one, or a random selection of
@@ -137,9 +138,10 @@ export function applyFoodEffect(
   boardPosition: number | undefined,
   petRegistry: Record<string, StaticPet>,
   // The shop item's own multiplier (ShopFood.multiplier).
-  foodMultiplier = 1
+  multiplier = 1
 ): ApiBoard {
   const newBoard = new Board(board).clone().pets;
+  multiplier = fireFoodBought(food, newBoard, petRegistry, multiplier);
   if (food.applyEffect) {
     if (boardPosition === undefined) return newBoard;
 
@@ -150,9 +152,6 @@ export function applyFoodEffect(
     return food.applyEffect({ board: newBoard, boardPosition, petRegistry });
   }
 
-  // One purchase spends one use, however many pets it feeds (Sushi).
-  const multiplier =
-    foodMultiplier + consumeCatBonus(food, newBoard, petRegistry);
   for (const i of pickTargets(food, new Board(newBoard), boardPosition)) {
     const pet = newBoard[i];
     if (pet) {

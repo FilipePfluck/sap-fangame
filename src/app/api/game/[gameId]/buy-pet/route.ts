@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { prisma, toPrismaJson } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
-import { applyFrozenFlags } from "@/lib/game/shop";
+import { applyFrozenFlags, getRewardTier } from "@/lib/game/shop";
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import {
   fireShopAbility,
@@ -141,7 +141,7 @@ export async function POST(
       // The level of the pet it merged into.
       state.board[boardPosition]!.level,
       {
-        turn: state.turn.turnNumber,
+        rewardTier: getRewardTier(state.turn.turnNumber),
         rewardPool: SHOP_PET_POOL,
         petRegistry: PET_REGISTRY,
       }

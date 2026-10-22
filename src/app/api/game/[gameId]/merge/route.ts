@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { prisma, toPrismaJson } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { mergePets, mergeError, levelUpRewardEarned } from "@/lib/game/merge";
-import { applyFrozenFlags } from "@/lib/game/shop";
+import { applyFrozenFlags, getRewardTier } from "@/lib/game/shop";
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
 import { resolveLevelUp } from "@/lib/game/shop-ability";
@@ -80,11 +80,11 @@ export async function POST(
       to,
       preMergeLevel,
       {
-        turn: state.turn.turnNumber,
+        rewardTier: getRewardTier(state.turn.turnNumber),
         rewardPool: SHOP_PET_POOL,
         petRegistry: PET_REGISTRY,
-      },
-      levelUpRewardEarned(petFrom, petTo)
+        earnsReward: levelUpRewardEarned(petFrom, petTo),
+      }
     );
     currentBoard = result.board;
     currentShop = result.shop;

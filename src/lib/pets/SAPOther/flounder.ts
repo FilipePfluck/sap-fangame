@@ -1,6 +1,6 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { createAbilityMap, incrementTriggerCount } from "@/lib/pets/ability";
-import { transformPet } from "@/lib/game/pet";
+import { TransformPreserve, transformPet } from "@/lib/game/pet";
 import { AdultFlounder } from "@/lib/pets/SAPOther/adult-flounder";
 
 const FOODS_TO_TRANSFORM = 2;
@@ -18,7 +18,12 @@ export const Flounder: Readonly<StaticPet> = {
       if (ctx.self !== ctx.fedPet) return;
       const eaten = incrementTriggerCount(ctx.self, Trigger.friend_ate_food);
       if (eaten < FOODS_TO_TRANSFORM) return;
-      transformPet(ctx.self, AdultFlounder, ctx.friends);
+      transformPet(
+        ctx.self,
+        AdultFlounder,
+        ctx.friends,
+        new Map([[TransformPreserve.experience, false]])
+      );
     },
   }),
   description: (level: number) =>

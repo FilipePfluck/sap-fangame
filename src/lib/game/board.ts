@@ -56,6 +56,14 @@ export class Board {
     return new Board(this.pets.map((p) => (p ? { ...p } : null)));
   }
 
+  // The `count` back-most living pets, in board order.
+  back(count = 1): PetInstance[] {
+    const living = this.pets.filter(
+      (pet): pet is PetInstance => pet !== null && pet.health > 0
+    );
+    return living.slice(Math.max(0, living.length - count));
+  }
+
   swap(from: number, to: number) {
     if (this.pets[to] === null) {
       this.pets[to] = this.pets[from];

@@ -5,7 +5,7 @@ import { getFoodCost } from "@/lib/game/costs";
 import { PET_REGISTRY } from "@/lib/pets";
 import { Cupcake } from "@/lib/foods/cupcake";
 import { ApiBoard, Trigger } from "@/lib/types";
-import { EMPTY_SHOP, pet } from "./helpers";
+import { EMPTY_SHOP, pet } from "@/__tests__/helpers";
 
 function startTurn(board: ApiBoard) {
   return fireBoardShopAbility(Trigger.start_of_turn, board, EMPTY_SHOP, PET_REGISTRY);

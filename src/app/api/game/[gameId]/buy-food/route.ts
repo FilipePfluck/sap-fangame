@@ -4,7 +4,7 @@ import { getLastBoardState } from "@/lib/game/board";
 import { FOOD_REGISTRY } from "@/lib/foods";
 import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
 import { applyFoodEffect, feedError } from "@/lib/game/food";
-import { applyFrozenFlags } from "@/lib/game/shop";
+import { applyFrozenFlags, getRewardTier } from "@/lib/game/shop";
 import { resolveExperienceLevelUps } from "@/lib/game/shop-ability";
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import { getFoodCost } from "@/lib/game/costs";
@@ -83,7 +83,7 @@ export async function POST(
     fedBoard,
     { shopPets: shopNow.shopPets, shopFoods: newShopFoods },
     {
-      turn: state.turn.turnNumber,
+      rewardTier: getRewardTier(state.turn.turnNumber),
       rewardPool: SHOP_PET_POOL,
       petRegistry: PET_REGISTRY,
     }

@@ -32,8 +32,7 @@ export type ShopFood = {
   frozen: boolean;
   // Gold knocked off this item's price (set by abilities); see lib/game/costs.
   discount?: number;
-  // Attack/health this food gives is multiplied by this (Sugar Glider's
-  // Cupcakes). Cat adds to it; see lib/game/food.
+  // See lib/game/food for exact behavior
   multiplier?: number;
 };
 
@@ -101,6 +100,14 @@ export type FoodAbilityContext = {
   foodGroup?: FoodType["foodGroup"];
 };
 
+export type FoodBoughtAbilityContext = {
+  self: PetInstance;
+  level: number;
+  // The bought food and the multiplier on its attack/health, which abilities
+  // may raise (Cat).
+  purchase: { food: FoodType; multiplier: number };
+};
+
 export type TransformedAbilityContext = {
   self: PetInstance;
   // The board's living pets, in board order (self included).
@@ -141,7 +148,6 @@ export enum Trigger {
   friend_ahead_faints,
   friend_hurt,
   friend_faints,
-  // Shop food bought (counted for Cat's uses per turn).
   food_bought,
   transformed,
 }
@@ -165,6 +171,7 @@ export type Ability =
   | { trigger: Trigger.knock_out; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: Trigger.friend_hurt; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: Trigger.friend_faints; fn: (ctx: BattleAbilityContext) => void }
+  | { trigger: Trigger.food_bought; fn: (ctx: FoodBoughtAbilityContext) => void }
   | { trigger: Trigger.transformed; fn: (ctx: TransformedAbilityContext) => void };
 
 export type AbilityData = Pick<Ability, "trigger">;
@@ -181,9 +188,6 @@ export type StaticPet = {
   // Pet types this pet's abilities never activate on (e.g. Fly ignores a
   // fainting Zombie Fly).
   doesNotActivate?: string[];
-  // While on the team, each level adds one more helping of shop food
-  // attack/health, for the first `usesPerTurn` foods each turn (Cat).
-  foodStatMultiplier?: { usesPerTurn: number };
   description: string | ((level: number) => string);
 };
 

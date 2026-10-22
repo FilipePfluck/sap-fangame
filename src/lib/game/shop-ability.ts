@@ -90,22 +90,22 @@ export function fireShopAbility(
 }
 
 export type LevelUpOptions = {
-  turn: number;
+  rewardTier: number;
   rewardPool: StaticPet[];
   petRegistry: Record<string, StaticPet>;
+  // False when merging two level-2 pets; defaults to true.
+  earnsReward?: boolean;
 };
 
 // The one place a shop level-up is resolved (buying into a merge, merging,
 // food experience): the pet fires its level-up ability at its old level,
-// then a level-up reward is stocked unless `earnsReward` is false (merging
-// two level-2 pets).
+// then a level-up reward is stocked unless `earnsReward` is false.
 export function resolveLevelUp(
   board: (PetInstance | null)[],
   shop: ShopState,
   index: number,
   oldLevel: number,
-  { turn, rewardPool, petRegistry }: LevelUpOptions,
-  earnsReward = true
+  { rewardTier, rewardPool, petRegistry, earnsReward = true }: LevelUpOptions
 ): ShopAbilityResult {
   const result = fireShopAbility(
     Trigger.level_up,
@@ -116,7 +116,7 @@ export function resolveLevelUp(
     petRegistry
   );
   if (earnsReward) {
-    result.shop = addLevelUpReward(result.shop, turn, rewardPool);
+    result.shop = addLevelUpReward(result.shop, rewardTier, rewardPool);
   }
   return result;
 }

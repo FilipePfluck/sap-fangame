@@ -672,12 +672,12 @@ export default function GameClient({
                     if (def?.perk) {
                       subtitle = "Perk";
                     } else if (def) {
-                      const mult = food.multiplier ?? 1;
-                      const a = (def.effect.attack ?? 0) * mult;
-                      const h = (def.effect.health ?? 0) * mult;
-                      if (a && h) subtitle = `+${a}/+${h}`;
-                      else if (a) subtitle = `+${a} atk`;
-                      else if (h) subtitle = `+${h} hp`;
+                      const multiplier = food.multiplier ?? 1;
+                      const attackBonus = (def.effect.attack ?? 0) * multiplier;
+                      const healthBonus = (def.effect.health ?? 0) * multiplier;
+                      if (attackBonus && healthBonus) subtitle = `+${attackBonus}/+${healthBonus}`;
+                      else if (attackBonus) subtitle = `+${attackBonus} atk`;
+                      else if (healthBonus) subtitle = `+${healthBonus} hp`;
                     }
                     return <ShopItem
                       key={i}
