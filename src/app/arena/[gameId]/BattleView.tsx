@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ApiBoard, BattleStep, PetData } from "@/lib/types";
 import { PET_SPRITES, FOOD_SPRITES } from "@/lib/sprites";
@@ -22,20 +22,25 @@ type AnimatingPet = { pet: PetData; animClass: string };
 export default function BattleView({ battleData, gameWon, onBackToShop }: BattleViewProps) {
   const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
-  const prevStepRef = useRef<BattleStep | null>(null);
   const done = stepIndex >= battleData.steps.length - 1;
 
   useEffect(() => {
     if (done) return;
     const timer = setTimeout(() => {
-      prevStepRef.current = battleData.steps[stepIndex];
       setStepIndex((i) => i + 1);
     }, 1200);
     return () => clearTimeout(timer);
   }, [stepIndex, done, battleData.steps]);
+  
+  useEffect(() => {
+    
+  }, [stepIndex])
 
+  const prevStep =
+    stepIndex > 0
+      ? battleData.steps[stepIndex - 1]
+      : null;
   const currentStep = battleData.steps[stepIndex];
-  const prevStep = prevStepRef.current;
 
   function getAttackerAnim(index: number): string {
     if (!prevStep || stepIndex === 0) return "";
