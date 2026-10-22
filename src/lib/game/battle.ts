@@ -1,24 +1,23 @@
 import {
   ApiBoard,
-  BattleAbilityContext, BattleAction,
+  BattleAbility,
+  BattleAbilityContext,
   BattleStep,
+  PendingSummon,
   PetData,
   StaticPet,
   Trigger,
 } from "@/lib/types";
 import { byCurrentAttack } from "@/lib/utils/random";
 import { dealAbilityDamage, dealDirectDamage } from "@/lib/utils/combat";
-import {
-  compactApiBoard,
-  grantExperience,
-} from "@/lib/game/merge";
+import { compactApiBoard, grantExperience } from "@/lib/game/merge";
 import { friendSummonedCandidates } from "@/lib/game/friend-summoned";
-import { friendAheadAbility } from "@/lib/game/pet";
+import { clonePet, friendAheadAbility } from "@/lib/game/pet";
 import { triggerEffect } from "@/lib/perks/trigger-functions";
 import { triggerFriendAteFood } from "@/lib/game/food";
 import { isOffensivePerk, isTriggerPerk } from "@/lib/game/perk";
+import { MAX_TEAM_SIZE } from "@/lib/game/rules";
 
-const MAX_TEAM_SIZE = 5;
 const NOOP_SUMMON = () => {};
 
 export type BattleSimulationResult = {
@@ -26,16 +25,12 @@ export type BattleSimulationResult = {
   steps: BattleStep[];
 };
 
-type BattleAbility = { fn: (ctx: BattleAbilityContext) => void };
-
-function clonePet(p: PetData): PetData {
-  return { ...p };
-}
-
 function compactTeam(team: (PetData | null)[]): PetData[] {
   return compactApiBoard(team).map(clonePet);
 }
 
+// TODO - Understand what this is doing
+// Appears to be used for organizing trigger usage on individual pets
 function nextTriggerCount(
   counts: WeakMap<PetData, number>,
   pet: PetData
@@ -148,8 +143,6 @@ function fireFriendSummoned(
     );
   }
 }
-
-type PendingSummon = { pet: PetData; afterIndex: number };
 
 function fireFaintAbility(
   fainted: PetData,
@@ -445,7 +438,7 @@ export function simulateBattle(
       playerTeam: attacker.map(clonePet),
       opposingTeam: defender.map(clonePet),
     },
-    actions: []
+    actions: [],
   };
 
   // Start-of-battle abilities fire across both teams, highest attack first

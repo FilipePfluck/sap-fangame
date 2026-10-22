@@ -154,6 +154,8 @@ export type Ability =
   | { trigger: Trigger.friend_bought; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.knock_out; fn: (ctx: BattleAbilityContext) => void };
 
+export type BattleAbility = { fn: (ctx: BattleAbilityContext) => void };
+
 export type StaticPet = {
   name: string;
   sprite: string;
@@ -211,10 +213,10 @@ export interface OffensivePerk extends BasePerkType {
 }
 
 export interface DefensivePerk extends BasePerkType {
-  blocksFor: number,
-  minimumDamageTaken: number,
-  blocksAbilityDamage: boolean,
-  blocksDirectDamage: boolean,
+  blocksFor: number;
+  minimumDamageTaken: number;
+  blocksAbilityDamage: boolean;
+  blocksDirectDamage: boolean;
 }
 
 export interface TriggerPerk extends BasePerkType {
@@ -226,3 +228,5 @@ export enum DamageType {
   DIRECT,
   ABILITY,
 }
+
+export type PendingSummon = { pet: PetData; afterIndex: number };

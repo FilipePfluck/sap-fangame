@@ -1,17 +1,6 @@
-import {
-  BattleAbilityContext,
-  DamageType,
-  PetData,
-  StaticPet,
-  Trigger,
-} from "@/lib/types";
+import { BattleAbilityContext, DamageType, PetData, StaticPet, Trigger, } from "@/lib/types";
 import { PET_REGISTRY } from "@/lib/pets";
-import {
-  decayPerk,
-  isDefensivePerk,
-  isOffensivePerk,
-  isPerkUsed,
-} from "@/lib/game/perk";
+import { decayPerk, isDefensivePerk, isOffensivePerk, isPerkUsed, } from "@/lib/game/perk";
 import { MAX_PET_EXPERIENCE } from "@/lib/game/rules";
 
 type FriendAheadTrigger =
@@ -169,6 +158,7 @@ export function friendAheadAbility(
   return ability?.trigger === trigger ? ability.fn : null;
 }
 
+// TODO - Phase out for factory method on PetInstance + PetInstance.getData()
 // A brand-new level-1 pet, as bought from the shop. `tempHealthBonus` is the
 // shop item's health bonus (e.g. from Duck). Used by the buy route and the
 // client's optimistic preview so the preview matches what the server places.
@@ -181,4 +171,9 @@ export function createPet(def: StaticPet, tempHealthBonus = 0): PetData {
     xp: 0,
     level: 1,
   };
+}
+
+// TODO - Phase out for PetInstance
+export function clonePet(p: PetData): PetData {
+  return { ...p };
 }
