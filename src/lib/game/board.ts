@@ -1,7 +1,13 @@
-import { getSellValue } from "@/lib/game/costs";
-import { MAX_PET_EXPERIENCE } from "@/lib/game/rules";
-import { ApiBoard, BuyResponse, PetData, ShopState } from "@/lib/types";
+import { MAX_PET_EXPERIENCE, MAX_TEAM_SIZE } from "@/lib/game/rules";
+import {
+  ApiBoard,
+  BuyResponse,
+  PetData,
+  ShopState,
+  Trigger,
+} from "@/lib/types";
 import { prisma } from "@/lib/prisma";
+import { PetInstance } from "@/lib/game/pet";
 
 export type ResolvedBoardState = {
   id: string;
@@ -17,6 +23,16 @@ export type ResolvedBoardState = {
     trophies: number;
   };
 };
+
+export type UpdatedBoard = {
+  player: Board;
+  opponent: Board;
+};
+
+export type FaintQueue = {
+  formerIndex: number;
+  pet: PetInstance;
+}
 
 export async function getLastBoardState(
   gameId: string
@@ -46,14 +62,30 @@ export async function getLastBoardState(
 }
 
 export class Board {
-  pets: ApiBoard;
+  private pets: (PetInstance | null)[];
+  private faintQueue: FaintQueue[] = [];
 
-  constructor(pets: (PetData | null)[]) {
-    this.pets = pets;
+  static fromPetInstance(data: (PetInstance | null)[]): Board {
+    return new Board(data.map((pet) => (pet ? pet.getData() : null)));
   }
 
+  constructor(pets: (PetData | null)[]) {
+    this.pets = pets.map((pet) => (pet ? new PetInstance(pet) : null));
+  }
+
+  // TODO - Obliterate this function and just let Board mutate.  Trying to maintain is causing nightmares with constantly
+  // recreating massive amounts of sub-objects and making state harder to maintain, not easier
   clone(): Board {
-    return new Board(this.pets.map((p) => (p ? { ...p } : null)));
+    return new Board(this.pets.map((p) => (p ? { ...p.getData() } : null)));
+  }
+
+  // Moves all pets as far forward as possible
+  moveForward(): Board {
+    const existing: (PetInstance | null)[] = this.pets.filter(
+      (p) => p !== null
+    );
+    existing.fill(null, existing.length, MAX_TEAM_SIZE);
+    return Board.fromPetInstance(existing);
   }
 
   swap(from: number, to: number) {
@@ -68,34 +100,83 @@ export class Board {
     this.pets[to] = tempPet;
   }
 
+  get = (index: number) => this.pets[index] ?? null;
+  getById = (id: number) => this.pets.filter(pet => pet?.getId() === id)[0];
+  living = () => this.alive(this.pets);
+  getFriends = (index: number) => this.alive(this.pets.splice(index, 1));
+  getFriendly = () => this.living; // Alias for living
+  getApiBoard = (): ApiBoard => this.pets.map((p) => p?.getData() ?? null);
+
+  set(index: number, value: PetInstance | null): void {
+    this.pets[index] = value ?? null;
+  }
+
+  private alive(pets: (PetInstance | null)[]): PetInstance[] {
+    return (
+      this.pets
+        .filter((pet) => pet !== null)
+        // TypeScript doesn't consider this "non-null" if this check is included with the above filter
+        .filter((pet) => pet.getHealth() > 0)
+    );
+  }
+
+  friend(index: number) {
+    return this.pets
+      .filter((_, i) => i !== index)
+      .filter((pet) => pet !== null)
+      .filter((pet) => pet.getHealth() > 0);
+  }
+
+  attack(
+    opposingBoard: Board,
+    from = 0,
+    to = 0
+  ): { dmgToPlayer: number; dmgToOpponent: number } {
+    const outcome = {
+      dmgToPlayer: 0, dmgToOpponent: 0
+    };
+
+    const playerPet = this.get(from);
+    const opponentPet = opposingBoard.get(to);
+
+    if (playerPet === null || opponentPet === null) return outcome;
+
+    const [dmgToPlayer, dmgToOpponent] = playerPet.attack(opponentPet);
+    this.set(0, playerPet);
+    opposingBoard.set(0, opponentPet);
+
+    outcome.dmgToPlayer = dmgToPlayer;
+    outcome.dmgToOpponent = dmgToOpponent;
+
+    this.updateFaintQueue();
+    opposingBoard.updateFaintQueue();
+
+    return outcome;
+  }
+
   buy(newPet: PetData, i: number): BuyResponse {
     const occupant = this.pets[i];
+    const newPetInstance = new PetInstance(newPet);
     const response: BuyResponse = {
       success: false,
       wasSummoned: false,
       levelUpReward: false,
     };
 
-    // Attempt to stack the pet
-    if (occupant?.type === newPet.type) {
-      const error = this.mergeError(occupant, newPet);
-      if (error) {
-        response.error = new Error(error);
-        return response;
-      }
+    if (occupant === null) {
+      this.pets[i] = newPetInstance;
       response.success = true;
-
-      const initialLevel = occupant.level;
-      const merged = this.mergePets(occupant, newPet);
-      this.pets[i] = merged;
-
-      if (merged.level > initialLevel) response.levelUpReward = true;
+      response.wasSummoned = true;
       return response;
     }
 
+    // Attempt to stack the pet
+    if (occupant.getType() === newPet.type)
+      return this.stack(i, newPet, response);
+
     // Attempt to summon the pet, either directly or by freeing space
     if (this.openSlot(i)) {
-      this.pets[i] = newPet;
+      this.pets[i] = newPetInstance;
       response.success = true;
       response.wasSummoned = true;
     } else {
@@ -105,16 +186,66 @@ export class Board {
     return response;
   }
 
-  leftShift(from: number, to: number) {
+  updateFaintQueue() {
+    let index = 0
+    for (const pet of this.pets) {
+      if (pet?.resolveTrigger(Trigger.faint)) {
+        this.faintQueue.push({ pet, formerIndex: index });
+      }
+      index += 1;
+    }
+  }
+
+  resolveFaintQueue() {
+    for (const entry of this.faintQueue) this.pets[entry.formerIndex] = null;
+    this.pets = this.pets.filter((pet) => pet !== null);
+    this.faintQueue = [];
+  }
+
+  toString(): string {
+    const output = [];
+    for (const pet of this.pets) output.push(pet?.toString() ?? "[EMPTY]");
+    return output.join(" - ");
+  }
+
+  private stack(
+    i: number,
+    newPetData: PetData,
+    response: BuyResponse
+  ): BuyResponse {
+    if (this.pets[i] === null) {
+      response.error = new Error(
+        "Stack should only be called for indices with a pet"
+      );
+      return response;
+    }
+    const newPetInstance = new PetInstance(newPetData);
+
+    const error = this.mergeError(this.pets[i], newPetInstance);
+    if (error) {
+      response.error = new Error(error);
+      return response;
+    }
+    response.success = true;
+
+    const initialLevel = this.pets[i].getLevel();
+    const merged = PetInstance.fromMerge(this.pets[i], newPetInstance);
+    this.pets[i] = newPetInstance;
+
+    if (merged.getLevel() > initialLevel) response.levelUpReward = true;
+    return response;
+  }
+
+  private leftShift(from: number, to: number) {
     for (let i = to; i < from; i++) this.swap(i, i + 1);
   }
 
-  rightShift(from: number, to: number) {
+  private rightShift(from: number, to: number) {
     for (let i = to; i > from; i--) this.swap(i, i - 1);
   }
 
   // Mutates the board and returns if the operation succeeded
-  openSlot(target: number): boolean {
+  private openSlot(target: number): boolean {
     // No-op if slot is open
     if (this.pets[target] === null) return true;
 
@@ -144,7 +275,7 @@ export class Board {
     const pet = this.pets[i];
 
     if (pet === null) return 0;
-    const sellValue = getSellValue(pet);
+    const sellValue = pet.getSellValue();
     this.pets[i] = null;
     return sellValue;
   }
@@ -160,54 +291,31 @@ export class Board {
     if (error) throw new Error(error);
 
     this.pets[i] = null;
-    this.pets[j] = this.mergePets(a, b);
+    this.pets[j] = PetInstance.fromMerge(a, b);
 
     return true;
   }
 
-  mergePets(a: PetData, b: PetData): PetData {
-    // TODO: Update pets to have a reasonable method of handling stat changes
-    // The "true" stat value should not be hidden behind visible stat - temp stat
-    const mergedAttack =
-      Math.max(a.attack - (a.tempAttack ?? 0), b.attack - (b.tempAttack ?? 0)) +
-      1;
-    const mergedHealth =
-      Math.max(a.health - (a.tempHealth ?? 0), b.health - (b.tempHealth ?? 0)) +
-      1;
-
-    const mergedTempAttack = Math.max(a.tempAttack ?? 0, b.tempAttack ?? 0);
-    const mergedTempHealth = Math.max(a.tempHealth ?? 0, b.tempHealth ?? 0);
-
-    const mergedXp = this.mergedXp(a, b);
-
-    return {
-      type: a.type,
-      attack: mergedAttack,
-      health: mergedHealth,
-      perk: a.perk ?? b.perk,
-      xp: mergedXp,
-      level: computeLevel(mergedXp),
-      tempAttack: mergedTempAttack,
-      tempHealth: mergedTempHealth,
-    };
-  }
-
-  mergedXp(a: PetData, b: PetData): number {
-    return Math.min(MAX_PET_EXPERIENCE, a.xp + b.xp + 1);
-  }
-
-  mergeError(a: PetData, b: PetData): string | null {
+  mergeError(a: PetInstance, b: PetInstance): string | null {
     if (a === null || b === null) return "Pets must exist";
-    if (a.type !== b.type) return "Pets must be the same type to merge";
-    if (a.xp >= MAX_PET_EXPERIENCE || b.xp >= MAX_PET_EXPERIENCE) {
+    const aData = a.getData();
+    const bData = b.getData();
+
+    if (aData.type !== bData.type) return "Pets must be the same type to merge";
+    if (aData.xp >= MAX_PET_EXPERIENCE || bData.xp >= MAX_PET_EXPERIENCE) {
       return "Pet has reached max experience";
     }
     return null;
   }
 }
 
+// TODO - Move into Pet.ts and remove Level as a property (instead derive using PetInstance)
 export function computeLevel(xp: number): 1 | 2 | 3 {
   if (xp >= MAX_PET_EXPERIENCE) return 3;
   if (xp >= 2) return 2;
   return 1;
+}
+
+export function compactApiBoard(board: ApiBoard): PetData[] {
+  return board.filter((p) => p !== null);
 }

@@ -1,14 +1,6 @@
-import type { ApiBoard, PetData } from "@/lib/types";
+import type { PetData } from "@/lib/types";
 import { MAX_PET_EXPERIENCE } from "@/lib/game/rules";
-import { Board, computeLevel } from "@/lib/game/board";
-
-export function compactBoard(board: Board): PetData[] {
-  return board.pets?.filter((p) => p !== null);
-}
-
-export function compactApiBoard(board: ApiBoard): PetData[] {
-  return board.filter((p) => p !== null);
-}
+import { computeLevel } from "@/lib/game/board";
 
 export function grantExperience(pet: PetData, amount: number): void {
   if (pet.health <= 0) return;

@@ -10,10 +10,10 @@ export const Rabbit: Readonly<StaticPet> = {
   ability: {
     trigger: Trigger.friend_ate_food,
     fn: (ctx) => {
-      const triggerCount = ctx.self.triggers ?? 0;
+      const triggerCount = ctx.self.getAbilityActivations();
       if (triggerCount >= 3) return;
-      ctx.self.triggers = triggerCount + 1;
-      ctx.fedPet.health += ctx.level;
+      ctx.self.incrementAbilityActivations();
+      ctx.fedPet.addHealth(ctx.level);
     },
   },
   description: (level: number) =>

@@ -22,9 +22,3 @@ export function getPetCost(pet: ShopPet): number {
 export function getFoodCost(item: ShopFood, def: FoodType): number {
   return discounted(def.cost ?? PET_COST, item);
 }
-
-// Gold gained for selling a board pet. Same idea as the prices above: the
-// sell route and the client's display/optimistic update both read it here.
-export function getSellValue(pet: PetData): number {
-  return pet.level;
-}

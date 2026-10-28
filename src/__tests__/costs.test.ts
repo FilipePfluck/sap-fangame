@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { PET_COST, getPetCost, getFoodCost, getSellValue } from "@/lib/game/costs";
+import { PET_COST, getPetCost, getFoodCost } from "@/lib/game/costs";
 import { Apple, BreadCrumbs, Pill } from "@/lib/foods";
-import type { PetData, ShopFood, ShopPet } from "@/lib/types";
+import type { ShopFood, ShopPet } from "@/lib/types";
+import { pet } from "@/__tests__/helpers";
+import { PetInstance } from "@/lib/game/pet";
 
 const shopPet = (extra: Partial<ShopPet> = {}): ShopPet => ({ type: "Ant", frozen: false, ...extra });
 const shopFood = (type: string, extra: Partial<ShopFood> = {}): ShopFood => ({ type, frozen: false, ...extra });
@@ -34,8 +36,10 @@ describe("getFoodCost", () => {
 });
 
 describe("getSellValue", () => {
-  it("is the pet's level", () => {
-    const pet = (level: number): PetData => ({ type: "Ant", attack: 1, health: 1, perk: null, xp: 1, level });
-    expect([1, 2, 3].map((l) => getSellValue(pet(l)))).toEqual([1, 2, 3]);
-  });
+  it.each([{ level: 1 }, { level: 2 }, { level: 3 }])(
+    "sells for $level at $level",
+    ({ level }) => {
+      expect(new PetInstance(pet({ level })).getSellValue()).toEqual(level);
+    }
+  );
 });

@@ -1,3 +1,6 @@
+import { PetInstance } from "@/lib/game/pet";
+import { Board } from "@/lib/game/board";
+
 export type PetData = {
   type: string;
 
@@ -9,6 +12,7 @@ export type PetData = {
   perk: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null;
 
   xp: number;
+  // TODO - Remove level from PetData; have it calculated from PetInstance
   level: number;
 
   // TODO - Retrofit tests to remove "optional" tag
@@ -17,7 +21,7 @@ export type PetData = {
   tempAttack?: number;
   tempHealth?: number;
 
-  triggers?: number;
+  abilityActivations?: number;
 };
 
 export type ShopPet = {
@@ -54,7 +58,6 @@ export type ShopState = {
 export type BattleStep = {
   round: number;
   summary: {
-    description: string;
     playerTeam: ApiBoard;
     opposingTeam: ApiBoard;
   };
@@ -62,13 +65,16 @@ export type BattleStep = {
 };
 
 export type BattleAction = {
+  description: string;
   sourceIndex: number;
   targetIndex: number;
-  value: number;
+  // Relevant for mutual attacks
+  sourceValue?: number;
+  targetValue: number;
   type: ActionType;
 }
 
-enum ActionType {
+export enum ActionType {
   DirectDamage,
   IndirectDamage,
   HealthRemoval,
@@ -82,10 +88,10 @@ enum ActionType {
 }
 
 export type BattleAbilityContext = {
-  self: PetData;
+  self: PetInstance;
   selfIndex: number;
-  team: PetData[];
-  enemyTeam: PetData[];
+  team: Board;
+  enemyTeam: Board;
   level: number;
   summon: (pet: PetData, afterIndex: number) => void;
   summonedIndex?: number;
@@ -98,9 +104,9 @@ export type BattleAbilityContext = {
 };
 
 export type FoodAbilityContext = {
-  self: PetData;
-  fedPet: PetData;
-  friends: PetData[];
+  self: PetInstance;
+  fedPet: PetInstance;
+  friends: PetInstance[];
   level: number;
 };
 

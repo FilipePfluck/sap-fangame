@@ -3,7 +3,7 @@ import type { Ability, PetData, StaticPet } from "@/lib/types";
 
 export function pet(
   override?: Partial<PetData>,
-): PetData {
+): PetData   {
   const perk = override?.perk ? {...override?.perk} : null;
   return { type: "Sloth", attack: 1, health: 1, xp: 0, level: 1, ...override, perk };
 }

@@ -10,7 +10,7 @@ export const Peacock: Readonly<StaticPet> = {
   ability: {
     trigger: Trigger.hurt,
     fn: (ctx) => {
-      ctx.self.attack += 3 * ctx.level;
+      ctx.self.addAttack(3 * ctx.level);
     },
   },
   description: (level: number) =>

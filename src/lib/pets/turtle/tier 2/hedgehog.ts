@@ -1,5 +1,5 @@
 import { StaticPet, Trigger } from "@/lib/types";
-import { livingPets } from "@/lib/utils/combat";
+import { PetInstance } from "@/lib/game/pet";
 
 export const Hedgehog: Readonly<StaticPet> = {
   name: "Hedgehog",
@@ -11,7 +11,7 @@ export const Hedgehog: Readonly<StaticPet> = {
   ability: {
     trigger: Trigger.faint,
     fn: (ctx) => {
-      for (const pet of livingPets([...ctx.team, ...ctx.enemyTeam])) {
+      for (const pet of [...ctx.team.living(), ...ctx.enemyTeam.living()]) {
         ctx.dealAbilityDamage(pet, 2 * ctx.level);
       }
     },

@@ -57,7 +57,7 @@ describe("Pet Abilities", () => {
           PET_REGISTRY
         );
 
-        expect(steps[1].attackerTeam[0].attack).toBe(expectedAttack);
+        expect(steps[1].summary.playerTeam[0]?.attack).toBe(expectedAttack);
       }
     );
 
@@ -68,7 +68,7 @@ describe("Pet Abilities", () => {
         PET_REGISTRY
       );
 
-      expect(steps[1].defenderTeam[0].attack).toBe(8);
+      expect(steps[1].summary.opposingTeam[0]?.attack).toBe(8);
     });
 
     it("does not trigger when damage is fully blocked", () => {
@@ -78,7 +78,7 @@ describe("Pet Abilities", () => {
         PET_REGISTRY
       );
 
-      expect(steps[1].defenderTeam[0].attack).toBe(2);
+      expect(steps[1].summary.opposingTeam[0]?.attack).toBe(2);
     });
 
     it("does not trigger when health is removed", () => {
@@ -88,8 +88,8 @@ describe("Pet Abilities", () => {
         PET_REGISTRY
       );
 
-      expect(steps[1].defenderTeam[0].health).toBe(3);
-      expect(steps[1].defenderTeam[0].attack).toBe(2);
+      expect(steps[1].summary.opposingTeam[0]?.health).toBe(3);
+      expect(steps[1].summary.opposingTeam[0]?.attack).toBe(2);
     });
   });
 
@@ -105,7 +105,7 @@ describe("Pet Abilities", () => {
         PET_REGISTRY
       );
 
-      expect(petToString(steps[1].attackerTeam[1])).toBe(expected);
+      expect(petToString(steps[1].summary.playerTeam[1]!)).toBe(expected);
     });
 
     it("does not trigger from its own attack when a friend is behind", () => {
@@ -115,7 +115,7 @@ describe("Pet Abilities", () => {
         PET_REGISTRY
       );
 
-      expect(petToString(steps[1].attackerTeam[0])).toBe("Kangaroo (2/1)");
+      expect(petToString(steps[1].summary.playerTeam[0]!)).toBe("Kangaroo (2/1)");
     });
   });
 
@@ -131,7 +131,7 @@ describe("Pet Abilities", () => {
         PET_REGISTRY
       );
 
-      expect(steps[1].attackerTeam[1].health).toBe(expectedHealth);
+      expect(steps[1].summary.playerTeam[1]?.health).toBe(expectedHealth);
     });
 
     it("targets only the nearest friend behind", () => {
@@ -145,8 +145,8 @@ describe("Pet Abilities", () => {
         PET_REGISTRY
       );
 
-      expect(steps[1].attackerTeam[1].health).toBe(8);
-      expect(steps[1].attackerTeam[2].health).toBe(10);
+      expect(steps[1].summary.playerTeam[1]?.health).toBe(8);
+      expect(steps[1].summary.playerTeam[2]?.health).toBe(10);
     });
 
     it("retargets a living friend if the first one faints", () => {
@@ -160,8 +160,8 @@ describe("Pet Abilities", () => {
         PET_REGISTRY
       );
 
-      expect(steps[1].attackerTeam).toHaveLength(2);
-      expect(steps[1].attackerTeam[1].health).toBe(8);
+      expect(steps[1].summary.playerTeam).toHaveLength(2);
+      expect(steps[1].summary.playerTeam[1]?.health).toBe(8);
     });
   });
 
@@ -177,9 +177,9 @@ describe("Pet Abilities", () => {
         PET_REGISTRY
       );
 
-      expect(steps[1].attackerTeam[0].health).toBe(1 + bonus);
-      expect(steps[1].attackerTeam[1].health).toBe(1 + bonus);
-      expect(steps[1].defenderTeam[0].health).toBe(1 + bonus);
+      expect(steps[1].summary.playerTeam[0]?.health).toBe(1 + bonus);
+      expect(steps[1].summary.playerTeam[1]?.health).toBe(1 + bonus);
+      expect(steps[1].summary.opposingTeam[0]?.health).toBe(1 + bonus);
     });
 
     it("does not buff pets at zero or negative health", () => {
@@ -271,7 +271,7 @@ describe("Pet Abilities", () => {
         PET_REGISTRY
       );
 
-      expect(petToString(steps[1].attackerTeam[1])).toBe(result);
+      expect(petToString(steps[1].summary.playerTeam[1]!)).toBe(result);
     });
 
     it("skips a pending faint to buff the nearest living friend behind", () => {
@@ -302,7 +302,7 @@ describe("Pet Abilities", () => {
           PET_REGISTRY
         );
 
-        expect(steps[1].defenderTeam[0].health).toBe(expectedHealth);
+        expect(steps[1].summary.opposingTeam[0]?.health).toBe(expectedHealth);
       }
     );
   });
@@ -314,12 +314,14 @@ describe("Pet Abilities", () => {
       { level: 3, ram: "Ram (6/6)" },
     ])("summons two $ram at level $level", ({ level, ram }) => {
       const { steps } = simulateBattle(
-        [pet({ type: "Sheep",  level })],
+        [pet({ type: "Sheep", level })],
         [pet()],
         PET_REGISTRY
       );
 
-      expect(steps[1].attackerTeam.map(petToString)).toEqual([ram, ram]);
+      expect(
+        steps[1].summary.playerTeam.filter((p) => p !== null).map(petToString)
+      ).toEqual([ram, ram]);
     });
 
     it("flings the second Ram when the team has room for only one summon", () => {
@@ -335,8 +337,8 @@ describe("Pet Abilities", () => {
         PET_REGISTRY
       );
 
-      expect(steps[1].attackerTeam.filter((friend) => friend.type === "Ram")).toHaveLength(1);
-      expect(steps[1].attackerTeam).toHaveLength(5);
+      expect(steps[1].summary.playerTeam.filter((friend) => friend?.type === "Ram")).toHaveLength(1);
+      expect(steps[1].summary.playerTeam).toHaveLength(5);
     });
   });
 
@@ -383,7 +385,10 @@ describe("Pet Abilities", () => {
         PET_REGISTRY
       );
 
-      expect(steps[1].attackerTeam.map(petToString)).toEqual(expected);
+      expect(steps[1].summary.playerTeam
+        .filter(p => p !== null)
+        .map(petToString))
+        .toEqual(expected);
     });
 
     it("rounds half its attack down", () => {
@@ -393,7 +398,7 @@ describe("Pet Abilities", () => {
         PET_REGISTRY
       );
 
-      expect(petToString(steps[1].attackerTeam[0])).toBe("Chick (2/1)");
+      expect(petToString(steps[1].summary.playerTeam[0]!)).toBe("Chick (2/1)");
     });
 
     it("does not summon a Chick with 0 attack", () => {
@@ -403,7 +408,7 @@ describe("Pet Abilities", () => {
         PET_REGISTRY
       );
 
-      expect(steps[1].attackerTeam).toHaveLength(0);
+      expect(steps[1].summary.playerTeam).toHaveLength(0);
     });
   });
 
@@ -432,8 +437,8 @@ describe("Pet Abilities", () => {
         registryWith(Ox)
       );
 
-      expect(petToString(steps[1].attackerTeam[0])).toBe("Ox (2/1)");
-      expect(steps[1].attackerTeam[0].perk?.name).toBe("Melon");
+      expect(petToString(steps[1].summary.playerTeam[0]!)).toBe("Ox (2/1)");
+      expect(steps[1].summary.playerTeam[0]?.perk?.name).toBe("Melon");
     });
 
     it.skip.each([
@@ -449,8 +454,8 @@ describe("Pet Abilities", () => {
         registryWith(Ox)
       );
 
-      expect(petToString(steps[1].attackerTeam[1])).toBe("Ox (1/1)");
-      expect(steps[1].attackerTeam[1].perk).toBeNull();
+      expect(petToString(steps[1].summary.playerTeam[1]!)).toBe("Ox (1/1)");
+      expect(steps[1].summary.playerTeam[1]?.perk).toBeNull();
     });
 
     it("works once per turn in battle", () => {
@@ -460,18 +465,21 @@ describe("Pet Abilities", () => {
         registryWith(Ox)
       );
 
-      expect(steps[2].attackerTeam.map(petToString)).toEqual(["Ox (2/1)"]);
+      expect(steps[2].summary.playerTeam
+        .filter(p => p !== null)
+        .map(petToString))
+        .toEqual(["Ox (2/1)"]);
     });
 
     it("does not trigger in battle after triggering in the shop that turn", () => {
       const { steps } = simulateBattle(
-        [pet(), pet({ type: "Ox",  triggers: 1})],
+        [pet(), pet({ type: "Ox",  abilityActivations: 1})],
         [pet()],
         registryWith(Ox)
       );
 
-      expect(petToString(steps[1].attackerTeam[0])).toBe("Ox (1/1)");
-      expect(steps[1].attackerTeam[0].perk).toBeNull();
+      expect(petToString(steps[1].summary.playerTeam[0]!)).toBe("Ox (1/1)");
+      expect(steps[1].summary.playerTeam[0]?.perk).toBeNull();
     });
   });
 
@@ -487,7 +495,7 @@ describe("Pet Abilities", () => {
         PET_REGISTRY
       );
 
-      expect(steps[1].defenderTeam[0].health).toBe(expectedHealth);
+      expect(steps[1].summary.opposingTeam[0]?.health).toBe(expectedHealth);
     });
 
     it("deals damage at most five times", () => {
@@ -497,7 +505,7 @@ describe("Pet Abilities", () => {
         PET_REGISTRY
       );
 
-      expect(steps.at(-1)?.defenderTeam[0].health).toBe(25);
+      expect(steps.at(-1)?.summary.opposingTeam[0]?.health).toBe(25);
     });
   });
 
@@ -505,30 +513,30 @@ describe("Pet Abilities", () => {
     const tripleFeeder = abilityPet("Triple Feeder", {
       trigger: Trigger.start_of_battle,
       fn: (ctx) => {
-        for (let i = 0; i < 3; i++) ctx.friendAteFood(ctx.team[1]);
+        for (let i = 0; i < 3; i++) ctx.friendAteFood(ctx.team);
       },
     });
 
     it("has only the triggers left over from the shop", () => {
       const { steps } = simulateBattle(
-        [pet({ type: "Triple Feeder" }), pet({ type: "Rabbit",  triggers: 1 })],
+        [pet({ type: "Triple Feeder" }), pet({ type: "Rabbit",  abilityActivations: 1 })],
         [pet({ attack: 0 })],
         registryWith(tripleFeeder)
       );
 
-      expect(steps[1].attackerTeam[1].health).toBe(3);
+      expect(steps[1].summary.playerTeam[1]?.health).toBe(3);
     });
 
     // TODO: This doesn't appear to "return to the shop," and simply tests that simulateBattle doesn't mutate PetData
     it("does not carry battle triggers back to the shop", () => {
-      const rabbit = pet({ type: "Rabbit",  triggers: 1 });
+      const rabbit = pet({ type: "Rabbit",  abilityActivations: 1 });
       simulateBattle(
         [pet({ type: "Triple Feeder" }), rabbit],
         [pet()],
         registryWith(tripleFeeder)
       );
 
-      expect(rabbit.triggers).toBe(1);
+      expect(rabbit.abilityActivations).toBe(1);
     });
 
     it("triggers when a battle ability gives a friend a perk", () => {
@@ -547,8 +555,8 @@ describe("Pet Abilities", () => {
         registryWith(perkGiver)
       );
 
-      expect(steps[1].attackerTeam[0].health).toBe(2);
-      expect(steps[1].attackerTeam[0].perk).toBe(MelonPerk);
+      expect(steps[1].summary.playerTeam[0]?.health).toBe(2);
+      expect(steps[1].summary.playerTeam[0]?.perk).toBe(MelonPerk);
     });
   });
 
@@ -567,7 +575,7 @@ describe("Pet Abilities", () => {
         registryWith(experienceGiver)
       );
 
-      expect(steps[1].attackerTeam[1]).toMatchObject({
+      expect(steps[1].summary.playerTeam[1]).toMatchObject({
         attack: 2,
         health: 2,
         xp: 5,
@@ -588,7 +596,7 @@ describe("Pet Abilities", () => {
         registryWith(summoner)
       );
 
-      expect(steps[1].attackerTeam.some((friend) => friend.type === "Dog")).toBe(false);
+      expect(steps[1].summary.playerTeam.some((friend) => friend?.type === "Dog")).toBe(false);
     });
 
     it("Mosquito only selects enemies with health remaining", () => {
@@ -654,7 +662,7 @@ describe("Pet Abilities", () => {
           PET_REGISTRY
         );
 
-        expect(petToString(steps[1].attackerTeam[0])).toBe(result);
+        expect(petToString(steps[1].summary.playerTeam[0]!)).toBe(result);
       }
     );
   });
@@ -673,7 +681,7 @@ describe("Pet Abilities", () => {
           PET_REGISTRY
         );
 
-        expect(petToString(steps[1].attackerTeam[0])).toBe(result);
+        expect(petToString(steps[1].summary.playerTeam[0]!)).toBe(result);
       }
     );
   });
@@ -690,7 +698,7 @@ describe("Pet Abilities", () => {
         PET_REGISTRY
       );
 
-      expect(petToString(steps[1].attackerTeam[1])).toBe(result);
+      expect(petToString(steps[1].summary.playerTeam[1]!)).toBe(result);
     });
   });
 
@@ -706,7 +714,7 @@ describe("Pet Abilities", () => {
         PET_REGISTRY
       );
 
-      expect(petToString(steps[1].attackerTeam[0])).toBe(result);
+      expect(petToString(steps[1].summary.playerTeam[0]!)).toBe(result);
     });
   });
 
@@ -727,7 +735,7 @@ describe("Pet Abilities", () => {
         );
 
         const stepAfterRound1 = steps[1];
-        expect(petToString(stepAfterRound1.attackerTeam[0])).toBe(result);
+        expect(petToString(stepAfterRound1.summary.playerTeam[0]!)).toBe(result);
       }
     );
   });
@@ -746,8 +754,8 @@ describe("Pet Abilities", () => {
           PET_REGISTRY
         );
 
-        expect(petToString(steps[0].attackerTeam[1])).toBe("Ant (1/1)");
-        expect(petToString(steps[1].attackerTeam[1])).toBe(result);
+        expect(petToString(steps[0].summary.playerTeam[1]!)).toBe("Ant (1/1)");
+        expect(petToString(steps[1].summary.playerTeam[1]!)).toBe(result);
       }
     );
   });
@@ -783,8 +791,8 @@ describe("Pet Abilities", () => {
         PET_REGISTRY
       );
 
-      expect(steps[1].attackerTeam[0].health).toBe(2);
-      expect(steps[1].attackerTeam[1].health).toBe(5);
+      expect(steps[1].summary.playerTeam[0]?.health).toBe(2);
+      expect(steps[1].summary.playerTeam[1]?.health).toBe(5);
     });
 
     it("hits the front enemy when it is at the front of its team", () => {
@@ -835,7 +843,7 @@ describe("Pet Abilities", () => {
           PET_REGISTRY
         );
 
-        expect(steps[1].description).toContain(result);
+        expect(steps[1].summary.description).toContain(result);
       }
     );
 
@@ -865,7 +873,7 @@ describe("Pet Abilities", () => {
           PET_REGISTRY
         );
 
-        expect(steps[1].description).toContain(result);
+        expect(steps[1].summary.description).toContain(result);
       }
     );
 
@@ -875,7 +883,7 @@ describe("Pet Abilities", () => {
         [pet()],
         PET_REGISTRY
       );
-      expect(steps[1].description).toContain("Sloth (1/1)");
+      expect(steps[1].summary.description).toContain("Sloth (1/1)");
     });
   });
 
@@ -893,7 +901,7 @@ describe("Pet Abilities", () => {
           PET_REGISTRY
         );
 
-        expect(steps[1].description).toContain(result);
+        expect(steps[1].summary.description).toContain(result);
       }
     );
 
@@ -903,7 +911,7 @@ describe("Pet Abilities", () => {
         [pet()],
         PET_REGISTRY
       );
-      expect(steps[1].description).toContain("Crab (1/1)");
+      expect(steps[1].summary.description).toContain("Crab (1/1)");
     });
   });
 
@@ -929,7 +937,7 @@ describe("Pet Abilities", () => {
         PET_REGISTRY
       );
 
-      expect(steps[1].description).toContain("Sloth (1/5)");
+      expect(steps[1].summary.description).toContain("Sloth (1/5)");
     });
   });
 
@@ -945,7 +953,7 @@ describe("Pet Abilities", () => {
         PET_REGISTRY
       );
 
-      expect(steps[1].description).toContain(result);
+      expect(steps[1].summary.description).toContain(result);
     });
 
     it("retriggers", () => {
@@ -955,10 +963,10 @@ describe("Pet Abilities", () => {
         PET_REGISTRY
       );
 
-      expect(steps[1].description).toContain("Boar (5/3)");
-      expect(steps[2].description).toContain("Boar (9/5)");
-      expect(steps[3].description).toContain("Boar (13/7)");
-      expect(steps[4].description).toContain("Boar (17/9)");
+      expect(steps[1].summary.description).toContain("Boar (5/3)");
+      expect(steps[2].summary.description).toContain("Boar (9/5)");
+      expect(steps[3].summary.description).toContain("Boar (13/7)");
+      expect(steps[4].summary.description).toContain("Boar (17/9)");
     });
   });
 
@@ -974,7 +982,7 @@ describe("Pet Abilities", () => {
         PET_REGISTRY
       );
 
-      expect(petToString(steps[1].attackerTeam[0])).toBe(result);
+      expect(petToString(steps[1].summary.playerTeam[0]!)).toBe(result);
     });
 
     it("is capped at 3 triggers per battle", () => {
@@ -990,7 +998,7 @@ describe("Pet Abilities", () => {
       );
 
       const lastStep = steps[steps.length - 1];
-      expect(petToString(lastStep.attackerTeam[0])).toContain("Hippo (10/10)");
+      expect(petToString(lastStep.summary.playerTeam[0]!)).toContain("Hippo (10/10)");
     });
   });
 
@@ -1008,7 +1016,7 @@ describe("Pet Abilities", () => {
           PET_REGISTRY
         );
 
-        expect(steps[1].defenderTeam[0].health).toBe(50 - expected);
+        expect(steps[1].summary.opposingTeam[0]?.health).toBe(50 - expected);
       }
     );
 
@@ -1025,7 +1033,7 @@ describe("Pet Abilities", () => {
           PET_REGISTRY
         );
 
-        expect(steps[1].defenderTeam[0].health).toBe(50 - expected);
+        expect(steps[1].summary.opposingTeam[0]?.health).toBe(50 - expected);
       }
     );
   });
@@ -1040,7 +1048,7 @@ describe("Pet Abilities", () => {
           PET_REGISTRY
         );
 
-        expect(steps[1].defenderTeam[1].health).toBe(30 - level * 8);
+        expect(steps[1].summary.opposingTeam[1]?.health).toBe(30 - level * 8);
       }
     );
 
@@ -1054,9 +1062,9 @@ describe("Pet Abilities", () => {
       // Level 2 hits the last enemy (8 hp) once, killing it, then re-targets
       // the new last enemy (20 hp) for the second hit: 20 - 8 = 12. Round 1's
       // own attack (8 more) then brings it to 4 by the time this step is captured.
-      expect(steps[0].defenderTeam).toHaveLength(2);
-      expect(steps[1].defenderTeam).toHaveLength(1);
-      expect(steps[1].defenderTeam[0].health).toBe(4);
+      expect(steps[0].summary.opposingTeam).toHaveLength(2);
+      expect(steps[1].summary.opposingTeam).toHaveLength(1);
+      expect(steps[1].summary.opposingTeam[0]?.health).toBe(4);
     });
   });
 
@@ -1068,7 +1076,7 @@ describe("Pet Abilities", () => {
         PET_REGISTRY
       );
 
-      expect(steps[1].attackerTeam[0]).toMatchObject({
+      expect(steps[1].summary.playerTeam[0]).toMatchObject({
         type: "Tiger",
         attack: 3,
         health: 3,
@@ -1093,7 +1101,7 @@ describe("Pet Abilities", () => {
           PET_REGISTRY
         );
 
-        expect(steps[1].description).toContain(result);
+        expect(steps[1].summary.description).toContain(result);
       }
     );
   });
@@ -1116,7 +1124,7 @@ describe("Perks", () => {
       expect(result).toBe("DRAW");
       // After round 1, Bee should appear in attacker team
       const stepAfterRound1 = steps[1];
-      expect(stepAfterRound1.attackerTeam[0].type).toBe("Bee");
+      expect(stepAfterRound1.summary.playerTeam[0]?.type).toBe("Bee");
     });
 
     it("flings Honey's Bee when Cricket's Zombie Cricket fills the last slot", () => {
@@ -1132,9 +1140,9 @@ describe("Perks", () => {
         PET_REGISTRY
       );
 
-      expect(steps[1].attackerTeam).toHaveLength(5);
-      expect(steps[1].attackerTeam[0].type).toBe("Zombie Cricket");
-      expect(steps[1].attackerTeam.some((friend) => friend.type === "Bee")).toBe(false);
+      expect(steps[1].summary.playerTeam).toHaveLength(5);
+      expect(steps[1].summary.playerTeam[0]?.type).toBe("Zombie Cricket");
+      expect(steps[1].summary.playerTeam.some((friend) => friend?.type === "Bee")).toBe(false);
     });
 
     it("does not mutate input teams", () => {
@@ -1165,7 +1173,7 @@ describe("Perks", () => {
 
       // Scorpion's 1 dmg is fully blocked (min(20,1)=1) — Sloth takes 0, so it
       // wasn't "hurt" and Peanut's instakill does not apply.
-      expect(steps[1].defenderTeam[0].health).toBe(1);
+      expect(steps[1].summary.opposingTeam[0]?.health).toBe(1);
     });
   });
 
@@ -1175,14 +1183,14 @@ describe("Perks", () => {
       const opposingSloth = pet({ attack: 5 });
       const { steps } = simulateBattle([garlicSloth], [opposingSloth], PET_REGISTRY);
 
-      expect(steps[1].attackerTeam[0].health).toBe(7);
+      expect(steps[1].summary.playerTeam[0]?.health).toBe(7);
     });
 
     it("does not increase damage for attackers with only 1 attack", () => {
       const garlicSloth = pet({ health: 10, perk: GarlicPerk });
       const { steps } = simulateBattle([garlicSloth], [pet()], PET_REGISTRY);
 
-      expect(steps[1].attackerTeam[0].health).toBe(9);
+      expect(steps[1].summary.playerTeam[0]?.health).toBe(9);
     });
   });
 
@@ -1191,8 +1199,8 @@ describe("Perks", () => {
       const melonSloth = pet({ health: 10, perk: MelonPerk });
       const { steps } = simulateBattle([melonSloth], [pet()], PET_REGISTRY);
 
-      expect(steps[1].attackerTeam[0].health).toBe(10);
-      expect(steps[1].attackerTeam[0].perk).toBeNull();
+      expect(steps[1].summary.playerTeam[0]?.health).toBe(10);
+      expect(steps[1].summary.playerTeam[0]?.perk).toBeNull();
     });
 
     it("blocks exactly 20 and lets the remainder through on a bigger hit", () => {
@@ -1200,17 +1208,15 @@ describe("Perks", () => {
       const normalSloth = pet({ attack: 21 });
 
       const { steps } = simulateBattle([melonSloth], [normalSloth], PET_REGISTRY);
-      expect(steps[1].attackerTeam[0].health).toBe(9); // 10 - (21-20)
+      expect(steps[1].summary.playerTeam[0]?.health).toBe(9); // 10 - (21-20)
     });
 
     it("no longer blocks a second hit once used up", () => {
       const melonSloth = pet({ health: 30, perk: MelonPerk });
       const { steps } = simulateBattle([melonSloth], [pet({ attack: 5, health: 5 })], PET_REGISTRY);
 
-      expect(steps[1].attackerTeam[0].health).toBe(30); // round 1: blocked
-      console.log(steps[1].attackerTeam[0].perk);
-      expect(steps[2].attackerTeam[0].health).toBe(25); // round 2: perk gone, takes 5
-      console.log(steps[2].attackerTeam[0].perk);
+      expect(steps[1].summary.playerTeam[0]?.health).toBe(30); // round 1: blocked
+      expect(steps[2].summary.playerTeam[0]?.health).toBe(25); // round 2: perk gone, takes 5
     });
   });
 
@@ -1230,7 +1236,7 @@ describe("Perks", () => {
       const opponent = pet({ health: 22 });
 
       const { steps } = simulateBattle([steakSloth], [opponent], PET_REGISTRY);
-      expect(steps[1].defenderTeam[0].health).toBe(1);
+      expect(steps[1].summary.opposingTeam[0]?.health).toBe(1);
     });
 
     it("is consumed after use", () => {
@@ -1238,8 +1244,8 @@ describe("Perks", () => {
       const opponent = pet();
 
       const { steps } = simulateBattle([steakSloth], [opponent], PET_REGISTRY);
-      expect(steps[0].attackerTeam[0].perk?.name).toBe("Steak");
-      expect(steps[1].attackerTeam[0].perk).toBe(null);
+      expect(steps[0].summary.playerTeam[0]?.perk?.name).toBe("Steak");
+      expect(steps[1].summary.playerTeam[0]?.perk).toBe(null);
     });
   })
 
@@ -1254,9 +1260,9 @@ describe("Perks", () => {
 
       // After round 1, Sloth should appear in attacker team
       const stepAfterRound1 = steps[1];
-      expect(stepAfterRound1.attackerTeam[0].type).toBe("Sloth");
-      expect(stepAfterRound1.attackerTeam[0].attack).toBe(1);
-      expect(stepAfterRound1.attackerTeam[0].health).toBe(1);
+      expect(stepAfterRound1.summary.playerTeam[0]?.type).toBe("Sloth");
+      expect(stepAfterRound1.summary.playerTeam[0]?.attack).toBe(1);
+      expect(stepAfterRound1.summary.playerTeam[0]?.health).toBe(1);
     });
   });
 });
@@ -1278,10 +1284,10 @@ describe("Engine Behavior", () => {
     // Expected order:  middleDodo > backDodo > frontDodo
     // Order can be confirmed by Dodo attack scaling to give more or less based on activation order
 
-    expect(petToString(steps[1].attackerTeam[0])).toBe("Sloth (13/1)");
-    expect(petToString(steps[1].attackerTeam[1])).toBe("Dodo (13/1)");
-    expect(petToString(steps[1].attackerTeam[2])).toBe("Dodo (20/1)");
-    expect(petToString(steps[1].attackerTeam[3])).toBe("Dodo (8/1)");
+    expect(petToString(steps[1].summary.playerTeam[0]!)).toBe("Sloth (13/1)");
+    expect(petToString(steps[1].summary.playerTeam[1]!)).toBe("Dodo (13/1)");
+    expect(petToString(steps[1].summary.playerTeam[2]!)).toBe("Dodo (20/1)");
+    expect(petToString(steps[1].summary.playerTeam[3]!)).toBe("Dodo (8/1)");
   });
 
   it("Start of Battle dynamically updates based on attack order", () => {
@@ -1305,10 +1311,10 @@ describe("Engine Behavior", () => {
     // -> middleDodo (16 attack)
     // -> frontDodo (8 attack)
 
-    expect(petToString(steps[1].attackerTeam[0])).toBe("Sloth (24/1)");
-    expect(petToString(steps[1].attackerTeam[1])).toBe("Dodo (24/1)");
-    expect(petToString(steps[1].attackerTeam[2])).toBe("Dodo (16/1)");
-    expect(petToString(steps[1].attackerTeam[3])).toBe("Dodo (12/1)");
+    expect(petToString(steps[1].summary.playerTeam[0]!)).toBe("Sloth (24/1)");
+    expect(petToString(steps[1].summary.playerTeam[1]!)).toBe("Dodo (24/1)");
+    expect(petToString(steps[1].summary.playerTeam[2]!)).toBe("Dodo (16/1)");
+    expect(petToString(steps[1].summary.playerTeam[3]!)).toBe("Dodo (12/1)");
   });
 
   it("Faint ability fires even when pet dies during the Start of Battle phase", () => {
@@ -1320,7 +1326,7 @@ describe("Engine Behavior", () => {
     // Dolphin's start-of-battle hit (4 dmg) kills the low-health Badger
     // before combat begins. Badger's faint ability must still fire, dealing
     // 3 dmg (50% of 6) to the Sloth ahead of it: 5 - 3 = 2.
-    expect(steps[1].description).toContain("Sloth (1/2)");
+    expect(steps[1].summary.description).toContain("Sloth (1/2)");
   });
 
   describe("Pending faints", () => {
@@ -1331,7 +1337,7 @@ describe("Engine Behavior", () => {
         PET_REGISTRY
       );
 
-      expect(petToString(steps[1].attackerTeam[0])).toBe("Dolphin (4/1)");
+      expect(petToString(steps[1].summary.playerTeam[0]!)).toBe("Dolphin (4/1)");
     });
 
     it("fires Friend ahead attacks after an After attack faints its pet", () => {
@@ -1373,8 +1379,8 @@ describe("Engine Behavior", () => {
         PET_REGISTRY
       );
 
-      expect(steps[1].attackerTeam).toHaveLength(0);
-      expect(steps[1].defenderTeam[0].health).toBe(42);
+      expect(steps[1].summary.playerTeam).toHaveLength(0);
+      expect(steps[1].summary.opposingTeam[0]?.health).toBe(42);
     });
   });
 

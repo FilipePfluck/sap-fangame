@@ -10,8 +10,7 @@ export const Kangaroo: Readonly<StaticPet> = {
   ability: {
     trigger: Trigger.friend_ahead_attacks,
     fn: (ctx) => {
-      ctx.self.attack += ctx.level;
-      ctx.self.health += ctx.level;
+      ctx.self.addStats([ctx.level, ctx.level])
     },
   },
   description: (level: number) =>

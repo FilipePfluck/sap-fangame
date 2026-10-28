@@ -13,9 +13,9 @@ export const Dragon: Readonly<StaticPet> = {
     trigger: Trigger.friend_bought,
     fn: (ctx) => {
       if (ctx.boughtPet?.tier !== 1) return;
-      const triggers = ctx.self.triggers ?? 0;
+      const triggers = ctx.self.abilityActivations ?? 0;
       if (triggers >= TRIGGER_LIMIT) return;
-      ctx.self.triggers = triggers + 1;
+      ctx.self.abilityActivations = triggers + 1;
       for (const friend of ctx.board) {
         if (!friend || friend === ctx.self || friend.health <= 0) continue;
         friend.attack += ctx.level;

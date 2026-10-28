@@ -7,8 +7,8 @@ import { PET_REGISTRY, getShopPetTooltipText } from "@/lib/pets";
 import { FOOD_REGISTRY } from "@/lib/foods";
 import { mergePets, mergeError } from "@/lib/game/merge";
 import { applyFoodEffect, feedError, needsTarget } from "@/lib/game/food";
-import { getPetCost, getFoodCost, getSellValue, ROLL_COST } from "@/lib/game/costs";
-import { createPet } from "@/lib/game/pet";
+import { getPetCost, getFoodCost, ROLL_COST } from "@/lib/game/costs";
+import { createPet, PetInstance } from "@/lib/game/pet";
 import { STARTING_LIVES } from "@/lib/game/rules";
 import { PET_SPRITES, FOOD_SPRITES } from "@/lib/sprites";
 import ShopItem from "./ShopItem";
@@ -179,23 +179,12 @@ export default function GameClient({
     if (gold < cost) { setError("Not enough gold"); return; }
 
     const freshPet = createPet(petDef, shopPet.tempHealthBonus);
-    
-    const occupant = apiBoard[boardPosition];
-
     const updatedBoard = prevBoard.clone();
-    
-    if (occupant === null) {
-      updatedBoard.pets[boardPosition] = freshPet;
-    
-    } else if (occupant.type === shopPet.type) {
-      const error = mergeError(occupant, freshPet);
-      if (error) { setError(error); return; }
-      updatedBoard.pets[boardPosition] = mergePets(occupant, freshPet);
-      
-    } else {
-      const shifted = updatedBoard.openSlot(boardPosition);
-      if (!shifted) { setError("Board is full"); return; }
-      updatedBoard.pets[boardPosition] = freshPet;
+    const response = updatedBoard.buy(freshPet, boardPosition);
+
+    if (response.error) {
+      setError(response.error.message);
+      return;
     }
 
     // Buying one half of a chained level-up reward removes the other half.
@@ -205,7 +194,7 @@ export default function GameClient({
     const newShopPets = shop.shopPets.filter((_, i) => !removedPetIdx.includes(i));
     const optimisticShop: ShopState = { shopPets: newShopPets, shopFoods: shop.shopFoods };
 
-    setApiBoard(updatedBoard.pets);
+    setApiBoard(updatedBoard.getApiBoard());
     setShop(optimisticShop);
     setFrozenPets(removeFrozenIndices(frozenPets, removedPetIdx));
     setGold(gold - cost);
@@ -224,7 +213,7 @@ export default function GameClient({
       });
       const data = await res.json();
       if (!res.ok) {
-        setApiBoard(prevBoard.pets); setShop(prevShop); setGold(prevGold); setFrozenPets(prevFrozen);
+        setApiBoard(prevBoard.getApiBoard()); setShop(prevShop); setGold(prevGold); setFrozenPets(prevFrozen);
         setError(data.error ?? "Something went wrong");
         return;
       }
@@ -236,7 +225,7 @@ export default function GameClient({
       setFrozenFoods(synced.foods);
 
     } catch {
-      setApiBoard(prevBoard.pets); setShop(prevShop); setGold(prevGold); setFrozenPets(prevFrozen);
+      setApiBoard(prevBoard.getApiBoard()); setShop(prevShop); setGold(prevGold); setFrozenPets(prevFrozen);
 
     } finally {
       setLoading(false);
@@ -323,7 +312,7 @@ export default function GameClient({
     const board = prevBoard.clone();
     board.swap(selectedBoardIndex, targetPosition);
 
-    setApiBoard(board.pets);
+    setApiBoard(board.getApiBoard());
     setSelectedBoardIndex(null);
     setLoading(true);
 
@@ -340,7 +329,7 @@ export default function GameClient({
       const data = await res.json();
 
       if (!res.ok) {
-        setApiBoard(prevBoard.pets);
+        setApiBoard(prevBoard.getApiBoard());
         setError(data.error ?? "Something went wrong");
         return;
       }
@@ -352,7 +341,7 @@ export default function GameClient({
       setFrozenFoods(synced.foods);
 
     } catch {
-      setApiBoard(prevBoard.pets);
+      setApiBoard(prevBoard.getApiBoard());
 
     } finally {
       setLoading(false);
@@ -367,7 +356,7 @@ export default function GameClient({
 
     updatedBoard.merge(selectedBoardIndex, targetPosition);
 
-    setApiBoard(updatedBoard.pets);
+    setApiBoard(updatedBoard.getApiBoard);
     setSelectedBoardIndex(null);
     setLoading(true);
 
@@ -379,7 +368,7 @@ export default function GameClient({
       });
       const data = await res.json();
       if (!res.ok) {
-        setApiBoard(board.pets);
+        setApiBoard(board.getApiBoard);
         setError(data.error ?? "Something went wrong");
         return;
       }
@@ -390,7 +379,7 @@ export default function GameClient({
       setFrozenPets(synced.pets);
       setFrozenFoods(synced.foods);
     } catch {
-      setApiBoard(board.pets);
+      setApiBoard(board.getApiBoard());
     } finally {
       setLoading(false);
     }
@@ -404,7 +393,7 @@ export default function GameClient({
     const initialGold = gold;
     const sellValue = updatedBoard.sell(selectedBoardIndex);
 
-    setApiBoard(updatedBoard.pets);
+    setApiBoard(updatedBoard.getApiBoard());
     setGold(gold + sellValue);
     setSelectedBoardIndex(null);
     setLoading(true);
@@ -420,7 +409,7 @@ export default function GameClient({
       });
       const data = await res.json();
       if (!res.ok) {
-        setApiBoard(board.pets);
+        setApiBoard(board.getApiBoard());
         setGold(initialGold);
         setError(data.error ?? "Something went wrong");
         return;
@@ -433,7 +422,7 @@ export default function GameClient({
       setFrozenFoods(synced.foods);
 
     } catch {
-      setApiBoard(board.pets);
+      setApiBoard(board.getApiBoard());
       setGold(initialGold);
 
     } finally {
@@ -588,7 +577,7 @@ export default function GameClient({
                         onClick={() => handleBoardSlotClick(i)}
                       />
                       {pet && (
-                        <span className="text-xs text-zinc-400">sells {getSellValue(pet)}g</span>
+                        <span className="text-xs text-zinc-400">sells {new PetInstance(pet).getSellValue()}g</span>
                       )}
                       {isOtherSlot && (
                         <div className="flex gap-1">
@@ -621,7 +610,7 @@ export default function GameClient({
                     disabled={loading}
                     className="px-4 py-1.5 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700 disabled:opacity-40 transition-colors"
                   >
-                    Sell (+{getSellValue(apiBoard[selectedBoardIndex]!)}g)
+                    Sell (+{new PetInstance(apiBoard[selectedBoardIndex]).getSellValue()}g)
                   </button>
                 </div>
               )}

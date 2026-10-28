@@ -11,7 +11,7 @@ export const Crab: Readonly<StaticPet> = {
   ability: {
     trigger: Trigger.start_of_battle,
     fn: (ctx) => {
-      const friendHealths = livingPets(ctx.team)
+      const friendHealths = ctx.team.living()
         .filter((friend) => friend !== ctx.self)
         .map((p) => p.health);
       if (friendHealths.length === 0) return;
