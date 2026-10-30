@@ -40,6 +40,7 @@ import {
   Milk,
   Peanut,
   SHOP_FOOD_POOL,
+  getFoodTooltipText,
 } from "@/lib/foods";
 import { Chili } from "@/lib/foods/chili";
 import { Cupcake } from "@/lib/foods/cupcake";
@@ -90,8 +91,7 @@ const TOOLTIP_LINKS: ReadonlyMap<StaticPet | FoodType, readonly (StaticPet | Foo
 ]);
 
 function getLinkedPage(entry: StaticPet | FoodType): string {
-  const text = "abilities" in entry ? getAllLevelsTooltipText(entry) : entry.description;
-  return `${entry.name}\n${text}`;
+  return "abilities" in entry ? getAllLevelsTooltipText(entry) : getFoodTooltipText(entry);
 }
 
 function getLinkedPages(entry: StaticPet | FoodType): readonly string[] {
@@ -103,5 +103,5 @@ export function getPetTooltipPages(pet: StaticPet): readonly string[] {
 }
 
 export function getFoodTooltipPages(food: FoodType): readonly string[] {
-  return [food.description, ...getLinkedPages(food)];
+  return [getFoodTooltipText(food), ...getLinkedPages(food)];
 }

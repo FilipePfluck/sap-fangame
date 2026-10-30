@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ShopState, PetInstance, ApiBoard } from "@/lib/types";
-import { PET_REGISTRY, getShopPetTooltipText } from "@/lib/pets";
-import { FOOD_REGISTRY } from "@/lib/foods";
+import { PET_REGISTRY, getPetTooltipText } from "@/lib/pets";
+import { FOOD_REGISTRY, getFoodTooltipText } from "@/lib/foods";
 import { mergePets, mergeError } from "@/lib/game/merge";
 import { applyFoodEffect, feedError, needsTarget } from "@/lib/game/food";
 import { getPetCost, getFoodCost, getSellValue, ROLL_COST } from "@/lib/game/costs";
@@ -652,7 +652,7 @@ export default function GameClient({
                       subtitle={`${atk}/${hp}`}
                       price={getPetCost(pet)}
                       discounted={!!pet.discount}
-                      description={getShopPetTooltipText(def, 1)}
+                      description={getPetTooltipText(def, 1)}
                       chained={!!pet.chainId}
                       isSelected={selectedItem?.kind === "pet" && selectedItem.index === i}
                       isFrozen={frozenPets.has(i)}
@@ -688,7 +688,7 @@ export default function GameClient({
                       subtitle={subtitle}
                       price={def ? getFoodCost(food, def) : 0}
                       discounted={!!food.discount}
-                      description={def?.description ?? ""}
+                      description={getFoodTooltipText(def)}
                       isSelected={selectedItem?.kind === "food" && selectedItem.index === i}
                       isFrozen={frozenFoods.has(i)}
                       onSelect={() => handleSelectShopFood(i)}

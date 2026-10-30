@@ -6,9 +6,9 @@ import {
   TURTLE_PACK_PETS,
   Duck,
   getAllLevelsTooltipText,
-  getShopPetTooltipText,
+  getPetTooltipText,
 } from "@/lib/pets";
-import { SHOP_FOOD_POOL } from "@/lib/foods";
+import { FOOD_REGISTRY, SHOP_FOOD_POOL, getFoodTooltipText } from "@/lib/foods";
 import type { StaticPet, FoodType } from "@/lib/types";
 
 // Minimal multi-tier pack for tier-unlock tests
@@ -244,12 +244,12 @@ describe("generateShop — discounts", () => {
 describe("getAllLevelsTooltipText", () => {
   it("puts each level's ability on its own line", () => {
     expect(getAllLevelsTooltipText(Duck)).toBe(
-      "L1 Sell: Give shop pets +1 health.\nL2 Sell: Give shop pets +2 health.\nL3 Sell: Give shop pets +3 health."
+      "Duck\nL1 Sell: Give shop pets +1 health.\nL2 Sell: Give shop pets +2 health.\nL3 Sell: Give shop pets +3 health."
     );
   });
 });
 
-describe("shop pet tooltip text", () => {
+describe("getPetTooltipText", () => {
   it("shows only the pet ability and not any note text", () => {
     const pet = {
       name: "Duck",
@@ -262,9 +262,21 @@ describe("shop pet tooltip text", () => {
       description: (level: number) => `Sell: Give shop pets +${level} health.\n\nSimilar targeting to Armadillo.`,
     };
 
-    expect(getShopPetTooltipText(pet, 1)).toBe("Sell: Give shop pets +1 health.");
-    expect(getShopPetTooltipText(pet, 1)).not.toContain("Similar targeting");
-    expect(getShopPetTooltipText(pet, 1)).not.toContain("Notes:");
-    expect(getShopPetTooltipText(pet, 1)).not.toContain("Level up reward");
+    expect(getPetTooltipText(pet, 1)).toBe("Duck\nSell: Give shop pets +1 health.");
+    expect(getPetTooltipText(pet, 1)).not.toContain("Similar targeting");
+    expect(getPetTooltipText(pet, 1)).not.toContain("Notes:");
+    expect(getPetTooltipText(pet, 1)).not.toContain("Level up reward");
+  });
+});
+
+describe("getFoodTooltipText", () => {
+  it("puts the food's name above its description", () => {
+    expect(getFoodTooltipText(FOOD_REGISTRY["Apple"])).toBe(
+      "Apple\nGive one pet +1 attack and +1 health."
+    );
+  });
+
+  it("is empty for an unknown food, so no tooltip shows", () => {
+    expect(getFoodTooltipText(undefined)).toBe("");
   });
 });

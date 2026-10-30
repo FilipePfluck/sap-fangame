@@ -249,13 +249,15 @@ export function getPetDescription(pet: StaticPet | undefined, level: number): st
   return description ? stripTooltipNotes(description) : undefined;
 }
 
-export function getShopPetTooltipText(pet: StaticPet | undefined, level: number): string {
-  return getPetDescription(pet, level) ?? "";
+export function getPetTooltipText(pet: StaticPet | undefined, level: number): string {
+  const description = getPetDescription(pet, level);
+  return pet && description ? `${pet.name}\n${description}` : "";
 }
 
 export function getAllLevelsTooltipText(pet: StaticPet): string {
-  return Array.from({ length: MAX_PET_LEVEL }, (_, index) => {
+  const levelLines = Array.from({ length: MAX_PET_LEVEL }, (_, index) => {
     const level = index + 1;
-    return `L${level} ${getShopPetTooltipText(pet, level)}`;
-  }).join("\n");
+    return `L${level} ${getPetDescription(pet, level) ?? ""}`;
+  });
+  return [pet.name, ...levelLines].join("\n");
 }

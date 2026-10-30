@@ -50,7 +50,7 @@ describe("getPackTierRows", () => {
 describe("getFoodTooltipPages", () => {
   it("gives Honey its description, then Bee", () => {
     expect(getFoodTooltipPages(FOOD_REGISTRY["Honey"])).toEqual([
-      "Give one pet the Honey perk: Faint: Summon a 1/1 Bee.",
+      "Honey\nGive one pet the Honey perk: Faint: Summon a 1/1 Bee.",
       "Bee\nL1 No ability.\nL2 No ability.\nL3 No ability.",
     ]);
   });
@@ -66,7 +66,7 @@ describe("getFoodTooltipPages", () => {
 describe("getPetTooltipPages", () => {
   it("gives Deer its ability, then Bus, then Chili", () => {
     expect(getPetTooltipPages(PET_REGISTRY["Deer"])).toEqual([
-      "L1 Faint: Summon one 5/3 Bus with Chili.\nL2 Faint: Summon one 10/6 Bus with Chili.\nL3 Faint: Summon one 15/9 Bus with Chili.",
+      "Deer\nL1 Faint: Summon one 5/3 Bus with Chili.\nL2 Faint: Summon one 10/6 Bus with Chili.\nL3 Faint: Summon one 15/9 Bus with Chili.",
       "Bus\nL1 No ability.\nL2 No ability.\nL3 No ability.",
       "Chili\nGive one pet the Chili perk. Attack second enemy for 5 damage.",
     ]);

@@ -80,3 +80,7 @@ export const FOOD_REGISTRY: Record<string, FoodType> = Object.fromEntries(
 export const SHOP_FOOD_POOL: FoodType[] = TURTLE_PACK_FOODS.filter(
   (f) => !f.isToken
 );
+
+export function getFoodTooltipText(food: FoodType | undefined): string {
+  return food ? `${food.name}\n${food.description}` : "";
+}
