@@ -35,6 +35,22 @@ export function friendAheadAbility(
   return getAbility(petRegistry[pet.type], trigger)?.fn ?? null;
 }
 
+// The living friends with a "friend faints" ability that `fainted` activates.
+export function friendFaintsListeners(
+  team: PetInstance[],
+  fainted: PetInstance,
+  petRegistry: Record<string, StaticPet>
+) {
+  return team.flatMap((friend) => {
+    if (friend === fainted || friend.health <= 0) return [];
+    if (petRegistry[friend.type]?.doesNotActivate?.includes(fainted.type)) {
+      return [];
+    }
+    const ability = getAbility(petRegistry[friend.type], Trigger.friend_faints);
+    return ability ? [{ friend, ability }] : [];
+  });
+}
+
 // A brand-new level-1 pet, as bought from the shop. `tempHealthBonus` is the
 // shop item's health bonus (e.g. from Duck). Used by the buy route and the
 // client's optimistic preview so the preview matches what the server places.

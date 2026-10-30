@@ -47,6 +47,7 @@ export { Turkey } from "./turtle/tier 5/turkey";
 export { Monkey } from "./turtle/tier 5/monkey";
 export { Seal } from "./turtle/tier 5/seal";
 export { Rooster } from "./turtle/tier 5/rooster";
+export { Shark } from "./turtle/tier 5/shark";
 export { Chick } from "./turtle/token/chick";
 export { Dragon } from "./turtle/tier 6/dragon";
 export { Mammoth } from "./turtle/tier 6/mammoth";
@@ -120,6 +121,7 @@ import { Turkey } from "./turtle/tier 5/turkey";
 import { Monkey } from "./turtle/tier 5/monkey";
 import { Seal } from "./turtle/tier 5/seal";
 import { Rooster } from "./turtle/tier 5/rooster";
+import { Shark } from "./turtle/tier 5/shark";
 import { Chick } from "./turtle/token/chick";
 import { Dragon } from "./turtle/tier 6/dragon";
 import { Mammoth } from "./turtle/tier 6/mammoth";
@@ -195,6 +197,7 @@ export const TURTLE_PACK_PETS = [
   Monkey,
   Seal,
   Rooster,
+  Shark,
   Chick,
   Dragon,
   Mammoth,
