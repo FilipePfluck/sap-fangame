@@ -13,6 +13,8 @@ export { Sushi } from "./sushi";
 export { Melon } from "./melon";
 export { Peanut } from "./peanut";
 export { Coconut } from "./coconut";
+export { Cupcake } from "./cupcake";
+export { Chili } from "./chili";
 
 import type { FoodType } from "@/lib/types";
 import { Cupcake } from "@/lib/foods/cupcake";

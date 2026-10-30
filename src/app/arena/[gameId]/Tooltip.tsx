@@ -51,11 +51,7 @@ export default function Tooltip({ text, pages, className, children }: TooltipPro
       className={className ?? "relative"}
       onMouseEnter={show}
       onMouseLeave={hide}
-      onClick={
-        hasMultiplePages
-          ? () => setPageIndex((index) => (index + 1) % tooltipPages.length)
-          : undefined
-      }
+      onClick={() => setPageIndex((index) => (index + 1) % tooltipPages.length)}
     >
       {children}
       {placement &&

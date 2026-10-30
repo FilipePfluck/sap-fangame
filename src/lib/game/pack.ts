@@ -34,7 +34,9 @@ import {
   BetterApple,
   BetterMilk,
   BreadCrumbs,
+  Chili,
   Coconut,
+  Cupcake,
   Honey,
   Melon,
   Milk,
@@ -42,35 +44,30 @@ import {
   SHOP_FOOD_POOL,
   getFoodTooltipText,
 } from "@/lib/foods";
-import { Chili } from "@/lib/foods/chili";
-import { Cupcake } from "@/lib/foods/cupcake";
 import { MAX_TIER } from "@/lib/game/rules";
 import { getTierUnlockTurn } from "@/lib/game/shop";
 
-export type PackTierRow = Readonly<{
+export type TooltipEntry = StaticPet | FoodType;
+
+type PackTierRow = Readonly<{
   tier: number;
   unlockTurn: number;
   pets: readonly StaticPet[];
   foods: readonly FoodType[];
 }>;
 
-export function getPackTierRows(): readonly PackTierRow[] {
-  return Array.from({ length: MAX_TIER }, (_, index) => {
-    const tier = index + 1;
-    return {
-      tier,
-      unlockTurn: getTierUnlockTurn(tier),
-      pets: SHOP_PET_POOL.filter((pet) => pet.tier === tier),
-      foods: SHOP_FOOD_POOL.filter((food) => food.tier === tier),
-    };
-  });
-}
+export const PACK_TIER_ROWS: readonly PackTierRow[] = Array.from({ length: MAX_TIER }, (_, index) => {
+  const tier = index + 1;
+  return {
+    tier,
+    unlockTurn: getTierUnlockTurn(tier),
+    pets: SHOP_PET_POOL.filter((pet) => pet.tier === tier),
+    foods: SHOP_FOOD_POOL.filter((food) => food.tier === tier),
+  };
+});
 
 // The tokens and foods each pet or food names, shown as extra tooltip pages.
-const TOOLTIP_LINKS: ReadonlyMap<StaticPet | FoodType, readonly (StaticPet | FoodType)[]> = new Map<
-  StaticPet | FoodType,
-  readonly (StaticPet | FoodType)[]
->([
+const TOOLTIP_LINKS = new Map<TooltipEntry, readonly TooltipEntry[]>([
   [Pigeon, [BreadCrumbs]],
   [Cricket, [ZombieCricket]],
   [Worm, [Apple, BetterApple, BestApple]],
@@ -90,18 +87,10 @@ const TOOLTIP_LINKS: ReadonlyMap<StaticPet | FoodType, readonly (StaticPet | Foo
   [Honey, [Bee]],
 ]);
 
-function getLinkedPage(entry: StaticPet | FoodType): string {
+function getEntryPage(entry: TooltipEntry): string {
   return "abilities" in entry ? getAllLevelsTooltipText(entry) : getFoodTooltipText(entry);
 }
 
-function getLinkedPages(entry: StaticPet | FoodType): readonly string[] {
-  return (TOOLTIP_LINKS.get(entry) ?? []).map(getLinkedPage);
-}
-
-export function getPetTooltipPages(pet: StaticPet): readonly string[] {
-  return [getAllLevelsTooltipText(pet), ...getLinkedPages(pet)];
-}
-
-export function getFoodTooltipPages(food: FoodType): readonly string[] {
-  return [getFoodTooltipText(food), ...getLinkedPages(food)];
+export function getTooltipPages(entry: TooltipEntry): readonly string[] {
+  return [entry, ...(TOOLTIP_LINKS.get(entry) ?? [])].map(getEntryPage);
 }

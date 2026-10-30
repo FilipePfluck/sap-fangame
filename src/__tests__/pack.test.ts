@@ -1,15 +1,15 @@
 import { describe, it, expect } from "vitest";
-import { getFoodTooltipPages, getPackTierRows, getPetTooltipPages } from "@/lib/game/pack";
+import { PACK_TIER_ROWS, getTooltipPages } from "@/lib/game/pack";
 import { FOOD_REGISTRY } from "@/lib/foods";
 import { PET_REGISTRY } from "@/lib/pets";
 
 function getRow(tier: number) {
-  return getPackTierRows().find((row) => row.tier === tier)!;
+  return PACK_TIER_ROWS.find((row) => row.tier === tier)!;
 }
 
-describe("getPackTierRows", () => {
+describe("PACK_TIER_ROWS", () => {
   it("has a row per tier with its unlock turn", () => {
-    expect(getPackTierRows().map(({ tier, unlockTurn }) => ({ tier, unlockTurn }))).toEqual([
+    expect(PACK_TIER_ROWS.map(({ tier, unlockTurn }) => ({ tier, unlockTurn }))).toEqual([
       { tier: 1, unlockTurn: 1 },
       { tier: 2, unlockTurn: 3 },
       { tier: 3, unlockTurn: 5 },
@@ -42,14 +42,14 @@ describe("getPackTierRows", () => {
   });
 
   it("leaves out tokens", () => {
-    const entries = getPackTierRows().flatMap((row) => [...row.pets, ...row.foods]);
+    const entries = PACK_TIER_ROWS.flatMap((row) => [...row.pets, ...row.foods]);
     expect(entries.filter((entry) => entry.isToken)).toEqual([]);
   });
 });
 
-describe("getFoodTooltipPages", () => {
+describe("getTooltipPages for foods", () => {
   it("gives Honey its description, then Bee", () => {
-    expect(getFoodTooltipPages(FOOD_REGISTRY["Honey"])).toEqual([
+    expect(getTooltipPages(FOOD_REGISTRY["Honey"])).toEqual([
       "Honey\nGive one pet the Honey perk: Faint: Summon a 1/1 Bee.",
       "Bee\nL1 No ability.\nL2 No ability.\nL3 No ability.",
     ]);
@@ -57,15 +57,15 @@ describe("getFoodTooltipPages", () => {
 
   it("gives other foods a single page", () => {
     const multiPageFoods = Object.values(FOOD_REGISTRY).filter(
-      (food) => getFoodTooltipPages(food).length > 1
+      (food) => getTooltipPages(food).length > 1
     );
     expect(multiPageFoods.map((food) => food.name)).toEqual(["Honey"]);
   });
 });
 
-describe("getPetTooltipPages", () => {
+describe("getTooltipPages for pets", () => {
   it("gives Deer its ability, then Bus, then Chili", () => {
-    expect(getPetTooltipPages(PET_REGISTRY["Deer"])).toEqual([
+    expect(getTooltipPages(PET_REGISTRY["Deer"])).toEqual([
       "Deer\nL1 Faint: Summon one 5/3 Bus with Chili.\nL2 Faint: Summon one 10/6 Bus with Chili.\nL3 Faint: Summon one 15/9 Bus with Chili.",
       "Bus\nL1 No ability.\nL2 No ability.\nL3 No ability.",
       "Chili\nGive one pet the Chili perk. Attack second enemy for 5 damage.",
@@ -73,7 +73,7 @@ describe("getPetTooltipPages", () => {
   });
 
   it("shows a linked pet's scaling ability per level", () => {
-    expect(getPetTooltipPages(PET_REGISTRY["Flounder"])[1]).toBe(
+    expect(getTooltipPages(PET_REGISTRY["Flounder"])[1]).toBe(
       "Adult Flounder\nL1 Transformed: Give the two back-most friends +1 experience.\nL2 Transformed: Give the two back-most friends +2 experience.\nL3 Transformed: Give the two back-most friends +3 experience."
     );
   });
@@ -96,11 +96,11 @@ describe("getPetTooltipPages", () => {
     { name: "Gorilla", links: ["Coconut"] },
     { name: "Fly", links: ["Zombie Fly"] },
   ])("links $name to $links", ({ name, links }) => {
-    const linkedPages = getPetTooltipPages(PET_REGISTRY[name]).slice(1);
+    const linkedPages = getTooltipPages(PET_REGISTRY[name]).slice(1);
     expect(linkedPages.map((page) => page.split("\n")[0])).toEqual(links);
   });
 
   it.each(["Duck", "Spider", "Seagull"])("gives %s a single page", (name) => {
-    expect(getPetTooltipPages(PET_REGISTRY[name])).toHaveLength(1);
+    expect(getTooltipPages(PET_REGISTRY[name])).toHaveLength(1);
   });
 });

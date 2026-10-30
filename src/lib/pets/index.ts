@@ -246,7 +246,7 @@ function stripTooltipNotes(text: string): string {
     .trim();
 }
 
-export function getPetDescription(pet: StaticPet | undefined, level: number): string | undefined {
+function getPetDescription(pet: StaticPet | undefined, level: number): string | undefined {
   if (!pet) return undefined;
   const description = typeof pet.description === "function" ? pet.description(level) : pet.description;
   return description ? stripTooltipNotes(description) : undefined;

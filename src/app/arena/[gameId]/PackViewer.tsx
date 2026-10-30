@@ -1,22 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import { getFoodTooltipPages, getPackTierRows, getPetTooltipPages } from "@/lib/game/pack";
+import { PACK_TIER_ROWS, getTooltipPages, type TooltipEntry } from "@/lib/game/pack";
 import Tooltip from "./Tooltip";
 
-const PACK_TIER_ROWS = getPackTierRows();
-
 type PackSpriteProps = {
-  name: string;
-  sprite: string;
-  tooltipPages: readonly string[];
+  entry: TooltipEntry;
 };
 
-function PackSprite({ name, sprite, tooltipPages }: PackSpriteProps) {
+function PackSprite({ entry }: PackSpriteProps) {
   return (
-    <Tooltip pages={tooltipPages}>
+    <Tooltip pages={getTooltipPages(entry)}>
       <div className="relative w-12 h-12">
-        <Image src={sprite} alt={name} fill sizes="48px" className="object-contain" />
+        <Image src={entry.sprite} alt={entry.name} fill sizes="48px" className="object-contain" />
       </div>
     </Tooltip>
   );
@@ -54,22 +50,12 @@ export default function PackViewer({ onClose }: PackViewerProps) {
             </span>
             <div className="flex flex-1 min-w-0 flex-wrap gap-2">
               {pets.map((pet) => (
-                <PackSprite
-                  key={pet.name}
-                  name={pet.name}
-                  sprite={pet.sprite}
-                  tooltipPages={getPetTooltipPages(pet)}
-                />
+                <PackSprite key={pet.name} entry={pet} />
               ))}
             </div>
             <div className="flex flex-wrap justify-end gap-2">
               {foods.map((food) => (
-                <PackSprite
-                  key={food.name}
-                  name={food.name}
-                  sprite={food.sprite}
-                  tooltipPages={getFoodTooltipPages(food)}
-                />
+                <PackSprite key={food.name} entry={food} />
               ))}
             </div>
           </div>
