@@ -1,5 +1,6 @@
 import type { FoodType } from "@/lib/types";
 import { ChiliPerk } from "@/lib/perks/chili";
+import { givePerkDescription } from "@/lib/perks/give-perk-description";
 
 export const Chili: FoodType = {
   name: "Chili",
@@ -8,6 +9,5 @@ export const Chili: FoodType = {
   perk: ChiliPerk,
   isToken: false,
   effect: {},
-  description:
-    "Give one pet the Chili perk. Attack second enemy for 5 damage.",
+  description: givePerkDescription(ChiliPerk),
 };

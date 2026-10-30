@@ -1,5 +1,6 @@
 import type { FoodType } from "@/lib/types";
 import { SteakPerk } from "@/lib/perks/steak";
+import { givePerkDescription } from "@/lib/perks/give-perk-description";
 
 export const Steak: FoodType = {
   name: "Steak",
@@ -8,5 +9,5 @@ export const Steak: FoodType = {
   perk: SteakPerk,
   isToken: false,
   effect: { },
-  description: "Give one pet the Steak perk.  Attack with +20 damage, once.",
+  description: givePerkDescription(SteakPerk),
 };

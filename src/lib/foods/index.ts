@@ -86,3 +86,10 @@ export const SHOP_FOOD_POOL: FoodType[] = TURTLE_PACK_FOODS.filter(
 export function getFoodTooltipText(food: FoodType | undefined): string {
   return food ? `${food.name}\n${food.description}` : "";
 }
+
+// Read from the registry, not the pet: saved pets keep the perk text from when
+// they got it.
+export function getPerkTooltipText(perkName: string): string {
+  const food = FOOD_REGISTRY[perkName];
+  return food?.perk ? `${food.perk.name}\n${food.perk.description}` : "";
+}

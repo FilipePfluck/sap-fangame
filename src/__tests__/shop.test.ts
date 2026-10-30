@@ -8,7 +8,7 @@ import {
   getAllLevelsTooltipText,
   getPetTooltipText,
 } from "@/lib/pets";
-import { FOOD_REGISTRY, SHOP_FOOD_POOL, getFoodTooltipText } from "@/lib/foods";
+import { FOOD_REGISTRY, SHOP_FOOD_POOL, getFoodTooltipText, getPerkTooltipText } from "@/lib/foods";
 import type { StaticPet, FoodType } from "@/lib/types";
 
 // Minimal multi-tier pack for tier-unlock tests
@@ -278,5 +278,37 @@ describe("getFoodTooltipText", () => {
 
   it("is empty for an unknown food, so no tooltip shows", () => {
     expect(getFoodTooltipText(undefined)).toBe("");
+  });
+});
+
+describe("perk tooltips", () => {
+  const PERK_FOODS = [
+    { name: "Bread", ability: "End turn: Gain +7 health until next turn." },
+    { name: "Cake", ability: "End turn: Increase sell value by 1 gold." },
+    { name: "Chili", ability: "Attack second enemy for 5 damage." },
+    { name: "Garlic", ability: "Take 2 less damage. It can't be reduced to less than 2." },
+    { name: "Honey", ability: "Faint: Summon a 1/1 Bee." },
+    { name: "Meat Bone", ability: "Attack with +3 damage." },
+    { name: "Melon", ability: "Take 20 damage less, once." },
+    { name: "Mushroom", ability: "Faint: Come back as a 1/1." },
+    { name: "Steak", ability: "Attack with +20 damage, once." },
+  ];
+
+  it.each(PERK_FOODS)("says $name gives the perk in the shop", ({ name, ability }) => {
+    expect(getFoodTooltipText(FOOD_REGISTRY[name])).toBe(
+      `${name}\nGive one pet the ${name} perk. ${ability}`
+    );
+  });
+
+  it.each([
+    ...PERK_FOODS,
+    { name: "Coconut", ability: "Block damage, once." },
+    { name: "Peanut", ability: "Knock out any pet attacked and hurt by this." },
+  ])("shows only the ability when $name is held", ({ name, ability }) => {
+    expect(getPerkTooltipText(name)).toBe(`${name}\n${ability}`);
+  });
+
+  it("is empty for a food without a perk, so no tooltip shows", () => {
+    expect(getPerkTooltipText("Apple")).toBe("");
   });
 });

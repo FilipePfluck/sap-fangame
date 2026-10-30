@@ -8,6 +8,5 @@ export const Peanut: FoodType = {
   perk: PeanutPerk,
   isToken: true,
   effect: {},
-  description:
-    "Knock out any pet attacked and hurt by this.",
+  description: PeanutPerk.description,
 };

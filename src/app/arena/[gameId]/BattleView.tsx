@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import type { BattleStep, PetInstance } from "@/lib/types";
 import { PET_SPRITES, FOOD_SPRITES } from "@/lib/sprites";
 import { PET_REGISTRY, getPetTooltipText } from "@/lib/pets";
-import { FOOD_REGISTRY, getFoodTooltipText } from "@/lib/foods";
+import { getPerkTooltipText } from "@/lib/foods";
 import { startGame } from "@/app/actions/game";
 import Tooltip from "./Tooltip";
 
@@ -206,7 +206,7 @@ function PetCard({
       </span>
       {pet.perk && FOOD_SPRITES[pet.perk.name] && (
         <Tooltip
-          text={getFoodTooltipText(FOOD_REGISTRY[pet.perk.name])}
+          text={getPerkTooltipText(pet.perk.name)}
           className="absolute top-1 right-1 w-4 h-4"
         >
           <Image src={FOOD_SPRITES[pet.perk.name]} alt={pet.perk.name} fill className="object-contain" />

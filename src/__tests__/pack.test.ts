@@ -50,7 +50,7 @@ describe("PACK_TIER_ROWS", () => {
 describe("getTooltipPages for foods", () => {
   it("gives Honey its description, then Bee", () => {
     expect(getTooltipPages(FOOD_REGISTRY["Honey"])).toEqual([
-      "Honey\nGive one pet the Honey perk: Faint: Summon a 1/1 Bee.",
+      "Honey\nGive one pet the Honey perk. Faint: Summon a 1/1 Bee.",
       "Bee\nL1 No ability.\nL2 No ability.\nL3 No ability.",
     ]);
   });
