@@ -9,5 +9,5 @@ export const Chili: FoodType = {
   isToken: false,
   effect: {},
   description:
-    "Give one pet the Chili perk.  Attack second enemy for 5 damage.",
+    "Give one pet the Chili perk. Attack second enemy for 5 damage.",
 };

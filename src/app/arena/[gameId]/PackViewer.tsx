@@ -1,8 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { getAllLevelsTooltipText } from "@/lib/pets";
-import { getPackTierRows } from "@/lib/game/pack";
+import { getFoodTooltipPages, getPackTierRows, getPetTooltipPages } from "@/lib/game/pack";
 import Tooltip from "./Tooltip";
 
 const PACK_TIER_ROWS = getPackTierRows();
@@ -10,12 +9,12 @@ const PACK_TIER_ROWS = getPackTierRows();
 type PackSpriteProps = {
   name: string;
   sprite: string;
-  description: string;
+  tooltipPages: readonly string[];
 };
 
-function PackSprite({ name, sprite, description }: PackSpriteProps) {
+function PackSprite({ name, sprite, tooltipPages }: PackSpriteProps) {
   return (
-    <Tooltip text={description}>
+    <Tooltip pages={tooltipPages}>
       <div className="relative w-12 h-12">
         <Image src={sprite} alt={name} fill sizes="48px" className="object-contain" />
       </div>
@@ -59,7 +58,7 @@ export default function PackViewer({ onClose }: PackViewerProps) {
                   key={pet.name}
                   name={pet.name}
                   sprite={pet.sprite}
-                  description={getAllLevelsTooltipText(pet)}
+                  tooltipPages={getPetTooltipPages(pet)}
                 />
               ))}
             </div>
@@ -69,7 +68,7 @@ export default function PackViewer({ onClose }: PackViewerProps) {
                   key={food.name}
                   name={food.name}
                   sprite={food.sprite}
-                  description={food.description}
+                  tooltipPages={getFoodTooltipPages(food)}
                 />
               ))}
             </div>
