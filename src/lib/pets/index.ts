@@ -143,6 +143,7 @@ import { Jerboa } from "./SAPOther/jerboa";
 import { SugarGlider } from "./SAPOther/sugar-glider";
 import { Flounder } from "./SAPOther/flounder";
 import { AdultFlounder } from "./SAPOther/adult-flounder";
+import { MAX_PET_LEVEL } from "@/lib/game/rules";
 import type { StaticPet } from "@/lib/types";
 
 export const TURTLE_PACK_PETS = [
@@ -250,4 +251,11 @@ export function getPetDescription(pet: StaticPet | undefined, level: number): st
 
 export function getShopPetTooltipText(pet: StaticPet | undefined, level: number): string {
   return getPetDescription(pet, level) ?? "";
+}
+
+export function getAllLevelsTooltipText(pet: StaticPet): string {
+  return Array.from({ length: MAX_PET_LEVEL }, (_, index) => {
+    const level = index + 1;
+    return `L${level} ${getShopPetTooltipText(pet, level)}`;
+  }).join("\n");
 }

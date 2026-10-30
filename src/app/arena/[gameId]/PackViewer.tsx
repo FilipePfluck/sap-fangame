@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { getShopPetTooltipText } from "@/lib/pets";
+import { getAllLevelsTooltipText } from "@/lib/pets";
 import { getPackTierRows } from "@/lib/game/pack";
 import Tooltip from "./Tooltip";
 
@@ -59,7 +59,7 @@ export default function PackViewer({ onClose }: PackViewerProps) {
                   key={pet.name}
                   name={pet.name}
                   sprite={pet.sprite}
-                  description={getShopPetTooltipText(pet, 1)}
+                  description={getAllLevelsTooltipText(pet)}
                 />
               ))}
             </div>

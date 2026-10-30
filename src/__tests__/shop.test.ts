@@ -4,6 +4,8 @@ import {
   SAP_OTHER_PETS,
   SHOP_PET_POOL,
   TURTLE_PACK_PETS,
+  Duck,
+  getAllLevelsTooltipText,
   getShopPetTooltipText,
 } from "@/lib/pets";
 import { SHOP_FOOD_POOL } from "@/lib/foods";
@@ -236,6 +238,14 @@ describe("generateShop — discounts", () => {
     expect(shop.shopFoods[0].discount).toBe(1);
     expect(shop.shopFoods.length).toBeGreaterThan(1);
     expect(shop.shopFoods.slice(1).every((f) => f.discount === undefined)).toBe(true);
+  });
+});
+
+describe("getAllLevelsTooltipText", () => {
+  it("puts each level's ability on its own line", () => {
+    expect(getAllLevelsTooltipText(Duck)).toBe(
+      "L1 Sell: Give shop pets +1 health.\nL2 Sell: Give shop pets +2 health.\nL3 Sell: Give shop pets +3 health."
+    );
   });
 });
 

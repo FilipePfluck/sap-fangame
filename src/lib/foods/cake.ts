@@ -9,5 +9,5 @@ export const Cake: FoodType = {
   isToken: false,
   effect: { },
   description:
-    "Give one pet the Cake perk. End turn -> Increase sell value by 1 gold",
+    "Give one pet the Cake perk. End turn: Increase sell value by 1 gold",
 };

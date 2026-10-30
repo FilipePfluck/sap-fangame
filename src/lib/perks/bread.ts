@@ -7,7 +7,7 @@ import {
 
 export const BreadPerk: TriggerPerk = {
   name: "Bread",
-  description: "End of Turn -> Gain +7 health until next turn.",
+  description: "End of Turn: Gain +7 health until next turn.",
   usesRemaining: DOES_NOT_DECAY,
 
   trigger: Trigger.end_turn,

@@ -2,7 +2,7 @@ import { DOES_NOT_DECAY, PetInstance, Trigger, TriggerPerk } from "@/lib/types";
 
 export const HoneyPerk: TriggerPerk = {
   name: "Honey",
-  description: "Faint -> Summon 1/1 Bee",
+  description: "Faint: Summon 1/1 Bee",
   usesRemaining: DOES_NOT_DECAY,
 
   trigger: Trigger.faint,

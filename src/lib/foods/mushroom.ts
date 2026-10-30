@@ -8,5 +8,5 @@ export const Mushroom: FoodType = {
   perk: MushroomPerk,
   isToken: false,
   effect: {},
-  description: "Give one pet the Mushroom perk. Faint -> Come back as a 1/1.",
+  description: "Give one pet the Mushroom perk. Faint: Come back as a 1/1.",
 };
