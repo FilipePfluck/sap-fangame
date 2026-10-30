@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { generateShop, clearDiscount } from "@/lib/game/shop";
+import { generateShop, clearDiscount, getTierUnlockTurn, getUnlockedTiers } from "@/lib/game/shop";
 import {
   SAP_OTHER_PETS,
   SHOP_PET_POOL,
@@ -183,6 +183,35 @@ describe("generateShop", () => {
       if (shop.shopPets.some((p) => tier6Names.has(p.type))) sawTier6 = true;
     }
     expect(sawTier6).toBe(true);
+  });
+});
+
+describe("getTierUnlockTurn", () => {
+  it.each([
+    { tier: 1, turn: 1 },
+    { tier: 2, turn: 3 },
+    { tier: 3, turn: 5 },
+    { tier: 4, turn: 7 },
+    { tier: 5, turn: 9 },
+    { tier: 6, turn: 11 },
+  ])("unlocks tier $tier on turn $turn", ({ tier, turn }) => {
+    expect(getTierUnlockTurn(tier)).toBe(turn);
+  });
+});
+
+describe("getUnlockedTiers", () => {
+  it.each([
+    { turn: 1, tiers: [1] },
+    { turn: 2, tiers: [1] },
+    { turn: 3, tiers: [1, 2] },
+    { turn: 4, tiers: [1, 2] },
+    { turn: 5, tiers: [1, 2, 3] },
+    { turn: 7, tiers: [1, 2, 3, 4] },
+    { turn: 9, tiers: [1, 2, 3, 4, 5] },
+    { turn: 11, tiers: [1, 2, 3, 4, 5, 6] },
+    { turn: 20, tiers: [1, 2, 3, 4, 5, 6] },
+  ])("unlocks tiers $tiers on turn $turn", ({ turn, tiers }) => {
+    expect(getUnlockedTiers(turn)).toEqual(tiers);
   });
 });
 

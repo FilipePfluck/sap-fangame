@@ -5,3 +5,4 @@ export const TROPHIES_TO_WIN = 10;
 // Gold at the start of every turn, before ability bonuses.
 export const TURN_GOLD = 10;
 export const MAX_PET_EXPERIENCE = 5;
+export const MAX_TIER = 6;
