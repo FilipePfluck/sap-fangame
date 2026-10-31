@@ -1263,12 +1263,6 @@ describe("Bread perk — end-turn / start-of-turn", () => {
 });
 
 describe("fireShopFaint — Pill", () => {
-  it("summons a Zombie Fly in the vacated slot when a Fly's friend faints", () => {
-    const board = makeBoard([makePet("Sloth"), makePet("Fly")]);
-    const result = fireShopFaint(board, 0, PET_REGISTRY);
-    expect(result[0]?.type).toBe("Zombie Fly");
-  });
-
   it("fires the target's faint ability, landing any summon in the same slot", () => {
     const cricket = makePet("Cricket");
     const board = makeBoard([cricket]);

@@ -12,7 +12,7 @@ import {
 import { orderByAttack } from "@/lib/utils/random";
 import { compactApiBoard } from "@/lib/game/merge";
 import { friendSummonedCandidates } from "@/lib/game/friend-summoned";
-import { friendAheadAbility, friendFaintsListeners } from "@/lib/game/pet";
+import { friendAheadAbility } from "@/lib/game/pet";
 import { getAbility } from "@/lib/pets/ability";
 import { triggerEffect } from "@/lib/perks/trigger-functions";
 import { addLevelUpReward } from "@/lib/game/shop";
@@ -298,13 +298,6 @@ export function fireShopFaint(
     petRegistry
   );
   if (friendAheadFaints) friendAheadFaints(context(behind));
-
-  for (const { friend, ability } of orderByAttack(
-    friendFaintsListeners(compacted, pet, petRegistry),
-    (listener) => listener.friend.attack
-  )) {
-    ability.fn({ ...context(friend), faintedIndex: selfIndex });
-  }
 
   // Pill frees one slot, so any later summon requests are flung. There is no
   // opposing team in the shop, so summons for it are dropped.

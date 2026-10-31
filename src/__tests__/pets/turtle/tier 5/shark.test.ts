@@ -1,9 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { simulateBattle } from "@/lib/game/battle";
-import { applyFoodEffect } from "@/lib/game/food";
-import { fireShopFaint } from "@/lib/game/shop-ability";
 import { PET_REGISTRY } from "@/lib/pets";
-import { Pill } from "@/lib/foods";
 import { pet } from "@/__tests__/helpers";
 
 describe("Shark", () => {
@@ -33,27 +30,5 @@ describe("Shark", () => {
     );
 
     expect(steps[2].attackerTeam[0]).toMatchObject({ type: "Shark", attack: 6, health: 6 });
-  });
-
-  it("does not react to its own faint", () => {
-    const fainted = pet({ type: "Shark", attack: 2, health: 2 });
-    const friend = pet({ type: "Shark", attack: 2, health: 2 });
-
-    fireShopFaint([fainted, friend], 0, PET_REGISTRY);
-
-    expect(fainted).toMatchObject({ attack: 2, health: 2 });
-    expect(friend).toMatchObject({ attack: 4, health: 4 });
-  });
-
-  it("gains stats when a friend is fed a Pill in the shop", () => {
-    const result = applyFoodEffect(
-      Pill,
-      [pet({ type: "Sloth" }), pet({ type: "Shark", attack: 2, health: 2 })],
-      0,
-      PET_REGISTRY
-    );
-
-    expect(result[0]).toBeNull();
-    expect(result[1]).toMatchObject({ type: "Shark", attack: 4, health: 4 });
   });
 });

@@ -13,7 +13,7 @@ import { clonePetInstance } from "@/lib/utils/clone";
 import { dealDirectDamage } from "@/lib/utils/combat";
 import { compactApiBoard } from "@/lib/game/merge";
 import { friendSummonedCandidates } from "@/lib/game/friend-summoned";
-import { friendAheadAbility, friendFaintsListeners } from "@/lib/game/pet";
+import { friendAheadAbility } from "@/lib/game/pet";
 import { getAbility } from "@/lib/pets/ability";
 import { triggerEffect } from "@/lib/perks/trigger-functions";
 
@@ -209,9 +209,18 @@ function fireFriendFaints(
   enemyTeam: PetInstance[],
   petRegistry: Record<string, StaticPet>
 ): SummonRequest[] {
+  const listeners = team.flatMap((friend) => {
+    if (friend === fainted || friend.health <= 0) return [];
+    if (petRegistry[friend.type]?.doesNotActivate?.includes(fainted.type)) {
+      return [];
+    }
+    const ability = getAbility(petRegistry[friend.type], Trigger.friend_faints);
+    return ability ? [{ friend, ability }] : [];
+  });
+
   const summonRequests: SummonRequest[] = [];
   for (const { friend, ability } of byCurrentAttack(
-    friendFaintsListeners(team, fainted, petRegistry),
+    listeners,
     (listener) => listener.friend.attack
   )) {
     const index = team.indexOf(friend);
