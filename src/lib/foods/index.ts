@@ -13,6 +13,8 @@ export { Sushi } from "./sushi";
 export { Melon } from "./melon";
 export { Peanut } from "./peanut";
 export { Coconut } from "./coconut";
+export { Cupcake } from "./cupcake";
+export { Chili } from "./chili";
 
 import type { FoodType } from "@/lib/types";
 import { Cupcake } from "@/lib/foods/cupcake";
@@ -80,3 +82,14 @@ export const FOOD_REGISTRY: Record<string, FoodType> = Object.fromEntries(
 export const SHOP_FOOD_POOL: FoodType[] = TURTLE_PACK_FOODS.filter(
   (f) => !f.isToken
 );
+
+export function getFoodTooltipText(food: FoodType | undefined): string {
+  return food ? `${food.name}\n${food.description}` : "";
+}
+
+// Read from the registry, not the pet: saved pets keep the perk text from when
+// they got it.
+export function getPerkTooltipText(perkName: string): string {
+  const food = FOOD_REGISTRY[perkName];
+  return food?.perk ? `${food.perk.name}\n${food.perk.description}` : "";
+}

@@ -1,12 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { generateShop, clearDiscount } from "@/lib/game/shop";
+import { generateShop, clearDiscount, getTierUnlockTurn, getUnlockedTiers } from "@/lib/game/shop";
 import {
   SAP_OTHER_PETS,
   SHOP_PET_POOL,
   TURTLE_PACK_PETS,
-  getShopPetTooltipText,
+  Duck,
+  getAllLevelsTooltipText,
+  getPetTooltipText,
 } from "@/lib/pets";
-import { SHOP_FOOD_POOL } from "@/lib/foods";
+import { FOOD_REGISTRY, SHOP_FOOD_POOL, getFoodTooltipText, getPerkTooltipText } from "@/lib/foods";
 import type { StaticPet, FoodType } from "@/lib/types";
 
 // Minimal multi-tier pack for tier-unlock tests
@@ -23,7 +25,7 @@ describe("generateShop", () => {
     { tier: 2, names: ["Snail", "Crab", "Swan", "Peacock", "Kangaroo", "Hedgehog", "Flamingo", "Worm", "Spider", "Rat"] },
     { tier: 3, names: ["Dodo", "Badger", "Dolphin", "Elephant", "Rabbit", "Giraffe", "Camel", "Dog", "Sheep", "Ox"] },
     { tier: 4, names: ["Skunk", "Hippo", "Bison", "Squirrel", "Penguin", "Blowfish", "Turtle", "Whale", "Deer"] },
-    { tier: 5, names: ["Scorpion", "Crocodile", "Rhino", "Armadillo", "Turkey", "Monkey", "Seal", "Rooster", "Cow"] },
+    { tier: 5, names: ["Scorpion", "Crocodile", "Rhino", "Armadillo", "Turkey", "Monkey", "Seal", "Rooster", "Cow", "Shark"] },
     { tier: 6, names: ["Leopard", "Boar", "Tiger", "Dragon", "Mammoth", "Snake", "Wolverine", "Gorilla", "Fly", "Cat"] },
   ])("has exactly the Turtle pack's tier $tier pets", ({ tier, names }) => {
     const tierPets = TURTLE_PACK_PETS.filter((pet) => !pet.isToken && pet.tier === tier);
@@ -186,6 +188,35 @@ describe("generateShop", () => {
   });
 });
 
+describe("getTierUnlockTurn", () => {
+  it.each([
+    { tier: 1, turn: 1 },
+    { tier: 2, turn: 3 },
+    { tier: 3, turn: 5 },
+    { tier: 4, turn: 7 },
+    { tier: 5, turn: 9 },
+    { tier: 6, turn: 11 },
+  ])("unlocks tier $tier on turn $turn", ({ tier, turn }) => {
+    expect(getTierUnlockTurn(tier)).toBe(turn);
+  });
+});
+
+describe("getUnlockedTiers", () => {
+  it.each([
+    { turn: 1, tiers: [1] },
+    { turn: 2, tiers: [1] },
+    { turn: 3, tiers: [1, 2] },
+    { turn: 4, tiers: [1, 2] },
+    { turn: 5, tiers: [1, 2, 3] },
+    { turn: 7, tiers: [1, 2, 3, 4] },
+    { turn: 9, tiers: [1, 2, 3, 4, 5] },
+    { turn: 11, tiers: [1, 2, 3, 4, 5, 6] },
+    { turn: 20, tiers: [1, 2, 3, 4, 5, 6] },
+  ])("unlocks tiers $tiers on turn $turn", ({ turn, tiers }) => {
+    expect(getUnlockedTiers(turn)).toEqual(tiers);
+  });
+});
+
 describe("clearDiscount", () => {
   it("removes the discount without touching other fields or the original", () => {
     const item = { type: "Apple", frozen: true, discount: 2 };
@@ -210,7 +241,15 @@ describe("generateShop — discounts", () => {
   });
 });
 
-describe("shop pet tooltip text", () => {
+describe("getAllLevelsTooltipText", () => {
+  it("puts each level's ability on its own line", () => {
+    expect(getAllLevelsTooltipText(Duck)).toBe(
+      "Duck\nL1 Sell: Give shop pets +1 health.\nL2 Sell: Give shop pets +2 health.\nL3 Sell: Give shop pets +3 health."
+    );
+  });
+});
+
+describe("getPetTooltipText", () => {
   it("shows only the pet ability and not any note text", () => {
     const pet = {
       name: "Duck",
@@ -223,9 +262,53 @@ describe("shop pet tooltip text", () => {
       description: (level: number) => `Sell: Give shop pets +${level} health.\n\nSimilar targeting to Armadillo.`,
     };
 
-    expect(getShopPetTooltipText(pet, 1)).toBe("Sell: Give shop pets +1 health.");
-    expect(getShopPetTooltipText(pet, 1)).not.toContain("Similar targeting");
-    expect(getShopPetTooltipText(pet, 1)).not.toContain("Notes:");
-    expect(getShopPetTooltipText(pet, 1)).not.toContain("Level up reward");
+    expect(getPetTooltipText(pet, 1)).toBe("Duck\nSell: Give shop pets +1 health.");
+    expect(getPetTooltipText(pet, 1)).not.toContain("Similar targeting");
+    expect(getPetTooltipText(pet, 1)).not.toContain("Notes:");
+    expect(getPetTooltipText(pet, 1)).not.toContain("Level up reward");
+  });
+});
+
+describe("getFoodTooltipText", () => {
+  it("puts the food's name above its description", () => {
+    expect(getFoodTooltipText(FOOD_REGISTRY["Apple"])).toBe(
+      "Apple\nGive one pet +1 attack and +1 health."
+    );
+  });
+
+  it("is empty for an unknown food, so no tooltip shows", () => {
+    expect(getFoodTooltipText(undefined)).toBe("");
+  });
+});
+
+describe("perk tooltips", () => {
+  const PERK_FOODS = [
+    { name: "Bread", ability: "End turn: Gain +7 health until next turn." },
+    { name: "Cake", ability: "End turn: Increase sell value by 1 gold." },
+    { name: "Chili", ability: "Attack second enemy for 5 damage." },
+    { name: "Garlic", ability: "Take 2 less damage. It can't be reduced to less than 2." },
+    { name: "Honey", ability: "Faint: Summon a 1/1 Bee." },
+    { name: "Meat Bone", ability: "Attack with +3 damage." },
+    { name: "Melon", ability: "Take 20 damage less, once." },
+    { name: "Mushroom", ability: "Faint: Come back as a 1/1." },
+    { name: "Steak", ability: "Attack with +20 damage, once." },
+  ];
+
+  it.each(PERK_FOODS)("says $name gives the perk in the shop", ({ name, ability }) => {
+    expect(getFoodTooltipText(FOOD_REGISTRY[name])).toBe(
+      `${name}\nGive one pet the ${name} perk. ${ability}`
+    );
+  });
+
+  it.each([
+    ...PERK_FOODS,
+    { name: "Coconut", ability: "Block damage, once." },
+    { name: "Peanut", ability: "Knock out any pet attacked and hurt by this." },
+  ])("shows only the ability when $name is held", ({ name, ability }) => {
+    expect(getPerkTooltipText(name)).toBe(`${name}\n${ability}`);
+  });
+
+  it("is empty for a food without a perk, so no tooltip shows", () => {
+    expect(getPerkTooltipText("Apple")).toBe("");
   });
 });

@@ -2,7 +2,7 @@ import type { DefensivePerk } from "@/lib/types";
 
 export const MelonPerk: DefensivePerk = {
   name: "Melon",
-  description: "Take 20 less damage, once.",
+  description: "Take 20 damage less, once.",
   usesRemaining: 1,
 
   blocksFor: 20,

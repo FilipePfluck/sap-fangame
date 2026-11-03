@@ -1,5 +1,6 @@
 import type { FoodType } from "@/lib/types";
 import { MushroomPerk } from "@/lib/perks/mushroom";
+import { givePerkDescription } from "@/lib/perks/give-perk-description";
 
 export const Mushroom: FoodType = {
   name: "Mushroom",
@@ -8,5 +9,5 @@ export const Mushroom: FoodType = {
   perk: MushroomPerk,
   isToken: false,
   effect: {},
-  description: "Give one pet the Mushroom perk. Faint -> Come back as a 1/1.",
+  description: givePerkDescription(MushroomPerk),
 };

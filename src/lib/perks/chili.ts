@@ -10,7 +10,7 @@ const CHILI_DAMAGE = 5;
 
 export const ChiliPerk: TriggerPerk = {
   name: "Chili",
-  description: `Attack second enemy for ${CHILI_DAMAGE} damage`,
+  description: `Attack second enemy for ${CHILI_DAMAGE} damage.`,
   usesRemaining: DOES_NOT_DECAY,
 
   trigger: Trigger.after_attack,

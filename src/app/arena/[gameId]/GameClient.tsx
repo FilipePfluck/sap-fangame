@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ShopState, PetInstance, ApiBoard } from "@/lib/types";
-import { PET_REGISTRY, getShopPetTooltipText } from "@/lib/pets";
-import { FOOD_REGISTRY } from "@/lib/foods";
+import { PET_REGISTRY, getPetTooltipText } from "@/lib/pets";
+import { FOOD_REGISTRY, getFoodTooltipText } from "@/lib/foods";
 import { mergePets, mergeError } from "@/lib/game/merge";
 import { applyFoodEffect, feedError, needsTarget } from "@/lib/game/food";
 import { getPetCost, getFoodCost, getSellValue, ROLL_COST } from "@/lib/game/costs";
@@ -14,6 +14,7 @@ import { PET_SPRITES, FOOD_SPRITES } from "@/lib/sprites";
 import ShopItem from "./ShopItem";
 import BoardSlot from "./BoardSlot";
 import BattleView from "./BattleView";
+import PackViewer from "./PackViewer";
 import { Board } from "@/lib/game/board";
 
 function frozenFromShop(shop: ShopState) {
@@ -105,6 +106,7 @@ export default function GameClient({
   const [gameWon, setGameWon] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [packViewerOpen, setPackViewerOpen] = useState(false);
 
   const selectedFoodDef =
     selectedItem?.kind === "food" ? FOOD_MAP[shop.shopFoods[selectedItem.index]?.type] : undefined;
@@ -650,7 +652,7 @@ export default function GameClient({
                       subtitle={`${atk}/${hp}`}
                       price={getPetCost(pet)}
                       discounted={!!pet.discount}
-                      description={getShopPetTooltipText(def, 1)}
+                      description={getPetTooltipText(def, 1)}
                       chained={!!pet.chainId}
                       isSelected={selectedItem?.kind === "pet" && selectedItem.index === i}
                       isFrozen={frozenPets.has(i)}
@@ -686,7 +688,7 @@ export default function GameClient({
                       subtitle={subtitle}
                       price={def ? getFoodCost(food, def) : 0}
                       discounted={!!food.discount}
-                      description={def?.description ?? ""}
+                      description={getFoodTooltipText(def)}
                       isSelected={selectedItem?.kind === "food" && selectedItem.index === i}
                       isFrozen={frozenFoods.has(i)}
                       onSelect={() => handleSelectShopFood(i)}
@@ -709,6 +711,13 @@ export default function GameClient({
                 Roll ({ROLL_COST}g)
               </button>
               <button
+                onClick={() => setPackViewerOpen(true)}
+                aria-label="View pack"
+                className="px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
+              >
+                🐾
+              </button>
+              <button
                 onClick={handleEndTurn}
                 disabled={loading}
                 className="px-4 py-2 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-sm hover:bg-zinc-700 dark:hover:bg-zinc-200 disabled:opacity-40 transition-colors"
@@ -716,6 +725,8 @@ export default function GameClient({
                 {loading ? "…" : "End Turn"}
               </button>
             </div>
+
+            {packViewerOpen && <PackViewer onClose={() => setPackViewerOpen(false)} />}
           </>
         ) : (
           battleData && (

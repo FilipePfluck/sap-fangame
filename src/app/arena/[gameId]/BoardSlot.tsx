@@ -3,8 +3,8 @@
 import Image from "next/image";
 import type { PetInstance } from "@/lib/types";
 import { FOOD_SPRITES } from "@/lib/sprites";
-import { PET_REGISTRY, getPetDescription } from "@/lib/pets";
-import { FOOD_REGISTRY } from "@/lib/foods";
+import { PET_REGISTRY, getPetTooltipText } from "@/lib/pets";
+import { getPerkTooltipText } from "@/lib/foods";
 import Tooltip from "./Tooltip";
 import { computeLevel } from "@/lib/game/board";
 
@@ -38,7 +38,7 @@ export default function BoardSlot({ pet, sprite, isSelected, isTargetable, onCli
             Lv{level} · {pet.xp}xp
           </span>
           <Tooltip
-            text={getPetDescription(PET_REGISTRY[pet.type], level)}
+            text={getPetTooltipText(PET_REGISTRY[pet.type], level)}
           >
             <div className="relative w-10 h-10">
               <Image src={sprite} alt={pet.type} fill className="object-contain" />
@@ -49,7 +49,7 @@ export default function BoardSlot({ pet, sprite, isSelected, isTargetable, onCli
           </span>
           {pet.perk && FOOD_SPRITES[pet.perk.name] && (
             <Tooltip
-              text={FOOD_REGISTRY[pet.perk.name]?.description}
+              text={getPerkTooltipText(pet.perk.name)}
               className="absolute top-1 right-1 w-4 h-4"
             >
               <Image src={FOOD_SPRITES[pet.perk.name]} alt={pet.perk.name} fill className="object-contain" />

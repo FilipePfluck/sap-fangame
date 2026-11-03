@@ -5,6 +5,8 @@ import { createPortal } from "react-dom";
 
 type TooltipProps = {
   text?: string;
+  // Replaces `text` with pages that clicking cycles through.
+  pages?: readonly string[];
   className?: string;
   children: React.ReactNode;
 };
@@ -19,10 +21,13 @@ type Placement = { x: number; y: number; below: boolean; width: number; maxHeigh
 // `className` replaces the default `relative` when the wrapped child needs its
 // own positioning moved onto this wrapper instead (e.g. an absolutely-
 // positioned badge).
-export default function Tooltip({ text, className, children }: TooltipProps) {
+export default function Tooltip({ text, pages, className, children }: TooltipProps) {
   const [placement, setPlacement] = useState<Placement | null>(null);
+  const [pageIndex, setPageIndex] = useState(0);
 
-  if (!text) return <>{children}</>;
+  const tooltipPages = pages ?? (text ? [text] : []);
+  if (tooltipPages.length === 0) return <>{children}</>;
+  const hasMultiplePages = tooltipPages.length > 1;
 
   function show(e: React.MouseEvent<HTMLDivElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -36,11 +41,17 @@ export default function Tooltip({ text, className, children }: TooltipProps) {
     setPlacement({ x, y: below ? rect.bottom : rect.top, below, width, maxHeight });
   }
 
+  function hide() {
+    setPlacement(null);
+    setPageIndex(0);
+  }
+
   return (
     <div
       className={className ?? "relative"}
       onMouseEnter={show}
-      onMouseLeave={() => setPlacement(null)}
+      onMouseLeave={hide}
+      onClick={() => setPageIndex((index) => (index + 1) % tooltipPages.length)}
     >
       {children}
       {placement &&
@@ -57,7 +68,12 @@ export default function Tooltip({ text, className, children }: TooltipProps) {
             }}
             className="pointer-events-none z-50 overflow-y-auto whitespace-pre-line rounded-md border border-zinc-300 bg-white p-2 text-left text-xs text-zinc-700 shadow-lg dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200"
           >
-            {text}
+            {tooltipPages[pageIndex]}
+            {hasMultiplePages && (
+              <div className="mt-1 text-right text-zinc-400">
+                {pageIndex + 1}/{tooltipPages.length}
+              </div>
+            )}
           </div>,
           document.body
         )}

@@ -8,7 +8,7 @@ import {
 
 export const CakePerk: BasePerkType | TriggerPerk = {
   name: "Cake",
-  description: "End of Turn -> Gain +1 gold sell value.",
+  description: "End turn: Increase sell value by 1 gold.",
   usesRemaining: DOES_NOT_DECAY,
 
   trigger: Trigger.end_turn,

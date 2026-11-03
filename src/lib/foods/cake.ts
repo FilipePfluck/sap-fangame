@@ -1,5 +1,6 @@
 import type { FoodType } from "@/lib/types";
 import { CakePerk } from "@/lib/perks/cake";
+import { givePerkDescription } from "@/lib/perks/give-perk-description";
 
 export const Cake: FoodType = {
   name: "Cake",
@@ -8,6 +9,5 @@ export const Cake: FoodType = {
   perk: CakePerk,
   isToken: false,
   effect: { },
-  description:
-    "Give one pet the Cake perk. End turn -> Increase sell value by 1 gold",
+  description: givePerkDescription(CakePerk),
 };

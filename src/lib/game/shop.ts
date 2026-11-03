@@ -1,4 +1,5 @@
 import type { StaticPet, FoodType, ShopPet, ShopFood, ShopState } from "@/lib/types";
+import { MAX_TIER } from "@/lib/game/rules";
 import { pickN, pickRandom } from "@/lib/utils/random";
 
 // Hard ceiling on total shop size (pets + food combined). The turn-based
@@ -18,13 +19,15 @@ function getFoodSlotCount(turn: number): number {
   return 1;
 }
 
+export function getTierUnlockTurn(tier: number): number {
+  return tier * 2 - 1;
+}
+
 export function getUnlockedTiers(turn: number): number[] {
-  const tiers: number[] = [1];
-  if (turn >= 3) tiers.push(2);
-  if (turn >= 5) tiers.push(3);
-  if (turn >= 7) tiers.push(4);
-  if (turn >= 9) tiers.push(5);
-  if (turn >= 11) tiers.push(6);
+  const tiers: number[] = [];
+  for (let tier = 1; tier <= MAX_TIER && getTierUnlockTurn(tier) <= turn; tier++) {
+    tiers.push(tier);
+  }
   return tiers;
 }
 
@@ -72,8 +75,6 @@ export function generateShop({
 
   return { shopPets, shopFoods };
 }
-
-const MAX_TIER = 6;
 
 // The level-up reward draws from the tier just above what's currently unlocked.
 export function getRewardTier(turn: number): number {

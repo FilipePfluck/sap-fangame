@@ -1,5 +1,5 @@
 import { getSellValue } from "@/lib/game/costs";
-import { MAX_PET_EXPERIENCE } from "@/lib/game/rules";
+import { MAX_PET_EXPERIENCE, MAX_PET_LEVEL } from "@/lib/game/rules";
 import { ApiBoard, BuyResponse, PetInstance, ShopState } from "@/lib/types";
 import { prisma } from "@/lib/prisma";
 
@@ -215,13 +215,13 @@ export class Board {
 }
 
 export function getMinimumXpFor(level: number): number {
-  if (level >= 3) return MAX_PET_EXPERIENCE;
+  if (level >= MAX_PET_LEVEL) return MAX_PET_EXPERIENCE;
   if (level === 2) return 2;
   return 0;
 }
 
 export function computeLevel(xp: number): 1 | 2 | 3 {
-  if (xp >= MAX_PET_EXPERIENCE) return 3;
+  if (xp >= MAX_PET_EXPERIENCE) return MAX_PET_LEVEL;
   if (xp >= 2) return 2;
   return 1;
 }

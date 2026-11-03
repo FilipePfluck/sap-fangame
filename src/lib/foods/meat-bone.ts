@@ -1,5 +1,6 @@
 import type { FoodType } from "@/lib/types";
 import { MeatBonePerk } from "@/lib/perks/meat-bone";
+import { givePerkDescription } from "@/lib/perks/give-perk-description";
 
 export const MeatBone: FoodType = {
   name: "Meat Bone",
@@ -8,5 +9,5 @@ export const MeatBone: FoodType = {
   perk: MeatBonePerk,
   isToken: false,
   effect: {},
-  description: "Give one pet the Meat Bone perk. Attack with +3 damage.",
+  description: givePerkDescription(MeatBonePerk),
 };

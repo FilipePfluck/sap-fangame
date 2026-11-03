@@ -8,5 +8,5 @@ export const Coconut: FoodType = {
   perk: CoconutPerk,
   isToken: true,
   effect: {},
-  description: "Block damage, once.",
+  description: CoconutPerk.description,
 };
