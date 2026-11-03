@@ -111,13 +111,11 @@ export class Board {
     this.pets[index] = value ?? null;
   }
 
-  private alive(pets: (PetInstance | null)[]): PetInstance[] {
-    return (
-      this.pets
+  private alive(): PetInstance[] {
+    return this.pets
         .filter((pet) => pet !== null)
         // TypeScript doesn't consider this "non-null" if this check is included with the above filter
-        .filter((pet) => pet.getHealth() > 0)
-    );
+        .filter((pet) => pet.getHealth() > 0);
   }
 
   friend(index: number) {
