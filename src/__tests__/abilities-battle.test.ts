@@ -21,7 +21,7 @@ import { HoneyPerk } from "@/lib/perks/honey";
 import { MeatBonePerk } from "@/lib/perks/meat-bone";
 import { MushroomPerk } from "@/lib/perks/mushroom";
 import { SteakPerk } from "@/lib/perks/steak";
-import { Ox } from "@/lib/pets/turtle/tier 3/ox";
+import { Ox } from "@/lib/pets/BaseGame/turtle/tier 3/ox";
 import { abilityPet, pet, registryWith } from "./helpers";
 import { getMinimumXpFor } from "@/lib/game/board";
 

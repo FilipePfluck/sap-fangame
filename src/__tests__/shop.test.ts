@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { generateShop, clearDiscount, getTierUnlockTurn, getUnlockedTiers } from "@/lib/game/shop";
 import {
-  SAP_OTHER_PETS,
+  CUSTOMS_PETS,
   SHOP_PET_POOL,
   TURTLE_PACK_PETS,
   Duck,
@@ -39,8 +39,8 @@ describe("generateShop", () => {
     );
   });
 
-  it("includes SAP Other non-token pets in the shop pool", () => {
-    const shopableNames = SAP_OTHER_PETS.filter((pet) => !pet.isToken).map((pet) => pet.name);
+  it("includes customs non-token pets in the shop pool", () => {
+    const shopableNames = CUSTOMS_PETS.filter((pet) => !pet.isToken).map((pet) => pet.name);
     expect(SHOP_PET_POOL.map((pet) => pet.name)).toEqual(expect.arrayContaining(shopableNames));
   });
 
