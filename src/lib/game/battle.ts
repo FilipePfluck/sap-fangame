@@ -18,6 +18,7 @@ import { friendAheadAbility } from "@/lib/game/pet";
 import { getAbility } from "@/lib/pets/ability";
 import { triggerEffect } from "@/lib/perks/trigger-functions";
 import { PET_REGISTRY } from "@/lib/pets";
+import { MAX_ROUNDS } from "@/lib/game/rules";
 
 const MAX_TEAM_SIZE = 5;
 
@@ -522,9 +523,10 @@ export function simulateBattle(playerTeam: (PetInstance | null)[], opponentTeam:
 export class Battle {
   private playerTeam: (PetInstance | null)[];
   private opponentTeam: (PetInstance | null)[];
-  private petRegistry: Record<string, StaticPet> = PET_REGISTRY;
+  private readonly petRegistry: Record<string, StaticPet> = PET_REGISTRY;
 
   result: BattleSimulationResult = { result: "undefined", steps: [] };
+  totalRounds: number = 0;
 
   constructor(
     playerTeam: ApiBoard,
@@ -553,11 +555,14 @@ export class Battle {
     fireStartOfBattlePhase(attacker, defender, this.petRegistry, waitingSummons);
     handleDeathsPhase(attacker, defender, this.petRegistry, waitingSummons);
 
-    let rounds = 0;
-    const MAX_ROUNDS = 50;
+    this.playerTeam = attacker;
+    this.opponentTeam = defender;
 
-    while (attacker.length > 0 && defender.length > 0 && rounds < MAX_ROUNDS) {
-      rounds++;
+    this.updateResult(this.playerTeam, this.opponentTeam);
+
+    while (this.result.result === "undefined") {
+      this.totalRounds++;
+
       const atkFront = attacker[0];
       const defFront = defender[0];
 
@@ -687,14 +692,18 @@ export class Battle {
         defenderTeam: defender.map(clonePetInstance),
         description,
       });
-    }
 
-    if (attacker.length > 0 && defender.length === 0) {
-      this.result.result = "WIN";
-    } else if (attacker.length === 0 && defender.length > 0) {
-      this.result.result = "LOSS";
-    } else {
-      this.result.result = "DRAW";
+      this.updateResult();
     }
+  }
+
+  private updateResult(attackerTeam?: (PetInstance | null)[], defenderTeam?: (PetInstance | null)[]): void {
+    attackerTeam = attackerTeam ?? this.result.steps[this.totalRounds].attackerTeam;
+    defenderTeam = defenderTeam ?? this.result.steps[this.totalRounds].defenderTeam;
+
+    if (attackerTeam.length == 0) this.result.result = "LOSS";
+    if (defenderTeam.length == 0) this.result.result = "WIN";
+    if (attackerTeam.length == 0 && defenderTeam.length == 0) this.result.result = "DRAW";
+    if (this.totalRounds == MAX_ROUNDS) this.result.result = "DRAW";
   }
 }

@@ -7,3 +7,4 @@ export const TURN_GOLD = 10;
 export const MAX_PET_EXPERIENCE = 5;
 export const MAX_PET_LEVEL = 3;
 export const MAX_TIER = 6;
+export const MAX_ROUNDS = 50;
