@@ -55,6 +55,36 @@ describe("PackEditor", () => {
     expect(dice).toEqual(["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"]);
   });
 
+  it("shows the archetypes in display order, then Super", () => {
+    const tagLabels = [...container.querySelectorAll("button[aria-pressed] img")]
+      .map((icon) => icon.getAttribute("alt"))
+      .filter((alt) => alt !== null);
+    expect(tagLabels).toEqual([
+      "Summon",
+      "Hurt",
+      "Food",
+      "Guard",
+      "Perk",
+      "Ailment",
+      "Cycle",
+      "Roll",
+      "Level-Up",
+      "Gold",
+      "Toy",
+      "Transform",
+      "Buff",
+      "Disruption",
+      "Biome",
+      "Collapse",
+      "Honey",
+      "Leavings",
+      "Rings",
+      "Shield",
+      "Shift",
+      "Super",
+    ]);
+  });
+
   it("selects a tier die, and deselects it on a second click", () => {
     click(button("Tier 3"));
     expect(pressed("Tier 3")).toBe(true);
