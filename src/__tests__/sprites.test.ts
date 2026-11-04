@@ -3,6 +3,7 @@ import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
 import { PET_REGISTRY } from "@/lib/pets";
 import { FOOD_REGISTRY } from "@/lib/foods";
+import { SUPER_TAG_DISPLAY, TAG_DISPLAY } from "@/lib/tags";
 
 const spriteDir = join(process.cwd(), "public", "sap");
 const onDisk = new Set(readdirSync(spriteDir));
@@ -10,6 +11,7 @@ const onDisk = new Set(readdirSync(spriteDir));
 const entries = [
   ...Object.values(PET_REGISTRY).map((p) => ({ name: p.name, sprite: p.sprite })),
   ...Object.values(FOOD_REGISTRY).map((f) => ({ name: f.name, sprite: f.sprite })),
+  ...[...Object.values(TAG_DISPLAY), SUPER_TAG_DISPLAY].map((t) => ({ name: `${t.label} tag`, sprite: t.sprite })),
 ];
 
 describe("sprites", () => {

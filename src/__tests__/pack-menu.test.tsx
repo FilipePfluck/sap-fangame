@@ -65,6 +65,11 @@ describe("PackMenu", () => {
     expect(viewer()).toBeNull();
   });
 
+  it("links 🔧 on the new pack card to the editor", () => {
+    const edit = container.querySelector('a[aria-label="Edit new pack"]')!;
+    expect(edit.getAttribute("href")).toBe("/packs/editor");
+  });
+
   it("has a Start game submit button", () => {
     const start = container.querySelector<HTMLButtonElement>('form button[type="submit"]')!;
     expect(start.textContent).toBe("Start game");

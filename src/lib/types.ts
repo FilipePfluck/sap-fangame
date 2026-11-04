@@ -129,6 +129,32 @@ export type ShopAbilityContext = {
   boughtPet?: StaticPet;
 };
 
+// Pet archetypes from the Tags spec. Super is not an archetype; pets count it
+// separately.
+export enum Tag {
+  Ailment,
+  Biome,
+  Buff,
+  Collapse,
+  Cycle,
+  Disruption,
+  Food,
+  Gold,
+  Guard,
+  Honey,
+  Hurt,
+  Leavings,
+  LevelUp,
+  Perk,
+  Rings,
+  Roll,
+  Shield,
+  Shift,
+  Summon,
+  Toy,
+  Transform,
+}
+
 export enum Trigger {
   sell,
   buy,

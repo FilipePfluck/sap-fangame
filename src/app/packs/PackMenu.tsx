@@ -3,7 +3,9 @@
 import { useState, type ReactNode } from "react";
 import Image from "next/image";
 import { Turtle } from "@/lib/pets";
+import Link from "next/link";
 import PackViewer from "@/app/arena/[gameId]/PackViewer";
+import { BUTTON_CLASS } from "./styles";
 
 enum MatchmakingMode {
   SamePack,
@@ -19,9 +21,6 @@ enum PackCard {
   Turtle,
   NewPack,
 }
-
-const BUTTON_CLASS =
-  "rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors";
 
 type PackCardFrameProps = {
   selected: boolean;
@@ -110,10 +109,9 @@ export default function PackMenu({ startGame }: PackMenuProps) {
           onSelect={() => setSelectedCard(PackCard.NewPack)}
           selectLabel="Select new pack"
           action={
-            // Opens the pack editor once it exists.
-            <button aria-label="Edit new pack" className={`px-2 py-1 text-sm ${BUTTON_CLASS}`}>
+            <Link href="/packs/editor" aria-label="Edit new pack" className={`block px-2 py-1 text-sm ${BUTTON_CLASS}`}>
               🔧
-            </button>
+            </Link>
           }
         >
           <span className="text-4xl">➕</span>
