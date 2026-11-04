@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { ALL_TAGS, SUPER_TAG_DISPLAY, TAG_DISPLAY, type TagDisplay } from "@/lib/tags";
 import PackViewer from "@/app/arena/[gameId]/PackViewer";
+import Tooltip from "@/app/arena/[gameId]/Tooltip";
 import { BUTTON_CLASS, toggleButtonClass } from "../styles";
 
 // Index 0 is tier 1.
@@ -28,17 +29,19 @@ type TagButtonProps = {
 
 function TagButton({ tag, selected, onToggle }: TagButtonProps) {
   return (
-    <button
-      onClick={onToggle}
-      aria-label={tag.label}
-      aria-pressed={selected}
-      title={tag.label}
-      className={`flex-1 min-w-0 p-0.5 ${toggleButtonClass(selected)}`}
-    >
-      <div className="relative w-full aspect-square">
-        <Image src={tag.sprite} alt={tag.label} fill sizes="32px" className="object-contain" />
-      </div>
-    </button>
+    // The tooltip wrapper takes the button's share of the row.
+    <Tooltip text={tag.label} className="relative flex-1 min-w-0">
+      <button
+        onClick={onToggle}
+        aria-label={tag.label}
+        aria-pressed={selected}
+        className={`w-full p-0.5 ${toggleButtonClass(selected)}`}
+      >
+        <div className="relative w-full aspect-square">
+          <Image src={tag.sprite} alt={tag.label} fill sizes="32px" className="object-contain" />
+        </div>
+      </button>
+    </Tooltip>
   );
 }
 
@@ -117,12 +120,16 @@ export default function PackEditor() {
           );
         })}
         <SearchBar search={search} onSearchChange={setSearch} />
-        <button onClick={() => setPackViewerOpen(true)} aria-label="View pack" className={`px-3 py-1 ${BUTTON_CLASS}`}>
-          🔍
-        </button>
-        <button onClick={() => setSettingsOpen(true)} aria-label="Open pack settings" className={`px-3 py-1 ${BUTTON_CLASS}`}>
-          🔧
-        </button>
+        <Tooltip text="View pack">
+          <button onClick={() => setPackViewerOpen(true)} aria-label="View pack" className={`px-3 py-1 ${BUTTON_CLASS}`}>
+            🐾
+          </button>
+        </Tooltip>
+        <Tooltip text="Pack settings">
+          <button onClick={() => setSettingsOpen(true)} aria-label="Pack settings" className={`px-3 py-1 ${BUTTON_CLASS}`}>
+            🔧
+          </button>
+        </Tooltip>
       </div>
 
       {/* One row: each tag shrinks to share the width. */}

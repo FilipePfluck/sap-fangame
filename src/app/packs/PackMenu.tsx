@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Turtle } from "@/lib/pets";
 import Link from "next/link";
 import PackViewer from "@/app/arena/[gameId]/PackViewer";
+import Tooltip from "@/app/arena/[gameId]/Tooltip";
 import { BUTTON_CLASS } from "./styles";
 
 enum MatchmakingMode {
@@ -12,14 +13,26 @@ enum MatchmakingMode {
   AllPacks,
 }
 
-const MATCHMAKING_BUTTONS: Record<MatchmakingMode, { icon: string; label: string; next: MatchmakingMode }> = {
-  [MatchmakingMode.SamePack]: { icon: "🗡️", label: "Same pack", next: MatchmakingMode.AllPacks },
-  [MatchmakingMode.AllPacks]: { icon: "⚔️", label: "All packs", next: MatchmakingMode.SamePack },
+type MatchmakingButton = { icon: string; label: string; description: string; next: MatchmakingMode };
+
+const MATCHMAKING_BUTTONS: Record<MatchmakingMode, MatchmakingButton> = {
+  [MatchmakingMode.SamePack]: {
+    icon: "🗡️",
+    label: "Same pack",
+    description: "Play against your own pack.",
+    next: MatchmakingMode.AllPacks,
+  },
+  [MatchmakingMode.AllPacks]: {
+    icon: "⚔️",
+    label: "All packs",
+    description: "Play against all packs.",
+    next: MatchmakingMode.SamePack,
+  },
 };
 
 enum PackCard {
   Turtle,
-  NewPack,
+  Custom,
 }
 
 type PackCardFrameProps = {
@@ -65,14 +78,15 @@ export default function PackMenu({ startGame }: PackMenuProps) {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex gap-3">
-        <button
-          onClick={() => setMatchmakingMode(matchmakingButton.next)}
-          aria-label={matchmakingButton.label}
-          title={matchmakingButton.label}
-          className={`px-4 py-2 text-lg ${BUTTON_CLASS}`}
-        >
-          {matchmakingButton.icon}
-        </button>
+        <Tooltip text={`${matchmakingButton.label}\n${matchmakingButton.description}`}>
+          <button
+            onClick={() => setMatchmakingMode(matchmakingButton.next)}
+            aria-label={matchmakingButton.label}
+            className={`px-4 py-2 text-lg ${BUTTON_CLASS}`}
+          >
+            {matchmakingButton.icon}
+          </button>
+        </Tooltip>
         <form action={startGame}>
           <button
             type="submit"
@@ -89,13 +103,15 @@ export default function PackMenu({ startGame }: PackMenuProps) {
           onSelect={() => setSelectedCard(PackCard.Turtle)}
           selectLabel="Select Turtle pack"
           action={
-            <button
-              onClick={() => setPackViewerOpen(true)}
-              aria-label="View Turtle pack"
-              className={`px-2 py-1 text-sm ${BUTTON_CLASS}`}
-            >
-              🔍
-            </button>
+            <Tooltip text="View pack">
+              <button
+                onClick={() => setPackViewerOpen(true)}
+                aria-label="View pack"
+                className={`px-2 py-1 text-sm ${BUTTON_CLASS}`}
+              >
+                🔍
+              </button>
+            </Tooltip>
           }
         >
           <div className="relative w-16 h-16">
@@ -105,16 +121,19 @@ export default function PackMenu({ startGame }: PackMenuProps) {
         </PackCardFrame>
 
         <PackCardFrame
-          selected={selectedCard === PackCard.NewPack}
-          onSelect={() => setSelectedCard(PackCard.NewPack)}
-          selectLabel="Select new pack"
+          selected={selectedCard === PackCard.Custom}
+          onSelect={() => setSelectedCard(PackCard.Custom)}
+          selectLabel="Select custom pack"
           action={
-            <Link href="/packs/editor" aria-label="Edit new pack" className={`block px-2 py-1 text-sm ${BUTTON_CLASS}`}>
-              🔧
-            </Link>
+            <Tooltip text="Open pack editor">
+              <Link href="/packs/editor" aria-label="Open pack editor" className={`block px-2 py-1 text-sm ${BUTTON_CLASS}`}>
+                🔧
+              </Link>
+            </Tooltip>
           }
         >
           <span className="text-4xl">➕</span>
+          <span className="font-medium">Custom</span>
         </PackCardFrame>
       </div>
 

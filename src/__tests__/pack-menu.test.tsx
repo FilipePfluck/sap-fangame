@@ -28,6 +28,17 @@ function click(element: HTMLElement) {
   act(() => element.click());
 }
 
+// The tooltip listens on its wrapper, the button's parent.
+function hover(element: HTMLElement) {
+  act(() => {
+    element.parentElement!.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+  });
+}
+
+function tooltip() {
+  return document.querySelector('[role="tooltip"]')?.textContent;
+}
+
 function viewer() {
   return container.querySelector('[role="dialog"][aria-label="Pack viewer"]');
 }
@@ -41,6 +52,28 @@ describe("PackMenu", () => {
     expect(button("Same pack").textContent).toBe("🗡️");
   });
 
+  it("shows a tooltip for the current matchmaking mode", () => {
+    hover(button("Same pack"));
+    expect(tooltip()).toBe("Same pack\nPlay against your own pack.");
+    click(button("Same pack"));
+    hover(button("All packs"));
+    expect(tooltip()).toBe("All packs\nPlay against all packs.");
+  });
+
+  it("shows a View pack tooltip on 🔍", () => {
+    hover(button("View pack"));
+    expect(tooltip()).toBe("View pack");
+  });
+
+  it("shows an Open pack editor tooltip on the Custom card's 🔧", () => {
+    hover(container.querySelector<HTMLElement>('a[aria-label="Open pack editor"]')!);
+    expect(tooltip()).toBe("Open pack editor");
+  });
+
+  it("titles the ➕ card Custom", () => {
+    expect(button("Select custom pack").textContent).toBe("➕Custom");
+  });
+
   it("shows the Turtle sprite on the Turtle card", () => {
     const sprite = button("Select Turtle pack").querySelector("img")!;
     expect(sprite.getAttribute("alt")).toBe("Turtle");
@@ -48,25 +81,25 @@ describe("PackMenu", () => {
 
   it("selects the Turtle pack by default", () => {
     expect(button("Select Turtle pack").getAttribute("aria-pressed")).toBe("true");
-    expect(button("Select new pack").getAttribute("aria-pressed")).toBe("false");
+    expect(button("Select custom pack").getAttribute("aria-pressed")).toBe("false");
   });
 
-  it("selects the new pack card when ➕ is pressed", () => {
-    click(button("Select new pack"));
-    expect(button("Select new pack").getAttribute("aria-pressed")).toBe("true");
+  it("selects the Custom card when ➕ is pressed", () => {
+    click(button("Select custom pack"));
+    expect(button("Select custom pack").getAttribute("aria-pressed")).toBe("true");
     expect(button("Select Turtle pack").getAttribute("aria-pressed")).toBe("false");
   });
 
   it("opens the pack viewer from 🔍 and closes it from ✕", () => {
     expect(viewer()).toBeNull();
-    click(button("View Turtle pack"));
+    click(button("View pack"));
     expect(viewer()).not.toBeNull();
     click(button("Close"));
     expect(viewer()).toBeNull();
   });
 
-  it("links 🔧 on the new pack card to the editor", () => {
-    const edit = container.querySelector('a[aria-label="Edit new pack"]')!;
+  it("links 🔧 on the Custom card to the editor", () => {
+    const edit = container.querySelector('a[aria-label="Open pack editor"]')!;
     expect(edit.getAttribute("href")).toBe("/packs/editor");
   });
 

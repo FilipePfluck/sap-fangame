@@ -76,6 +76,18 @@ describe("PackEditor", () => {
     expect(pressed("Summon")).toBe(true);
   });
 
+  // Each button's tooltip repeats its label.
+  it.each(["Hurt", "Level-Up", "Super", "View pack", "Pack settings"])("shows a %s tooltip", (label) => {
+    act(() => {
+      button(label).parentElement!.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+    });
+    expect(document.querySelector('[role="tooltip"]')?.textContent).toBe(label);
+  });
+
+  it("shows a paw on the view pack button", () => {
+    expect(button("View pack").textContent).toBe("🐾");
+  });
+
   it("treats Super as a tag", () => {
     click(button("Hurt"));
     click(button("Super"));
@@ -97,13 +109,13 @@ describe("PackEditor", () => {
     expect(searchInput().value).toBe("");
   });
 
-  it("opens the pack viewer from 🔍", () => {
+  it("opens the pack viewer from 🐾", () => {
     click(button("View pack"));
     expect(container.querySelector('[role="dialog"][aria-label="Pack viewer"]')).not.toBeNull();
   });
 
   it("opens the settings modal from 🔧 with all six buttons disabled", () => {
-    click(button("Open pack settings"));
+    click(button("Pack settings"));
     const modal = settingsModal()!;
     expect(modal.getAttribute("aria-modal")).toBe("true");
     const settings = [...modal.querySelectorAll<HTMLButtonElement>("button:disabled")];
@@ -118,7 +130,7 @@ describe("PackEditor", () => {
   });
 
   it("closes the settings modal from ✕", () => {
-    click(button("Open pack settings"));
+    click(button("Pack settings"));
     click(settingsModal()!.querySelector<HTMLButtonElement>('button[aria-label="Close"]')!);
     expect(settingsModal()).toBeNull();
   });
