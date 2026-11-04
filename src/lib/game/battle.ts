@@ -18,7 +18,6 @@ import { friendAheadAbility } from "@/lib/game/pet";
 import { getAbility } from "@/lib/pets/ability";
 import { triggerEffect } from "@/lib/perks/trigger-functions";
 import { PET_REGISTRY } from "@/lib/pets";
-import { pet, registryWith } from "@/__tests__/helpers";
 
 const MAX_TEAM_SIZE = 5;
 
@@ -690,7 +689,6 @@ export class Battle {
       });
     }
 
-    let result: "WIN" | "DRAW" | "LOSS";
     if (attacker.length > 0 && defender.length === 0) {
       this.result.result = "WIN";
     } else if (attacker.length === 0 && defender.length > 0) {
