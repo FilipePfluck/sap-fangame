@@ -10,8 +10,8 @@ describe("Shark", () => {
     { level: 3, stats: 8 },
   ])("gains stats when a friend faints in battle at level $level", ({ level, stats }) => {
     const { steps } = simulateBattle(
-      [pet({ type: "Sloth" }), pet({ type: "Shark", attack: 2, health: 2, level })],
-      [pet({ type: "Sloth", attack: 1, health: 100 })],
+      [pet(), pet({ type: "Shark", attack: 2, health: 2, level })],
+      [pet({ health: 100 })],
       PET_REGISTRY
     );
 
@@ -24,8 +24,8 @@ describe("Shark", () => {
 
   it("gains stats once per friend that faints", () => {
     const { steps } = simulateBattle(
-      [pet({ type: "Sloth" }), pet({ type: "Sloth" }), pet({ type: "Shark", attack: 2, health: 2 })],
-      [pet({ type: "Sloth", attack: 1, health: 100 })],
+      [pet(), pet(), pet({ type: "Shark", attack: 2, health: 2 })],
+      [pet({ health: 100 })],
       PET_REGISTRY
     );
 

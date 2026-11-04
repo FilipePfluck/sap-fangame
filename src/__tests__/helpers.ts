@@ -1,6 +1,13 @@
 import { PET_REGISTRY } from "@/lib/pets";
 import { getMinimumXpFor } from "@/lib/game/board";
-import type { Ability, PetInstance, ShopState, StaticPet } from "@/lib/types";
+import {
+  Ability,
+  ApiBoard,
+  BattleAbilityContext,
+  PetInstance,
+  ShopState,
+  StaticPet,
+} from "@/lib/types";
 
 export const EMPTY_SHOP: Readonly<ShopState> = { shopPets: [], shopFoods: [] };
 
@@ -18,7 +25,7 @@ export function pet(petData: Partial<PetInstance> = {}): PetInstance {
   };
 }
 
-export function abilityPet(name: string, ability: Ability, tier = 1): StaticPet {
+export function staticPet(name: string, ability: Ability, tier = 1): StaticPet {
   return {
     name,
     sprite: "/sap/sloth.webp",
@@ -32,5 +39,43 @@ export function abilityPet(name: string, ability: Ability, tier = 1): StaticPet 
 }
 
 export function registryWith(...pets: StaticPet[]): Record<string, StaticPet> {
-  return { ...PET_REGISTRY, ...Object.fromEntries(pets.map((p) => [p.name, p])) };
+  return {
+    ...PET_REGISTRY,
+    ...Object.fromEntries(pets.map((p) => [p.name, p])),
+  };
+}
+
+export function makeBoard(pets: (PetInstance | null)[]): ApiBoard {
+  const board: ApiBoard = [null, null, null, null, null];
+  pets.forEach((p, i) => {
+    board[i] = p;
+  });
+  return board;
+}
+
+export function makeShop(
+  StaticPets: string[] = [],
+  foodTypes: string[] = []
+): ShopState {
+  return {
+    shopPets: StaticPets.map((t) => ({ type: t, frozen: false })),
+    shopFoods: foodTypes.map((t) => ({ type: t, frozen: false })),
+  };
+}
+
+export function battleContext(
+  self: PetInstance,
+  team: PetInstance[],
+  enemyTeam: PetInstance[]
+): BattleAbilityContext {
+  return {
+    self,
+    selfIndex: team.indexOf(self),
+    team,
+    enemyTeam,
+    level: self.level,
+    summonRequests: [],
+    hurtPets: [],
+    petRegistry: PET_REGISTRY,
+  };
 }
