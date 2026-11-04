@@ -1,4 +1,5 @@
 import {
+  ApiBoard,
   BattleAbilityContext,
   BattleStep,
   isOffensivePerk,
@@ -16,11 +17,13 @@ import { friendSummonedCandidates } from "@/lib/game/friend-summoned";
 import { friendAheadAbility } from "@/lib/game/pet";
 import { getAbility } from "@/lib/pets/ability";
 import { triggerEffect } from "@/lib/perks/trigger-functions";
+import { PET_REGISTRY } from "@/lib/pets";
+import { pet, registryWith } from "@/__tests__/helpers";
 
 const MAX_TEAM_SIZE = 5;
 
 export type BattleSimulationResult = {
-  result: "WIN" | "DRAW" | "LOSS";
+  result: "undefined" | "WIN" | "DRAW" | "LOSS";
   steps: BattleStep[];
 };
 
@@ -512,170 +515,188 @@ function fireFriendAheadAttacks(
   }
 }
 
-export function simulateBattle(
-  playerTeam: (PetInstance | null)[],
-  opponentTeam: (PetInstance | null)[],
-  petRegistry: Record<string, StaticPet> = {}
-): BattleSimulationResult {
-  const attacker: PetInstance[] = compactTeam(playerTeam);
-  const defender: PetInstance[] = compactTeam(opponentTeam);
-  const steps: BattleStep[] = [];
-  const waitingSummons: QueuedSummon[] = [];
+export function simulateBattle(playerTeam: (PetInstance | null)[], opponentTeam: (PetInstance | null)[], petRegistry?: Record<string, StaticPet>): BattleSimulationResult {
+  return new Battle(playerTeam, opponentTeam, petRegistry).result;
+}
 
-  steps.push({
-    attackerTeam: attacker.map(clonePetInstance),
-    defenderTeam: defender.map(clonePetInstance),
-    description: "Battle start",
-  });
 
-  // Start-of-battle abilities fire across both teams, highest attack first
-  fireStartOfBattlePhase(attacker, defender, petRegistry, waitingSummons);
-  handleDeathsPhase(attacker, defender, petRegistry, waitingSummons);
+export class Battle {
+  private playerTeam: (PetInstance | null)[];
+  private opponentTeam: (PetInstance | null)[];
+  private petRegistry: Record<string, StaticPet> = PET_REGISTRY;
 
-  let rounds = 0;
-  const MAX_ROUNDS = 50;
+  result: BattleSimulationResult = { result: "undefined", steps: [] };
 
-  while (attacker.length > 0 && defender.length > 0 && rounds < MAX_ROUNDS) {
-    rounds++;
-    const atkFront = attacker[0];
-    const defFront = defender[0];
+  constructor(
+    playerTeam: ApiBoard,
+    opponentTeam: ApiBoard,
+    petRegistry?: Record<string, StaticPet>
+  ) {
+    this.playerTeam = playerTeam;
+    this.opponentTeam = opponentTeam;
+    this.petRegistry = petRegistry ?? this.petRegistry;
 
-    const beforeAttackOrder = byCurrentAttack(
-      [
-        { pet: atkFront, team: attacker, enemyTeam: defender },
-        { pet: defFront, team: defender, enemyTeam: attacker },
-      ],
-      (j) => j.pet.attack
-    );
-    for (const { pet, team, enemyTeam } of beforeAttackOrder) {
-      fireSingleTrigger(
-        Trigger.before_attack,
-        pet,
-        0,
-        team,
-        enemyTeam,
-        petRegistry
-      );
-    }
+    this.simulate();
+  }
 
-    const description = `${atkFront.type} (${atkFront.attack}/${atkFront.health}) attacks ${defFront.type} (${defFront.attack}/${defFront.health})`;
+  private simulate() {
+    const attacker: PetInstance[] = compactTeam(this.playerTeam);
+    const defender: PetInstance[] = compactTeam(this.opponentTeam);
+    const waitingSummons: QueuedSummon[] = [];
 
-    const defenderHealthBefore = defFront.health;
-    const attackerHealthBefore = atkFront.health;
-    const dmgToDefender = dealDirectDamage(atkFront, defFront);
-    const dmgToAttacker = dealDirectDamage(defFront, atkFront);
-
-    // Peanut only affects normal front-line attacks, not ability damage: any
-    // hit dealing damage post-mitigation is lethal (a full Melon block
-    // doesn't count as a hit).
-    if (
-      isOffensivePerk(atkFront.perk) &&
-      atkFront.perk.instantKill &&
-      dmgToDefender > 0
-    ) {
-      defFront.health = Math.min(defFront.health, 0);
-    }
-
-    if (
-      isOffensivePerk(defFront.perk) &&
-      defFront.perk.instantKill &&
-      dmgToAttacker > 0
-    ) {
-      atkFront.health = Math.min(atkFront.health, 0);
-    }
-
-    fireAfterAttackPerk(atkFront, attacker, defender, petRegistry);
-    fireAfterAttackPerk(defFront, defender, attacker, petRegistry);
-
-    // Queued before after-attack abilities so a pet they faint still reacts.
-    const friendAheadQueue = queueFriendAheadAttacks(
-      [
-        { attackingPet: atkFront, team: attacker, enemyTeam: defender },
-        { attackingPet: defFront, team: defender, enemyTeam: attacker },
-      ],
-      petRegistry
-    );
-
-    const afterAttackOrder = byCurrentAttack(
-      [
-        { pet: atkFront, team: attacker, enemyTeam: defender },
-        { pet: defFront, team: defender, enemyTeam: attacker },
-      ],
-      (job) => job.pet.attack
-    );
-    for (const { pet, team, enemyTeam } of afterAttackOrder) {
-      fireSingleTrigger(
-        Trigger.after_attack,
-        pet,
-        team.indexOf(pet),
-        team,
-        enemyTeam,
-        petRegistry
-      );
-    }
-
-    fireFriendAheadAttacks(friendAheadQueue, petRegistry);
-
-    const hurtOrder = byCurrentAttack(
-      [
-        ...(defFront.health < defenderHealthBefore
-          ? [{ pet: defFront, team: defender, enemyTeam: attacker }]
-          : []),
-        ...(atkFront.health < attackerHealthBefore
-          ? [{ pet: atkFront, team: attacker, enemyTeam: defender }]
-          : []),
-      ],
-      (job) => job.pet.attack
-    );
-    for (const { pet, team, enemyTeam } of hurtOrder) {
-      fireHurt(pet, team, enemyTeam, petRegistry);
-    }
-
-    const defenderDied = defFront.health <= 0;
-    const attackerDied = atkFront.health <= 0;
-
-    // Faint runs first (highest attack first on a mutual kill) so a
-    // knock-out ability like Rhino's sees the new front, not the pet that
-    // just died.
-    handleDeathsPhase(attacker, defender, petRegistry, waitingSummons);
-
-    const knockoutOrder = byCurrentAttack(
-      [
-        ...(defenderDied
-          ? [{ pet: atkFront, team: attacker, enemyTeam: defender }]
-          : []),
-        ...(attackerDied
-          ? [{ pet: defFront, team: defender, enemyTeam: attacker }]
-          : []),
-      ],
-      (j) => j.pet.attack
-    );
-    for (const { pet, team, enemyTeam } of knockoutOrder) {
-      fireSingleTrigger(
-        Trigger.knock_out,
-        pet,
-        team.indexOf(pet),
-        team,
-        enemyTeam,
-        petRegistry
-      );
-    }
-
-    steps.push({
+    this.result.steps.push({
       attackerTeam: attacker.map(clonePetInstance),
       defenderTeam: defender.map(clonePetInstance),
-      description,
+      description: "Battle start",
     });
-  }
 
-  let result: "WIN" | "DRAW" | "LOSS";
-  if (attacker.length > 0 && defender.length === 0) {
-    result = "WIN";
-  } else if (attacker.length === 0 && defender.length > 0) {
-    result = "LOSS";
-  } else {
-    result = "DRAW";
-  }
+    // Start-of-battle abilities fire across both teams, highest attack first
+    fireStartOfBattlePhase(attacker, defender, this.petRegistry, waitingSummons);
+    handleDeathsPhase(attacker, defender, this.petRegistry, waitingSummons);
 
-  return { result, steps };
+    let rounds = 0;
+    const MAX_ROUNDS = 50;
+
+    while (attacker.length > 0 && defender.length > 0 && rounds < MAX_ROUNDS) {
+      rounds++;
+      const atkFront = attacker[0];
+      const defFront = defender[0];
+
+      const beforeAttackOrder = byCurrentAttack(
+        [
+          { pet: atkFront, team: attacker, enemyTeam: defender },
+          { pet: defFront, team: defender, enemyTeam: attacker },
+        ],
+        (j) => j.pet.attack
+      );
+      for (const { pet, team, enemyTeam } of beforeAttackOrder) {
+        fireSingleTrigger(
+          Trigger.before_attack,
+          pet,
+          0,
+          team,
+          enemyTeam,
+          this.petRegistry
+        );
+      }
+
+      const description = `${atkFront.type} (${atkFront.attack}/${atkFront.health}) attacks ${defFront.type} (${defFront.attack}/${defFront.health})`;
+
+      const defenderHealthBefore = defFront.health;
+      const attackerHealthBefore = atkFront.health;
+      const dmgToDefender = dealDirectDamage(atkFront, defFront);
+      const dmgToAttacker = dealDirectDamage(defFront, atkFront);
+
+      // Peanut only affects normal front-line attacks, not ability damage: any
+      // hit dealing damage post-mitigation is lethal (a full Melon block
+      // doesn't count as a hit).
+      if (
+        isOffensivePerk(atkFront.perk) &&
+        atkFront.perk.instantKill &&
+        dmgToDefender > 0
+      ) {
+        defFront.health = Math.min(defFront.health, 0);
+      }
+
+      if (
+        isOffensivePerk(defFront.perk) &&
+        defFront.perk.instantKill &&
+        dmgToAttacker > 0
+      ) {
+        atkFront.health = Math.min(atkFront.health, 0);
+      }
+
+      fireAfterAttackPerk(atkFront, attacker, defender, this.petRegistry);
+      fireAfterAttackPerk(defFront, defender, attacker, this.petRegistry);
+
+      // Queued before after-attack abilities so a pet they faint still reacts.
+      const friendAheadQueue = queueFriendAheadAttacks(
+        [
+          { attackingPet: atkFront, team: attacker, enemyTeam: defender },
+          { attackingPet: defFront, team: defender, enemyTeam: attacker },
+        ],
+        this.petRegistry
+      );
+
+      const afterAttackOrder = byCurrentAttack(
+        [
+          { pet: atkFront, team: attacker, enemyTeam: defender },
+          { pet: defFront, team: defender, enemyTeam: attacker },
+        ],
+        (job) => job.pet.attack
+      );
+      for (const { pet, team, enemyTeam } of afterAttackOrder) {
+        fireSingleTrigger(
+          Trigger.after_attack,
+          pet,
+          team.indexOf(pet),
+          team,
+          enemyTeam,
+          this.petRegistry
+        );
+      }
+
+      fireFriendAheadAttacks(friendAheadQueue, this.petRegistry);
+
+      const hurtOrder = byCurrentAttack(
+        [
+          ...(defFront.health < defenderHealthBefore
+            ? [{ pet: defFront, team: defender, enemyTeam: attacker }]
+            : []),
+          ...(atkFront.health < attackerHealthBefore
+            ? [{ pet: atkFront, team: attacker, enemyTeam: defender }]
+            : []),
+        ],
+        (job) => job.pet.attack
+      );
+      for (const { pet, team, enemyTeam } of hurtOrder) {
+        fireHurt(pet, team, enemyTeam, this.petRegistry);
+      }
+
+      const defenderDied = defFront.health <= 0;
+      const attackerDied = atkFront.health <= 0;
+
+      // Faint runs first (highest attack first on a mutual kill) so a
+      // knock-out ability like Rhino's sees the new front, not the pet that
+      // just died.
+      handleDeathsPhase(attacker, defender, this.petRegistry, waitingSummons);
+
+      const knockoutOrder = byCurrentAttack(
+        [
+          ...(defenderDied
+            ? [{ pet: atkFront, team: attacker, enemyTeam: defender }]
+            : []),
+          ...(attackerDied
+            ? [{ pet: defFront, team: defender, enemyTeam: attacker }]
+            : []),
+        ],
+        (j) => j.pet.attack
+      );
+      for (const { pet, team, enemyTeam } of knockoutOrder) {
+        fireSingleTrigger(
+          Trigger.knock_out,
+          pet,
+          team.indexOf(pet),
+          team,
+          enemyTeam,
+          this.petRegistry
+        );
+      }
+
+      this.result.steps.push({
+        attackerTeam: attacker.map(clonePetInstance),
+        defenderTeam: defender.map(clonePetInstance),
+        description,
+      });
+    }
+
+    let result: "WIN" | "DRAW" | "LOSS";
+    if (attacker.length > 0 && defender.length === 0) {
+      this.result.result = "WIN";
+    } else if (attacker.length === 0 && defender.length > 0) {
+      this.result.result = "LOSS";
+    } else {
+      this.result.result = "DRAW";
+    }
+  }
 }
