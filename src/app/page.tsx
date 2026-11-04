@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { auth, signOut } from "@/auth";
-import { startGame } from "@/app/actions/game";
 
 export default async function Home() {
   const session = await auth();
@@ -14,14 +13,12 @@ export default async function Home() {
         </p>
         {session ? (
           <div className="flex gap-3">
-            <form action={startGame}>
-              <button
-                type="submit"
-                className="px-4 py-2 rounded bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-200 transition-colors"
-              >
-                Play
-              </button>
-            </form>
+            <Link
+              href="/packs"
+              className="px-4 py-2 rounded bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-200 transition-colors"
+            >
+              Play
+            </Link>
             <form
               action={async () => {
                 "use server";
