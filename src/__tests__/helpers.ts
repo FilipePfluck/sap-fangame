@@ -1,6 +1,6 @@
 import { PET_REGISTRY } from "@/lib/pets";
 import { getMinimumXpFor } from "@/lib/game/board";
-import {
+import type {
   Ability,
   ApiBoard,
   BattleAbilityContext,
@@ -54,11 +54,11 @@ export function makeBoard(pets: (PetInstance | null)[]): ApiBoard {
 }
 
 export function makeShop(
-  StaticPets: string[] = [],
+  petType: string[] = [],
   foodTypes: string[] = []
 ): ShopState {
   return {
-    shopPets: StaticPets.map((t) => ({ type: t, frozen: false })),
+    shopPets: petType.map((t) => ({ type: t, frozen: false })),
     shopFoods: foodTypes.map((t) => ({ type: t, frozen: false })),
   };
 }
