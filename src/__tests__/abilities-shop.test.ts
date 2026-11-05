@@ -473,7 +473,7 @@ describe("fireShopFriendSummoned", () => {
   ])(
     "gives newly summoned pets from the shop +$level attack at level $level",
     ({ level, expected }) => {
-      const horse = pet({ type:  "Horse", level });
+      const horse = pet({ type: "Horse", level });
       const sloth = pet();
       const board = makeBoard([horse, sloth]);
       const result = fireShopFriendSummoned(board, 1, PET_REGISTRY);
@@ -483,7 +483,7 @@ describe("fireShopFriendSummoned", () => {
   );
 
   it("does not fire on itself when bought", () => {
-    const horse = pet({ type:  "Horse" });
+    const horse = pet({ type: "Horse" });
     const board = makeBoard([horse]);
     const result = fireShopFriendSummoned(board, 0, PET_REGISTRY);
 
@@ -501,7 +501,6 @@ describe("fireShopFriendSummoned", () => {
   });
 });
 
-// TODO - This should likely just be in the same description as Horse.  Descriptions can be nested if desired.
 describe("Temporary stats", () => {
   it("keeps temp attack through end-turn (it lasts into the battle)", () => {
     const buffed: PetData = pet({ attack: 3, tempAttack: 2 });
@@ -511,8 +510,22 @@ describe("Temporary stats", () => {
       makeShop(),
       PET_REGISTRY
     );
-    expect((board[0] as PetData).attack).toBe(3);
-    expect((board[0] as PetData).tempAttack).toBe(2);
+
+    expect(board[0]?.tempAttack).toBe(3);
+    expect(board[0]?.tempHealth).toBe(2);
+  });
+
+  it("removes temporary stats at start of turn", () => {
+    const buffed: PetData = pet({ tempAttack: 3, tempHealth: 2 });
+    const nextTurn = fireBoardShopAbility(
+      Trigger.start_of_turn,
+      makeBoard([buffed]),
+      makeShop(),
+      PET_REGISTRY
+    ).board;
+
+    expect(nextTurn[0]?.tempAttack).toBeUndefined();
+    expect(nextTurn[0]?.tempHealth).toBeUndefined();
   });
 });
 

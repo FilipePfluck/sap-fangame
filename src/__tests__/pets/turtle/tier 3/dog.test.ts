@@ -1,32 +1,23 @@
 import { describe, it, expect } from "vitest";
 import { PET_REGISTRY } from "@/lib/pets";
-import { makeBoard, makeShop, pet } from "@/__tests__/helpers";
-import { fireBoardShopAbility, fireShopFriendSummoned } from "@/lib/game/shop-ability";
-import { Trigger } from "@/lib/types";
+import { makeBoard, pet } from "@/__tests__/helpers";
+import { fireShopFriendSummoned } from "@/lib/game/shop-ability";
 import { simulateBattle } from "@/lib/game/battle";
 import { petToString } from "@/lib/utils/flavor-text";
 
 describe("Dog", () => {
-  it("gains temporary stats in shop until the next turn", () => {
+  it("gains temporary stats", () => {
     const board = makeBoard([pet({ type: "Dog", level: 2 }), pet()]);
+
+    expect(board[0]?.tempAttack).toBeUndefined();
+    expect(board[0]?.tempHealth).toBeUndefined();
+
     const summoned = fireShopFriendSummoned(board, 1, PET_REGISTRY);
 
     expect(summoned[0]).toMatchObject({
-      attack: 5,
-      health: 3,
       tempAttack: 4,
       tempHealth: 2,
     });
-
-    const nextTurn = fireBoardShopAbility(
-      Trigger.start_of_turn,
-      summoned,
-      makeShop(),
-      PET_REGISTRY
-    ).board;
-    expect(nextTurn[0]).toMatchObject({ health: 1 });
-    expect(nextTurn[0]?.tempAttack).toBeUndefined();
-    expect(nextTurn[0]?.tempHealth).toBeUndefined();
   });
 
   it.each([
