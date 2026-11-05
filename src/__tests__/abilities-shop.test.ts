@@ -502,8 +502,8 @@ describe("fireShopFriendSummoned", () => {
 });
 
 describe("Temporary stats", () => {
-  it("keeps temp attack through end-turn (it lasts into the battle)", () => {
-    const buffed: PetData = pet({ attack: 3, tempAttack: 2 });
+  it("keeps temporary stats after end of turn", () => {
+    const buffed: PetData = pet({ tempAttack: 2, tempHealth: 3 });
     const { board } = fireBoardShopAbility(
       Trigger.end_turn,
       makeBoard([buffed]),
@@ -511,8 +511,8 @@ describe("Temporary stats", () => {
       PET_REGISTRY
     );
 
-    expect(board[0]?.tempAttack).toBe(3);
-    expect(board[0]?.tempHealth).toBe(2);
+    expect(board[0]?.tempAttack).toBe(2);
+    expect(board[0]?.tempHealth).toBe(3);
   });
 
   it("removes temporary stats at start of turn", () => {
