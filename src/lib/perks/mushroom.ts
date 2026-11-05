@@ -1,4 +1,5 @@
-import { DOES_NOT_DECAY, PetData, Trigger, TriggerPerk, } from "@/lib/types";
+import { PetData, Trigger,  } from "@/lib/types";
+import { DOES_NOT_DECAY, TriggerPerk } from "@/lib/game/perk";
 
 export const MushroomPerk: TriggerPerk = {
   name: "Mushroom",

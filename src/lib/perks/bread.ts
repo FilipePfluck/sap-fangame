@@ -1,9 +1,9 @@
 import {
   PetData,
   Trigger,
-  TriggerPerk,
-  DOES_NOT_DECAY,
+
 } from "@/lib/types";
+import { DOES_NOT_DECAY, TriggerPerk } from "@/lib/game/perk";
 
 export const BreadPerk: TriggerPerk = {
   name: "Bread",

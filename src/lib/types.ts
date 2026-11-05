@@ -1,3 +1,10 @@
+import {
+  BasePerkType,
+  DefensivePerk,
+  OffensivePerk,
+  TriggerPerk,
+} from "@/lib/game/perk";
+
 export type PetData = {
   type: string;
   attack: number;
@@ -43,9 +50,9 @@ export type BuyResponse = {
   wasSummoned: boolean;
   levelUpReward: boolean;
   error?: Error;
-}
+};
 
-export type ApiBoard = (PetData | null)[]
+export type ApiBoard = (PetData | null)[];
 
 export type ShopState = {
   shopPets: ShopPet[];
@@ -158,23 +165,41 @@ export type Ability =
   | { trigger: Trigger.sell; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.buy; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.faint; fn: (ctx: BattleAbilityContext) => void }
-  | { trigger: Trigger.start_of_battle; fn: (ctx: BattleAbilityContext) => void }
+  | {
+      trigger: Trigger.start_of_battle;
+      fn: (ctx: BattleAbilityContext) => void;
+    }
   | { trigger: Trigger.level_up; fn: (ctx: ShopAbilityContext) => void }
-  | { trigger: Trigger.friend_summoned; fn: (ctx: BattleAbilityContext) => void }
+  | {
+      trigger: Trigger.friend_summoned;
+      fn: (ctx: BattleAbilityContext) => void;
+    }
   | { trigger: Trigger.start_of_turn; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.end_turn; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.before_attack; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: Trigger.after_attack; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: Trigger.hurt; fn: (ctx: BattleAbilityContext) => void }
-  | { trigger: Trigger.friend_ahead_attacks; fn: (ctx: BattleAbilityContext) => void }
-  | { trigger: Trigger.friend_ahead_faints; fn: (ctx: BattleAbilityContext) => void }
+  | {
+      trigger: Trigger.friend_ahead_attacks;
+      fn: (ctx: BattleAbilityContext) => void;
+    }
+  | {
+      trigger: Trigger.friend_ahead_faints;
+      fn: (ctx: BattleAbilityContext) => void;
+    }
   | { trigger: Trigger.friend_ate_food; fn: (ctx: FoodAbilityContext) => void }
   | { trigger: Trigger.friend_bought; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.knock_out; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: Trigger.friend_hurt; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: Trigger.friend_faints; fn: (ctx: BattleAbilityContext) => void }
-  | { trigger: Trigger.food_bought; fn: (ctx: FoodBoughtAbilityContext) => void }
-  | { trigger: Trigger.transformed; fn: (ctx: TransformedAbilityContext) => void };
+  | {
+      trigger: Trigger.food_bought;
+      fn: (ctx: FoodBoughtAbilityContext) => void;
+    }
+  | {
+      trigger: Trigger.transformed;
+      fn: (ctx: TransformedAbilityContext) => void;
+    };
 
 export type AbilityData = Pick<Ability, "trigger">;
 
@@ -186,7 +211,8 @@ export type StaticPet = {
   baseHealth: number;
   isToken: boolean;
   abilities: Map<Trigger, Ability>;
-  innatePerk?: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null;
+  innatePerk?:
+    BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null;
   // Pet types this pet's abilities never activate on (e.g. Fly ignores a
   // fainting Zombie Fly).
   doesNotActivate?: string[];
@@ -230,54 +256,8 @@ export type FoodType = {
   description: string;
 };
 
-export const DOES_NOT_DECAY = -1
-
-export type BasePerkType = {
-  name: string;
-  description: string;
-  usesRemaining: number;
-}
-
-export interface OffensivePerk extends BasePerkType {
-  instantKill: boolean,
-  extraDamage: number,
-}
-
-export interface DefensivePerk extends BasePerkType {
-  blocksFor: number,
-  minimumDamageTaken: number,
-  blocksAllDamage?: boolean,
-  blocksAbilityDamage: boolean,
-  blocksDirectDamage: boolean,
-}
-
-export interface TriggerPerk extends BasePerkType {
-  trigger: Trigger;
-}
-
-export function isOffensivePerk(object: BasePerkType | null): object is OffensivePerk {
-  if (object === null) return false;
-  try {
-    return 'extraDamage' in object;
-  } catch {
-    return false;
-  }
-}
-
-export function isDefensivePerk(object: BasePerkType | null): object is DefensivePerk {
-  if (object === null) return false;
-  try {
-    return 'blocksFor' in object;
-  } catch {
-    return false;
-  }
-}
-
-export function isTriggerPerk(object: BasePerkType | null): object is TriggerPerk {
-  if (object === null) return false;
-  try {
-    return "trigger" in object;
-  } catch {
-    return false;
-  }
+export enum DamageType {
+  UNDEFINED,
+  DIRECT,
+  ABILITY,
 }

@@ -1,9 +1,11 @@
 import {
+  PetData,
+} from "@/lib/types";
+import {
   DOES_NOT_DECAY,
   isDefensivePerk,
   isOffensivePerk,
-  PetData,
-} from "@/lib/types";
+} from "@/lib/game/perk";
 
 export function livingPets(pets: readonly PetData[]): PetData[] {
   return pets.filter((pet) => pet.health > 0);

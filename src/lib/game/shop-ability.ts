@@ -1,7 +1,6 @@
 import {
   Ability,
   BattleAbilityContext,
-  isTriggerPerk,
   PetData,
   StaticPet,
   ShopAbilityContext,
@@ -16,6 +15,7 @@ import { friendAheadAbility } from "@/lib/game/pet";
 import { getAbility } from "@/lib/pets/ability";
 import { triggerEffect } from "@/lib/perks/trigger-functions";
 import { addLevelUpReward } from "@/lib/game/shop";
+import { isTriggerPerk } from "@/lib/game/perk";
 
 // TODO - Order shop abilities through a shared queue manager (supporting dynamic
 // updates) and remove the per-function orderByAttack sorting below.

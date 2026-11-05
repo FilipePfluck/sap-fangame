@@ -1,10 +1,9 @@
 import {
-  BasePerkType,
-  DOES_NOT_DECAY,
   PetData,
   Trigger,
-  TriggerPerk,
+
 } from "@/lib/types";
+import { BasePerkType, DOES_NOT_DECAY, TriggerPerk } from "@/lib/game/perk";
 
 export const CakePerk: BasePerkType | TriggerPerk = {
   name: "Cake",

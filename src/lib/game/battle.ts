@@ -2,8 +2,6 @@ import {
   ApiBoard,
   BattleAbilityContext,
   BattleStep,
-  isOffensivePerk,
-  isTriggerPerk,
   PetData,
   StaticPet,
   SummonRequest,
@@ -19,6 +17,7 @@ import { getAbility } from "@/lib/pets/ability";
 import { triggerEffect } from "@/lib/perks/trigger-functions";
 import { PET_REGISTRY } from "@/lib/pets";
 import { MAX_ROUNDS } from "@/lib/game/rules";
+import { isOffensivePerk, isTriggerPerk } from "@/lib/game/perk";
 
 const MAX_TEAM_SIZE = 5;
 

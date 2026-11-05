@@ -1,6 +1,4 @@
 import {
-  DOES_NOT_DECAY,
-  isDefensivePerk,
   type BattleAbilityContext,
   type FoodType,
   type PetData,
@@ -9,6 +7,7 @@ import {
 } from "@/lib/types";
 import { triggerFriendAteFood } from "@/lib/game/food";
 import { stockFood, type StockFoodOptions } from "@/lib/game/shop";
+import { DOES_NOT_DECAY, isDefensivePerk } from "@/lib/game/perk";
 
 // Ability contexts carry only data; these classes are what an ability
 // instantiates from its context when it needs to act on that data.
