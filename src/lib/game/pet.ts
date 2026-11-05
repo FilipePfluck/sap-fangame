@@ -259,7 +259,7 @@ export class PetInstance {
 
 // The client-facing data for a pet at `level`: plain JSON values only, with
 // each ability reduced to its trigger and the description resolved.
-export function toPetData(pet: StaticPet, level: number): PetTooltip {
+export function getTooltip(pet: StaticPet, level: number): PetTooltip {
   const { abilities, description, ...data } = pet;
   return {
     ...data,

@@ -4,7 +4,7 @@ import {
   incrementTriggerCount,
   tryIncrementTriggerCount,
 } from "@/lib/pets/ability";
-import { TransformPreserve, toPetData, transformPet } from "@/lib/game/pet";
+import { TransformPreserve, getTooltip, transformPet } from "@/lib/game/pet";
 import { AdultFlounder } from "@/lib/pets/SAPOther/adult-flounder";
 import { HoneyPerk } from "@/lib/perks/honey";
 import { pet } from "@/__tests__/helpers";
@@ -32,7 +32,7 @@ describe("pet ability data", () => {
     expect(abilities.get(Trigger.faint)).toBe(faintAbility);
   });
 
-  it("PetData includes only JSON-parseable data", () => {
+  it("PetTooltip includes only JSON-parseable data", () => {
     const pet: StaticPet = {
       name: "Test Pet",
       sprite: "/test.webp",
@@ -47,7 +47,7 @@ describe("pet ability data", () => {
       description: (level) => `Ability at level ${level}.`,
     };
 
-    const data = toPetData(pet, 2);
+    const data = getTooltip(pet, 2);
 
     expect(data).toMatchObject({
       name: "Test Pet",
