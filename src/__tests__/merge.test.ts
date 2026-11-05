@@ -84,7 +84,7 @@ describe("mergePets", () => {
   });
 });
 
-describe("mergePets — temporary stats", () => {
+describe("mergePets", () => {
   it("keeps temp attack on the merged pet so it is still removed next turn", () => {
     const buffed: PetInstance = { ...sloth(0), attack: 3, tempAttack: 2 };
     const merged = mergePets(buffed, sloth(0));
