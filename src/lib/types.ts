@@ -191,7 +191,7 @@ export type StaticPet = {
   description: string | ((level: number) => string);
 };
 
-export type PetData = Omit<StaticPet, "abilities" | "description"> & {
+export type PetTooltip = Omit<StaticPet, "abilities" | "description"> & {
   abilities: AbilityData[];
   description: string;
 };
