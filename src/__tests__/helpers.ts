@@ -4,14 +4,14 @@ import {
   Ability,
   ApiBoard,
   BattleAbilityContext,
-  PetInstance,
+  PetData,
   ShopState,
   StaticPet,
 } from "@/lib/types";
 
 export const EMPTY_SHOP: Readonly<ShopState> = { shopPets: [], shopFoods: [] };
 
-export function pet(petData: Partial<PetInstance> = {}): PetInstance {
+export function pet(petData: Partial<PetData> = {}): PetData {
   const data = structuredClone(petData);
   const level = data.level ?? 1;
   return {
@@ -45,7 +45,7 @@ export function registryWith(...pets: StaticPet[]): Record<string, StaticPet> {
   };
 }
 
-export function makeBoard(pets: (PetInstance | null)[]): ApiBoard {
+export function makeBoard(pets: (PetData | null)[]): ApiBoard {
   const board: ApiBoard = [null, null, null, null, null];
   pets.forEach((p, i) => {
     board[i] = p;
@@ -64,9 +64,9 @@ export function makeShop(
 }
 
 export function battleContext(
-  self: PetInstance,
-  team: PetInstance[],
-  enemyTeam: PetInstance[]
+  self: PetData,
+  team: PetData[],
+  enemyTeam: PetData[]
 ): BattleAbilityContext {
   return {
     self,

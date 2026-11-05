@@ -1,7 +1,7 @@
 import {
   BasePerkType,
   DOES_NOT_DECAY,
-  PetInstance,
+  PetData,
   Trigger,
   TriggerPerk,
 } from "@/lib/types";
@@ -14,6 +14,6 @@ export const CakePerk: BasePerkType | TriggerPerk = {
   trigger: Trigger.end_turn,
 };
 
-export function cakeEffect({ self }: { self: PetInstance }) {
+export function cakeEffect({ self }: { self: PetData }) {
   self.sellValue = (self.sellValue ?? 0) + 1;
 }

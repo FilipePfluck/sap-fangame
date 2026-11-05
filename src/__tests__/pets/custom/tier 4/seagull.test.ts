@@ -1,14 +1,14 @@
 import { describe, it, expect } from "vitest";
 import { fireBoardShopAbility, fireShopFriendSummoned } from "@/lib/game/shop-ability";
 import { PET_REGISTRY } from "@/lib/pets";
-import { ApiBoard, PetInstance, Trigger } from "@/lib/types";
+import { ApiBoard, PetData, Trigger } from "@/lib/types";
 import { simulateBattle } from "@/lib/game/battle";
 import { makeBoard, makeShop, pet } from "@/__tests__/helpers";
 import { MelonPerk } from "@/lib/perks/melon";
 
 describe("Seagull", () => {
   // Board is a Melon Seagull followed by Sloths, summoned front to back.
-  function summonSloths(level: number, sloths: PetInstance[]): ApiBoard {
+  function summonSloths(level: number, sloths: PetData[]): ApiBoard {
     const seagull = pet({ type: "Seagull", level, perk: MelonPerk });
     let board = makeBoard([seagull, ...sloths]);
     for (let position = 1; position <= sloths.length; position++) {

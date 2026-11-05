@@ -12,7 +12,7 @@ import {
 } from "@/lib/foods";
 import { applyFoodEffect } from "@/lib/game/food";
 import { grantExperience } from "@/lib/game/merge";
-import { ApiBoard, PetInstance, ShopState, Trigger } from "@/lib/types";
+import { ApiBoard, PetData, ShopState, Trigger } from "@/lib/types";
 import { BreadPerk } from "@/lib/perks/bread";
 import { GarlicPerk } from "@/lib/perks/garlic";
 import { HoneyPerk } from "@/lib/perks/honey";
@@ -284,7 +284,7 @@ describe("Ability order", () => {
 
 describe("Bread perk", () => {
   it("grants +7 health at end-turn, recorded as temporary", () => {
-    const breadPet: PetInstance = {
+    const breadPet: PetData = {
       type: "Sloth",
       attack: 1,
       health: 5,
@@ -299,12 +299,12 @@ describe("Bread perk", () => {
       makeShop(),
       PET_REGISTRY
     );
-    expect((result[0] as PetInstance).health).toBe(12);
-    expect((result[0] as PetInstance).tempHealth).toBe(7);
+    expect((result[0] as PetData).health).toBe(12);
+    expect((result[0] as PetData).tempHealth).toBe(7);
   });
 
   it("removes the +7 at start-of-turn", () => {
-    const breadPet: PetInstance = {
+    const breadPet: PetData = {
       type: "Sloth",
       attack: 1,
       health: 12,
@@ -320,12 +320,12 @@ describe("Bread perk", () => {
       makeShop(),
       PET_REGISTRY
     );
-    expect((result[0] as PetInstance).health).toBe(5);
-    expect((result[0] as PetInstance).tempHealth).toBeUndefined();
+    expect((result[0] as PetData).health).toBe(5);
+    expect((result[0] as PetData).tempHealth).toBeUndefined();
   });
 
   it("temporary health does not exceed stat caps", () => {
-    const breadPet: PetInstance = {
+    const breadPet: PetData = {
       type: "Sloth",
       attack: 1,
       health: 50,
@@ -340,12 +340,12 @@ describe("Bread perk", () => {
       makeShop(),
       PET_REGISTRY
     );
-    expect((result[0] as PetInstance).health).toBe(50);
-    expect((result[0] as PetInstance).tempHealth).toBe(0);
+    expect((result[0] as PetData).health).toBe(50);
+    expect((result[0] as PetData).tempHealth).toBe(0);
   });
 
   it("still removes the +7 at start-of-turn after the perk was replaced", () => {
-    const garlicPet: PetInstance = {
+    const garlicPet: PetData = {
       type: "Sloth",
       attack: 1,
       health: 12,
@@ -361,7 +361,7 @@ describe("Bread perk", () => {
       makeShop(),
       PET_REGISTRY
     );
-    expect((result[0] as PetInstance).health).toBe(5);
+    expect((result[0] as PetData).health).toBe(5);
   });
 });
 
@@ -447,7 +447,7 @@ describe("fireShopFaint", () => {
 
   it("splashes compacted neighbors for a pet like Badger", () => {
     const sloth1 = pet();
-    const badger: PetInstance = {
+    const badger: PetData = {
       type: "Badger",
       attack: 6,
       health: 3,
@@ -459,8 +459,8 @@ describe("fireShopFaint", () => {
     const board = makeBoard([sloth1, badger, sloth2]);
     const result = fireShopFaint(board, 1, PET_REGISTRY);
     // Badger's faint deals 50% of its attack (3) to both compacted neighbors.
-    expect((result[0] as PetInstance).health).toBe(-2); // 1 - 3
-    expect((result[2] as PetInstance).health).toBe(-2);
+    expect((result[0] as PetData).health).toBe(-2); // 1 - 3
+    expect((result[2] as PetData).health).toBe(-2);
     expect(result[1]).toBeNull();
   });
 });
@@ -478,7 +478,7 @@ describe("fireShopFriendSummoned", () => {
       const board = makeBoard([horse, sloth]);
       const result = fireShopFriendSummoned(board, 1, PET_REGISTRY);
 
-      expect((result[1] as PetInstance).attack).toBe(expected);
+      expect((result[1] as PetData).attack).toBe(expected);
     }
   );
 
@@ -487,7 +487,7 @@ describe("fireShopFriendSummoned", () => {
     const board = makeBoard([horse]);
     const result = fireShopFriendSummoned(board, 0, PET_REGISTRY);
 
-    expect((result[0] as PetInstance).attack).toBe(1);
+    expect((result[0] as PetData).attack).toBe(1);
   });
 
   // TODO - Should NOT be under "Horse" if this does not use "Horse."  Test seems valuable for confirming this function works w/o a summon friend
@@ -497,22 +497,22 @@ describe("fireShopFriendSummoned", () => {
     const board = makeBoard([sloth1, sloth2]);
     const result = fireShopFriendSummoned(board, 1, PET_REGISTRY);
 
-    expect((result[0] as PetInstance).attack).toBe(1);
+    expect((result[0] as PetData).attack).toBe(1);
   });
 });
 
 // TODO - This should likely just be in the same description as Horse.  Descriptions can be nested if desired.
 describe("Temporary stats", () => {
   it("keeps temp attack through end-turn (it lasts into the battle)", () => {
-    const buffed: PetInstance = pet({ attack: 3, tempAttack: 2 });
+    const buffed: PetData = pet({ attack: 3, tempAttack: 2 });
     const { board } = fireBoardShopAbility(
       Trigger.end_turn,
       makeBoard([buffed]),
       makeShop(),
       PET_REGISTRY
     );
-    expect((board[0] as PetInstance).attack).toBe(3);
-    expect((board[0] as PetInstance).tempAttack).toBe(2);
+    expect((board[0] as PetData).attack).toBe(3);
+    expect((board[0] as PetData).tempAttack).toBe(2);
   });
 });
 
@@ -538,7 +538,7 @@ describe("fireShopFriendSummoned", () => {
 
       const summoned = board
         .slice(1)
-        .filter((friend): friend is PetInstance => friend !== null);
+        .filter((friend): friend is PetData => friend !== null);
       expect(summoned.filter((friend) => friend.xp === 1)).toHaveLength(
         expectedCount
       );

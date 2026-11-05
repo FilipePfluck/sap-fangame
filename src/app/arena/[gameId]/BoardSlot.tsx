@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import type { PetInstance } from "@/lib/types";
+import type { PetData } from "@/lib/types";
 import { FOOD_SPRITES } from "@/lib/sprites";
 import { PET_REGISTRY, getPetTooltipText } from "@/lib/pets";
 import { getPerkTooltipText } from "@/lib/foods";
@@ -9,7 +9,7 @@ import Tooltip from "./Tooltip";
 import { computeLevel } from "@/lib/game/board";
 
 type BoardSlotProps = {
-  pet: PetInstance | null;
+  pet: PetData | null;
   sprite: string | null;
   isSelected: boolean;
   isTargetable: boolean;

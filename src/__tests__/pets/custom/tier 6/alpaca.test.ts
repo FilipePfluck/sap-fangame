@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { pet, registryWith, staticPet } from "@/__tests__/helpers";
-import { type PetInstance, Trigger } from "@/lib/types";
+import { type PetData, Trigger } from "@/lib/types";
 import { BattleActions } from "@/lib/game/ability-actions";
 import { simulateBattle } from "@/lib/game/battle";
 import { fireShopFriendSummoned } from "@/lib/game/shop-ability";
@@ -58,7 +58,7 @@ describe("Alpaca", () => {
       0,
       PET_REGISTRY
     );
-    const alpaca = shopTeam[1] as PetInstance;
+    const alpaca = shopTeam[1] as PetData;
     const doubleSummoner = summoner("Alpaca Carryover Summoner", 2);
     const { steps } = simulateBattle(
       [pet({ type: doubleSummoner.name, attack: 100, health: 100 }), alpaca],

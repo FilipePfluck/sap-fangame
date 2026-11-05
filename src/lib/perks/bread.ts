@@ -1,5 +1,5 @@
 import {
-  PetInstance,
+  PetData,
   Trigger,
   TriggerPerk,
   DOES_NOT_DECAY,
@@ -13,7 +13,7 @@ export const BreadPerk: TriggerPerk = {
   trigger: Trigger.end_turn,
 };
 
-export function breadEffect({ self }: { self: PetInstance }) {
+export function breadEffect({ self }: { self: PetData }) {
   const BREAD_STRENGTH = 7;
 
   self.tempHealth = self.tempHealth ?? 0;

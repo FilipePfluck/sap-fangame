@@ -1,7 +1,9 @@
-export type PetInstance = {
+export type PetData = {
   type: string;
   attack: number;
   health: number;
+  maxAttack?: number;
+  maxHealth?: number;
   perk: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null;
   xp: number;
   level: number;
@@ -14,7 +16,7 @@ export type PetInstance = {
   triggerCountsThisTurn?: Partial<Record<Trigger, number>>;
   // Friends swallowed this battle (Whale), each already at the level it will
   // be released at.
-  swallowedPets?: PetInstance[];
+  swallowedPets?: PetData[];
 };
 
 export type ShopPet = {
@@ -43,7 +45,7 @@ export type BuyResponse = {
   error?: Error;
 }
 
-export type ApiBoard = (PetInstance | null)[]
+export type ApiBoard = (PetData | null)[]
 
 export type ShopState = {
   shopPets: ShopPet[];
@@ -51,8 +53,8 @@ export type ShopState = {
 };
 
 export type BattleStep = {
-  attackerTeam: PetInstance[];
-  defenderTeam: PetInstance[];
+  attackerTeam: PetData[];
+  defenderTeam: PetData[];
   description: string;
 };
 
@@ -66,7 +68,7 @@ export type SummonOptions = {
 };
 
 export type SummonRequest = SummonOptions & {
-  pet: PetInstance;
+  pet: PetData;
   afterIndex: number;
 };
 
@@ -74,15 +76,15 @@ export type SummonRequest = SummonOptions & {
 // lives on BattleActions / ShopActions (lib/game/ability-actions), which are
 // instantiated from the context.
 export type BattleAbilityContext = {
-  self: PetInstance;
+  self: PetData;
   selfIndex: number;
-  team: PetInstance[];
-  enemyTeam: PetInstance[];
+  team: PetData[];
+  enemyTeam: PetData[];
   level: number;
   // Summons the ability asked for, placed by whatever fired it.
   summonRequests: SummonRequest[];
   // Pets the ability damaged; their "hurt" abilities fire once it finishes.
-  hurtPets: PetInstance[];
+  hurtPets: PetData[];
   summonedIndex?: number;
   // Where the fainted friend stood, for "friend faints" abilities.
   faintedIndex?: number;
@@ -93,15 +95,15 @@ export type BattleAbilityContext = {
 };
 
 export type FoodAbilityContext = {
-  self: PetInstance;
-  fedPet: PetInstance;
-  friends: PetInstance[];
+  self: PetData;
+  fedPet: PetData;
+  friends: PetData[];
   level: number;
   foodGroup?: FoodType["foodGroup"];
 };
 
 export type FoodBoughtAbilityContext = {
-  self: PetInstance;
+  self: PetData;
   level: number;
   // The bought food and the multiplier on its attack/health, which abilities
   // may raise (Cat).
@@ -109,16 +111,16 @@ export type FoodBoughtAbilityContext = {
 };
 
 export type TransformedAbilityContext = {
-  self: PetInstance;
+  self: PetData;
   // The board's living pets, in board order (self included).
-  friends: PetInstance[];
+  friends: PetData[];
   level: number;
 };
 
 export type ShopAbilityContext = {
-  self: PetInstance;
+  self: PetData;
   selfIndex: number;
-  board: (PetInstance | null)[];
+  board: (PetData | null)[];
   shop: ShopState;
   level: number;
   gold: { delta: number };

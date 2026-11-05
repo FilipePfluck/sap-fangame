@@ -3,7 +3,7 @@ import {
   PetTooltip,
   Trigger,
   type BattleAbilityContext,
-  type PetInstance,
+  type PetData,
   type StaticPet,
 } from "@/lib/types";
 import { getAbility } from "@/lib/pets/ability";
@@ -27,7 +27,7 @@ type FriendAheadTrigger =
   Trigger.friend_ahead_attacks | Trigger.friend_ahead_faints;
 
 export function friendAheadAbility(
-  pet: PetInstance | undefined,
+  pet: PetData | undefined,
   trigger: FriendAheadTrigger,
   petRegistry: Record<string, StaticPet>
 ): ((ctx: BattleAbilityContext) => void) | null {
@@ -38,7 +38,7 @@ export function friendAheadAbility(
 // A brand-new level-1 pet, as bought from the shop. `tempHealthBonus` is the
 // shop item's health bonus (e.g. from Duck). Used by the buy route and the
 // client's optimistic preview so the preview matches what the server places.
-export function createPet(def: StaticPet, tempHealthBonus = 0): PetInstance {
+export function createPet(def: StaticPet, tempHealthBonus = 0): PetData {
   return {
     type: def.name,
     attack: def.baseAttack,
@@ -71,9 +71,9 @@ const DEFAULT_TRANSFORM_PRESERVE: ReadonlyMap<TransformPreserve, boolean> =
 // its innate perk, dropping the level resets to level 1 with no experience,
 // and dropping experience removes progress beyond the current level.
 export function transformPet(
-  pet: PetInstance,
+  pet: PetData,
   into: StaticPet,
-  friends: PetInstance[],
+  friends: PetData[],
   preserve: ReadonlyMap<TransformPreserve, boolean> = new Map()
 ): void {
   const keeps = (part: TransformPreserve) =>

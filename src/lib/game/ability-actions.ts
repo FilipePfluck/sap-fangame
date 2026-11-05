@@ -3,7 +3,7 @@ import {
   isDefensivePerk,
   type BattleAbilityContext,
   type FoodType,
-  type PetInstance,
+  type PetData,
   type ShopAbilityContext,
   type SummonOptions,
 } from "@/lib/types";
@@ -21,7 +21,7 @@ export class BattleActions {
   // queued to fire its "hurt" ability once this ability finishes.
   // TODO - Ability damage in the shop (e.g. a Pilled Badger hitting Camel)
   // doesn't fire hurt abilities yet.
-  dealAbilityDamage(target: PetInstance, damage: number): number {
+  dealAbilityDamage(target: PetData, damage: number): number {
     if (!this.ctx.inShop && target.health <= 0) return 0;
 
     const perk = target.perk;
@@ -40,14 +40,14 @@ export class BattleActions {
 
   // Queues a summon; whatever fired the ability places it afterwards.
   summon(
-    pet: PetInstance,
+    pet: PetData,
     afterIndex: number,
     options: SummonOptions = {}
   ): void {
     this.ctx.summonRequests.push({ ...options, pet, afterIndex });
   }
 
-  friendAteFood(fedPet: PetInstance): void {
+  friendAteFood(fedPet: PetData): void {
     triggerFriendAteFood(this.ctx.team, fedPet, this.ctx.petRegistry);
   }
 }

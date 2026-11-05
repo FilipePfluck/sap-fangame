@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { BattleStep, PetInstance } from "@/lib/types";
+import type { BattleStep, PetData } from "@/lib/types";
 import { PET_SPRITES, FOOD_SPRITES } from "@/lib/sprites";
 import { PET_REGISTRY, getPetTooltipText } from "@/lib/pets";
 import { getPerkTooltipText } from "@/lib/foods";
@@ -11,7 +11,7 @@ import { startGame } from "@/app/actions/game";
 import Tooltip from "./Tooltip";
 
 type BattleData = {
-  opponentTeam: PetInstance[];
+  opponentTeam: PetData[];
   opponentName: string | null;
   result: "WIN" | "DRAW" | "LOSS";
   steps: BattleStep[];
@@ -23,7 +23,7 @@ type BattleViewProps = {
   onBackToShop: () => void;
 };
 
-type AnimatingPet = { pet: PetInstance; animClass: string };
+type AnimatingPet = { pet: PetData; animClass: string };
 
 export default function BattleView({ battleData, gameWon, onBackToShop }: BattleViewProps) {
   const router = useRouter();
@@ -57,8 +57,8 @@ export default function BattleView({ battleData, gameWon, onBackToShop }: Battle
   }
 
   function wasFainting(
-    prevTeam: PetInstance[],
-    currentTeam: PetInstance[]
+    prevTeam: PetData[],
+    currentTeam: PetData[]
   ): AnimatingPet[] {
     if (!prevStep) return [];
     // Pets that existed in prev step but are gone now
@@ -175,7 +175,7 @@ function PetCard({
   facing,
   animClass,
 }: {
-  pet: PetInstance;
+  pet: PetData;
   facing: "left" | "right";
   animClass: string;
 }) {

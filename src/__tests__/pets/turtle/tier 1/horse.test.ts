@@ -4,7 +4,7 @@ import { makeBoard, pet } from "@/__tests__/helpers";
 import { PET_REGISTRY } from "@/lib/pets";
 import { petToString } from "@/lib/utils/flavor-text";
 import { fireShopFriendSummoned } from "@/lib/game/shop-ability";
-import { PetInstance } from "@/lib/types";
+import { PetData } from "@/lib/types";
 
 describe("Horse", () => {
   it.each([
@@ -38,7 +38,7 @@ describe("Horse", () => {
       1,
       PET_REGISTRY
     );
-    expect((result[1] as PetInstance).attack).toBe(3);
-    expect((result[1] as PetInstance).tempAttack).toBe(2);
+    expect((result[1] as PetData).attack).toBe(3);
+    expect((result[1] as PetData).tempAttack).toBe(2);
   });
 });

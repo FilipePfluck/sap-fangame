@@ -1,4 +1,4 @@
-import { PetInstance } from "@/lib/types";
+import { PetData } from "@/lib/types";
 
 export const numberToText: { [key: number]: string } = {
   1: "one",
@@ -6,6 +6,6 @@ export const numberToText: { [key: number]: string } = {
   3: "three",
 }
 
-export function petToString(pet: PetInstance): string {
+export function petToString(pet: PetData): string {
   return `${pet.type} (${pet.attack}/${pet.health})`
 }

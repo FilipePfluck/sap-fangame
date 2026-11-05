@@ -11,7 +11,7 @@ import { pet } from "@/__tests__/helpers";
 import {
   Trigger,
   type Ability,
-  type PetInstance,
+  type PetData,
   type StaticPet,
 } from "@/lib/types";
 
@@ -60,7 +60,7 @@ describe("pet ability data", () => {
 });
 
 describe("pet trigger counts", () => {
-  const makePet = (): PetInstance => ({
+  const makePet = (): PetData => ({
     type: "Test Pet",
     attack: 1,
     health: 1,
@@ -105,7 +105,7 @@ describe("pet trigger counts", () => {
 });
 
 describe("transformPet", () => {
-  function transform(preserve?: Map<TransformPreserve, boolean>): PetInstance {
+  function transform(preserve?: Map<TransformPreserve, boolean>): PetData {
     const transformed = pet({ type: "Flounder", attack: 5, health: 6, perk: HoneyPerk, level: 2, xp: 3 });
     transformPet(transformed, AdultFlounder, [], preserve);
     return transformed;

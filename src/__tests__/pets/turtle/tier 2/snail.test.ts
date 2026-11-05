@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { PET_REGISTRY } from "@/lib/pets";
 import { makeBoard, makeShop, pet } from "@/__tests__/helpers";
 import { fireBoardShopAbility } from "@/lib/game/shop-ability";
-import { PetInstance, Trigger } from "@/lib/types";
+import { PetData, Trigger } from "@/lib/types";
 
 describe("Snail", () => {
   it.each([
@@ -23,10 +23,10 @@ describe("Snail", () => {
         "LOSS"
       );
 
-      expect((result[0] as PetInstance).attack).toBe(1);
-      expect((result[1] as PetInstance).attack).toBe(expected);
-      expect((result[2] as PetInstance).attack).toBe(expected);
-      expect((result[3] as PetInstance).attack).toBe(expected);
+      expect((result[0] as PetData).attack).toBe(1);
+      expect((result[1] as PetData).attack).toBe(expected);
+      expect((result[2] as PetData).attack).toBe(expected);
+      expect((result[3] as PetData).attack).toBe(expected);
     }
   );
 
@@ -41,7 +41,7 @@ describe("Snail", () => {
       PET_REGISTRY,
       "WIN"
     );
-    expect((result[0] as PetInstance).attack).toBe(1);
+    expect((result[0] as PetData).attack).toBe(1);
   });
 
   it("buffs only the friends that exist when fewer than 3 are ahead", () => {
@@ -55,6 +55,6 @@ describe("Snail", () => {
       PET_REGISTRY,
       "LOSS"
     );
-    expect((result[0] as PetInstance).attack).toBe(2);
+    expect((result[0] as PetData).attack).toBe(2);
   });
 });

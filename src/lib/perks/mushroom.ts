@@ -1,4 +1,4 @@
-import { DOES_NOT_DECAY, PetInstance, Trigger, TriggerPerk, } from "@/lib/types";
+import { DOES_NOT_DECAY, PetData, Trigger, TriggerPerk, } from "@/lib/types";
 
 export const MushroomPerk: TriggerPerk = {
   name: "Mushroom",
@@ -11,8 +11,8 @@ export const MushroomPerk: TriggerPerk = {
 export function mushroomEffect({
   self,
 }: {
-  self: PetInstance;
-}): PetInstance {
+  self: PetData;
+}): PetData {
   return {
     type: self.type,
     attack: 1,
