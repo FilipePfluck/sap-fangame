@@ -226,7 +226,7 @@ describe("clearDiscount", () => {
   });
 });
 
-describe("generateShop — discounts", () => {
+describe("generateShop", () => {
   it("keeps a frozen food's discount but gives newly generated foods full price", () => {
     const frozen = { type: "Apple", frozen: true, discount: 1 };
     const shop = generateShop({
