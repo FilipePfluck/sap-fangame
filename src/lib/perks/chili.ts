@@ -1,10 +1,10 @@
 import {
   BattleAbilityContext,
   Trigger,
-  TriggerPerk,
-  DOES_NOT_DECAY,
+
 } from "@/lib/types";
 import { BattleActions } from "@/lib/game/ability-actions";
+import { DOES_NOT_DECAY, TriggerPerk } from "@/lib/game/perk";
 
 const CHILI_DAMAGE = 5;
 

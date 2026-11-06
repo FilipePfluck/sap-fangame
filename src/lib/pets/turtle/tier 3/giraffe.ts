@@ -1,4 +1,4 @@
-import { PetInstance, StaticPet, Trigger } from "@/lib/types";
+import { PetData, StaticPet, Trigger } from "@/lib/types";
 import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Giraffe: Readonly<StaticPet> = {
@@ -13,7 +13,7 @@ export const Giraffe: Readonly<StaticPet> = {
     fn: (ctx) => {
       const friend = ctx.board
         .slice(0, ctx.selfIndex)
-        .filter((pet): pet is PetInstance => pet !== null && pet.health > 0)
+        .filter((pet): pet is PetData => pet !== null && pet.health > 0)
         .pop();
       if (!friend) return;
       friend.attack += ctx.level;

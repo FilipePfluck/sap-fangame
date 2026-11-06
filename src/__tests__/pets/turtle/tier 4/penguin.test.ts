@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { PET_REGISTRY } from "@/lib/pets";
 import { makeBoard, makeShop, pet } from "@/__tests__/helpers";
 import { fireBoardShopAbility } from "@/lib/game/shop-ability";
-import { PetInstance, Trigger } from "@/lib/types";
+import { PetData, Trigger } from "@/lib/types";
 
 describe("Penguin", () => {
   it.each([
@@ -43,7 +43,7 @@ describe("Penguin", () => {
       PET_REGISTRY
     );
 
-    const friends = result.slice(1, 4) as PetInstance[];
+    const friends = result.slice(1, 4) as PetData[];
     expect(friends.reduce((sum, friend) => sum + friend.attack, 0)).toBe(5);
     expect(friends.reduce((sum, friend) => sum + friend.health, 0)).toBe(5);
   });

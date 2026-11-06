@@ -1,8 +1,7 @@
 import {
   Ability,
   BattleAbilityContext,
-  isTriggerPerk,
-  PetInstance,
+  PetData,
   StaticPet,
   ShopAbilityContext,
   ShopState,
@@ -16,12 +15,13 @@ import { friendAheadAbility } from "@/lib/game/pet";
 import { getAbility } from "@/lib/pets/ability";
 import { triggerEffect } from "@/lib/perks/trigger-functions";
 import { addLevelUpReward } from "@/lib/game/shop";
+import { isTriggerPerk } from "@/lib/game/perk";
 
 // TODO - Order shop abilities through a shared queue manager (supporting dynamic
 // updates) and remove the per-function orderByAttack sorting below.
 
 export type ShopAbilityResult = {
-  board: (PetInstance | null)[];
+  board: (PetData | null)[];
   shop: ShopState;
   goldDelta: number;
 };
@@ -36,9 +36,9 @@ function cloneShop(shop: ShopState): ShopState {
 }
 
 function createShopContext(
-  self: PetInstance,
+  self: PetData,
   selfIndex: number,
-  board: (PetInstance | null)[],
+  board: (PetData | null)[],
   shop: ShopState,
   gold: { delta: number },
   justStocked: Set<object>,
@@ -58,7 +58,7 @@ function createShopContext(
   };
 }
 
-function clearTempStats(pet: PetInstance): void {
+function clearTempStats(pet: PetData): void {
   if (pet.tempAttack) pet.attack -= pet.tempAttack;
   if (pet.tempHealth) pet.health -= pet.tempHealth;
   delete pet.tempAttack;
@@ -67,9 +67,9 @@ function clearTempStats(pet: PetInstance): void {
 
 export function fireShopAbility(
   trigger: Trigger.sell | Trigger.buy | Trigger.level_up,
-  pet: PetInstance,
+  pet: PetData,
   petIndex: number,
-  board: (PetInstance | null)[],
+  board: (PetData | null)[],
   shop: ShopState,
   petRegistry: Record<string, StaticPet>
 ): ShopAbilityResult {
@@ -101,7 +101,7 @@ export type LevelUpOptions = {
 // food experience): the pet fires its level-up ability at its old level,
 // then a level-up reward is stocked unless `earnsReward` is false.
 export function resolveLevelUp(
-  board: (PetInstance | null)[],
+  board: (PetData | null)[],
   shop: ShopState,
   index: number,
   oldLevel: number,
@@ -124,8 +124,8 @@ export function resolveLevelUp(
 // Resolves every pet that leveled up from experience between `before` and
 // `after` (food, Flounder), matching pets by board position.
 export function resolveExperienceLevelUps(
-  before: (PetInstance | null)[],
-  after: (PetInstance | null)[],
+  before: (PetData | null)[],
+  after: (PetData | null)[],
   shop: ShopState,
   options: LevelUpOptions
 ): ShopAbilityResult {
@@ -145,7 +145,7 @@ export function resolveExperienceLevelUps(
 // the board, rather than a single acted-on pet.
 export function fireBoardShopAbility(
   trigger: Trigger.start_of_turn | Trigger.end_turn,
-  board: (PetInstance | null)[],
+  board: (PetData | null)[],
   shop: ShopState,
   petRegistry: Record<string, StaticPet>,
   lastBattleResult?: "WIN" | "DRAW" | "LOSS"
@@ -155,9 +155,9 @@ export function fireBoardShopAbility(
   const gold = { delta: 0 };
   const justStocked = new Set<object>();
   type Job = {
-    pet: PetInstance;
+    pet: PetData;
     index: number;
-    perk: Extract<PetInstance["perk"], { trigger: Trigger }> | null;
+    perk: Extract<PetData["perk"], { trigger: Trigger }> | null;
     ability: Extract<
       Ability,
       { trigger: Trigger.start_of_turn | Trigger.end_turn }
@@ -207,7 +207,7 @@ export function fireBoardShopAbility(
 
 export function fireShopFriendBought(
   boughtPet: StaticPet,
-  board: (PetInstance | null)[],
+  board: (PetData | null)[],
   shop: ShopState,
   petRegistry: Record<string, StaticPet>
 ): ShopAbilityResult {
@@ -216,7 +216,7 @@ export function fireShopFriendBought(
   const gold = { delta: 0 };
   const justStocked = new Set<object>();
   const listeners: {
-    pet: PetInstance;
+    pet: PetData;
     index: number;
     ability: FriendBoughtAbility;
   }[] = [];
@@ -254,10 +254,10 @@ export function fireShopFriendBought(
 // compacted just to get correct neighbor/selfIndex math (e.g. Badger's
 // splash) — any summon() lands back in the vacated board slot.
 export function fireShopFaint(
-  board: (PetInstance | null)[],
+  board: (PetData | null)[],
   boardPosition: number,
   petRegistry: Record<string, StaticPet>
-): (PetInstance | null)[] {
+): (PetData | null)[] {
   // Faint abilities can buff other pets in place, so work on copies.
   let newApiBoard = [...board];
   const pet = newApiBoard[boardPosition];
@@ -270,7 +270,7 @@ export function fireShopFaint(
   newApiBoard[boardPosition] = null;
   const summonRequests: SummonRequest[] = [];
 
-  const context = (self: PetInstance): BattleAbilityContext => ({
+  const context = (self: PetData): BattleAbilityContext => ({
     self,
     selfIndex: compacted.indexOf(self),
     team: compacted,
@@ -322,10 +322,10 @@ export function fireShopFaint(
 // a new one). Reuses the battle-ability context shape/compaction, matching
 // how fireShopFaint bridges battle-only triggers into the shop.
 export function fireShopFriendSummoned(
-  board: (PetInstance | null)[],
+  board: (PetData | null)[],
   summonedBoardPosition: number,
   petRegistry: Record<string, StaticPet>
-): (PetInstance | null)[] {
+): (PetData | null)[] {
   const newBoard = [...board];
   const summonedPet = newBoard[summonedBoardPosition];
   if (!summonedPet) return newBoard;

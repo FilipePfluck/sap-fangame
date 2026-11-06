@@ -1,4 +1,4 @@
-import type { Ability, PetInstance, StaticPet, Trigger } from "@/lib/types";
+import type { Ability, PetData, StaticPet, Trigger } from "@/lib/types";
 
 export function createAbilityMap(
   ...abilities: Ability[]
@@ -22,14 +22,14 @@ export function getAbility<T extends Trigger>(
   return ability;
 }
 
-export function getTriggerCount(pet: PetInstance, trigger: Trigger): number {
+export function getTriggerCount(pet: PetData, trigger: Trigger): number {
   return pet.triggerCountsThisTurn?.[trigger] ?? 0;
 }
 
 // Records one more `trigger` on `pet` and returns the new count. Abilities
 // that fire every Nth trigger check it with a modulus (count % N === 0).
 export function incrementTriggerCount(
-  pet: PetInstance,
+  pet: PetData,
   trigger: Trigger
 ): number {
   const count = getTriggerCount(pet, trigger) + 1;
@@ -43,7 +43,7 @@ export function incrementTriggerCount(
 // For abilities that stop after `limit` triggers: records one more `trigger`
 // and returns true, or returns false once the limit is reached.
 export function tryIncrementTriggerCount(
-  pet: PetInstance,
+  pet: PetData,
   trigger: Trigger,
   limit: number
 ): boolean {

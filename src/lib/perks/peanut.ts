@@ -1,4 +1,5 @@
-import { DOES_NOT_DECAY, OffensivePerk } from "@/lib/types";
+
+import { DOES_NOT_DECAY, OffensivePerk } from "@/lib/game/perk";
 
 export const PeanutPerk: OffensivePerk = {
   name: "Peanut",

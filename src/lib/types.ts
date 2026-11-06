@@ -1,7 +1,16 @@
-export type PetInstance = {
+import {
+  BasePerkType,
+  DefensivePerk,
+  OffensivePerk,
+  TriggerPerk,
+} from "@/lib/game/perk";
+
+export type PetData = {
   type: string;
   attack: number;
   health: number;
+  maxAttack?: number;
+  maxHealth?: number;
   perk: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null;
   xp: number;
   level: number;
@@ -14,7 +23,7 @@ export type PetInstance = {
   triggerCountsThisTurn?: Partial<Record<Trigger, number>>;
   // Friends swallowed this battle (Whale), each already at the level it will
   // be released at.
-  swallowedPets?: PetInstance[];
+  swallowedPets?: PetData[];
 };
 
 export type ShopPet = {
@@ -41,9 +50,9 @@ export type BuyResponse = {
   wasSummoned: boolean;
   levelUpReward: boolean;
   error?: Error;
-}
+};
 
-export type ApiBoard = (PetInstance | null)[]
+export type ApiBoard = (PetData | null)[];
 
 export type ShopState = {
   shopPets: ShopPet[];
@@ -51,8 +60,8 @@ export type ShopState = {
 };
 
 export type BattleStep = {
-  attackerTeam: PetInstance[];
-  defenderTeam: PetInstance[];
+  attackerTeam: PetData[];
+  defenderTeam: PetData[];
   description: string;
 };
 
@@ -66,7 +75,7 @@ export type SummonOptions = {
 };
 
 export type SummonRequest = SummonOptions & {
-  pet: PetInstance;
+  pet: PetData;
   afterIndex: number;
 };
 
@@ -74,15 +83,15 @@ export type SummonRequest = SummonOptions & {
 // lives on BattleActions / ShopActions (lib/game/ability-actions), which are
 // instantiated from the context.
 export type BattleAbilityContext = {
-  self: PetInstance;
+  self: PetData;
   selfIndex: number;
-  team: PetInstance[];
-  enemyTeam: PetInstance[];
+  team: PetData[];
+  enemyTeam: PetData[];
   level: number;
   // Summons the ability asked for, placed by whatever fired it.
   summonRequests: SummonRequest[];
   // Pets the ability damaged; their "hurt" abilities fire once it finishes.
-  hurtPets: PetInstance[];
+  hurtPets: PetData[];
   summonedIndex?: number;
   // Where the fainted friend stood, for "friend faints" abilities.
   faintedIndex?: number;
@@ -93,15 +102,15 @@ export type BattleAbilityContext = {
 };
 
 export type FoodAbilityContext = {
-  self: PetInstance;
-  fedPet: PetInstance;
-  friends: PetInstance[];
+  self: PetData;
+  fedPet: PetData;
+  friends: PetData[];
   level: number;
   foodGroup?: FoodType["foodGroup"];
 };
 
 export type FoodBoughtAbilityContext = {
-  self: PetInstance;
+  self: PetData;
   level: number;
   // The bought food and the multiplier on its attack/health, which abilities
   // may raise (Cat).
@@ -109,16 +118,16 @@ export type FoodBoughtAbilityContext = {
 };
 
 export type TransformedAbilityContext = {
-  self: PetInstance;
+  self: PetData;
   // The board's living pets, in board order (self included).
-  friends: PetInstance[];
+  friends: PetData[];
   level: number;
 };
 
 export type ShopAbilityContext = {
-  self: PetInstance;
+  self: PetData;
   selfIndex: number;
-  board: (PetInstance | null)[];
+  board: (PetData | null)[];
   shop: ShopState;
   level: number;
   gold: { delta: number };
@@ -156,23 +165,41 @@ export type Ability =
   | { trigger: Trigger.sell; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.buy; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.faint; fn: (ctx: BattleAbilityContext) => void }
-  | { trigger: Trigger.start_of_battle; fn: (ctx: BattleAbilityContext) => void }
+  | {
+      trigger: Trigger.start_of_battle;
+      fn: (ctx: BattleAbilityContext) => void;
+    }
   | { trigger: Trigger.level_up; fn: (ctx: ShopAbilityContext) => void }
-  | { trigger: Trigger.friend_summoned; fn: (ctx: BattleAbilityContext) => void }
+  | {
+      trigger: Trigger.friend_summoned;
+      fn: (ctx: BattleAbilityContext) => void;
+    }
   | { trigger: Trigger.start_of_turn; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.end_turn; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.before_attack; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: Trigger.after_attack; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: Trigger.hurt; fn: (ctx: BattleAbilityContext) => void }
-  | { trigger: Trigger.friend_ahead_attacks; fn: (ctx: BattleAbilityContext) => void }
-  | { trigger: Trigger.friend_ahead_faints; fn: (ctx: BattleAbilityContext) => void }
+  | {
+      trigger: Trigger.friend_ahead_attacks;
+      fn: (ctx: BattleAbilityContext) => void;
+    }
+  | {
+      trigger: Trigger.friend_ahead_faints;
+      fn: (ctx: BattleAbilityContext) => void;
+    }
   | { trigger: Trigger.friend_ate_food; fn: (ctx: FoodAbilityContext) => void }
   | { trigger: Trigger.friend_bought; fn: (ctx: ShopAbilityContext) => void }
   | { trigger: Trigger.knock_out; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: Trigger.friend_hurt; fn: (ctx: BattleAbilityContext) => void }
   | { trigger: Trigger.friend_faints; fn: (ctx: BattleAbilityContext) => void }
-  | { trigger: Trigger.food_bought; fn: (ctx: FoodBoughtAbilityContext) => void }
-  | { trigger: Trigger.transformed; fn: (ctx: TransformedAbilityContext) => void };
+  | {
+      trigger: Trigger.food_bought;
+      fn: (ctx: FoodBoughtAbilityContext) => void;
+    }
+  | {
+      trigger: Trigger.transformed;
+      fn: (ctx: TransformedAbilityContext) => void;
+    };
 
 export type AbilityData = Pick<Ability, "trigger">;
 
@@ -184,14 +211,15 @@ export type StaticPet = {
   baseHealth: number;
   isToken: boolean;
   abilities: Map<Trigger, Ability>;
-  innatePerk?: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null;
+  innatePerk?:
+    BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null;
   // Pet types this pet's abilities never activate on (e.g. Fly ignores a
   // fainting Zombie Fly).
   doesNotActivate?: string[];
   description: string | ((level: number) => string);
 };
 
-export type PetData = Omit<StaticPet, "abilities" | "description"> & {
+export type PetTooltip = Omit<StaticPet, "abilities" | "description"> & {
   abilities: AbilityData[];
   description: string;
 };
@@ -228,54 +256,8 @@ export type FoodType = {
   description: string;
 };
 
-export const DOES_NOT_DECAY = -1
-
-export type BasePerkType = {
-  name: string;
-  description: string;
-  usesRemaining: number;
-}
-
-export interface OffensivePerk extends BasePerkType {
-  instantKill: boolean,
-  extraDamage: number,
-}
-
-export interface DefensivePerk extends BasePerkType {
-  blocksFor: number,
-  minimumDamageTaken: number,
-  blocksAllDamage?: boolean,
-  blocksAbilityDamage: boolean,
-  blocksDirectDamage: boolean,
-}
-
-export interface TriggerPerk extends BasePerkType {
-  trigger: Trigger;
-}
-
-export function isOffensivePerk(object: BasePerkType | null): object is OffensivePerk {
-  if (object === null) return false;
-  try {
-    return 'extraDamage' in object;
-  } catch {
-    return false;
-  }
-}
-
-export function isDefensivePerk(object: BasePerkType | null): object is DefensivePerk {
-  if (object === null) return false;
-  try {
-    return 'blocksFor' in object;
-  } catch {
-    return false;
-  }
-}
-
-export function isTriggerPerk(object: BasePerkType | null): object is TriggerPerk {
-  if (object === null) return false;
-  try {
-    return "trigger" in object;
-  } catch {
-    return false;
-  }
+export enum DamageType {
+  UNDEFINED,
+  DIRECT,
+  ABILITY,
 }

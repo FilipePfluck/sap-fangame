@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { simulateBattle } from "@/lib/game/battle";
 import { PET_REGISTRY } from "@/lib/pets";
 import { petToString } from "@/lib/utils/flavor-text";
-import { PetInstance } from "@/lib/types";
+import { PetData } from "@/lib/types";
 import { Trigger } from "@/lib/types";
 import { grantExperience } from "@/lib/game/merge";
 import { BattleActions } from "@/lib/game/ability-actions";
@@ -128,11 +128,11 @@ describe("Pet Abilities", () => {
     it.each([
       {
         name: "flat",
-        remove: (target: PetInstance) => removeHealth(target, 99),
+        remove: (target: PetData) => removeHealth(target, 99),
       },
       {
         name: "percentage",
-        remove: (target: PetInstance) => removePercentageHealth(target, 1),
+        remove: (target: PetData) => removePercentageHealth(target, 1),
       },
     ])("leaves at least 1 health on $name removal", ({ remove }) => {
       const target = pet({ type: "Sloth", attack: 1, health: 10 });
@@ -182,7 +182,7 @@ describe("Perks", () => {
     });
 
     it("does not mutate input teams", () => {
-      const honeySloth: PetInstance = pet({ type: "Sloth", attack: 1, health: 1, perk: HoneyPerk });
+      const honeySloth: PetData = pet({ type: "Sloth", attack: 1, health: 1, perk: HoneyPerk });
       const opponent = pet({ type: "Sloth", attack: 2, health: 2 });
       simulateBattle([honeySloth], [opponent], PET_REGISTRY);
       expect(honeySloth.health).toBe(1);
@@ -204,7 +204,7 @@ describe("Perks", () => {
 
     it("Peanut requires damage to kill", () => {
       const scorpion = pet({ type: "Scorpion", attack: 1, health: 3, perk: PeanutPerk });
-      const melonSloth: PetInstance = pet({ type: "Sloth", attack: 1, health: 3, perk: MelonPerk });
+      const melonSloth: PetData = pet({ type: "Sloth", attack: 1, health: 3, perk: MelonPerk });
       const { steps } = simulateBattle([scorpion], [melonSloth], PET_REGISTRY);
 
       // Scorpion's 1 dmg is fully blocked (min(20,1)=1) — Sloth takes 0, so it

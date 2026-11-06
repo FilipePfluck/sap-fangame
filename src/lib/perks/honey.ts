@@ -1,4 +1,5 @@
-import { DOES_NOT_DECAY, PetInstance, Trigger, TriggerPerk } from "@/lib/types";
+import { PetData, Trigger } from "@/lib/types";
+import { DOES_NOT_DECAY, TriggerPerk } from "@/lib/game/perk";
 
 export const HoneyPerk: TriggerPerk = {
   name: "Honey",
@@ -8,6 +9,6 @@ export const HoneyPerk: TriggerPerk = {
   trigger: Trigger.faint,
 };
 
-export function honeyEffect(): PetInstance {
+export function honeyEffect(): PetData {
   return { type: "Bee", attack: 1, health: 1, perk: null, xp: 0, level: 1 };
 }

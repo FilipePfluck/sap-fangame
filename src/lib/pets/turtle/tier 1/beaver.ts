@@ -1,4 +1,4 @@
-import { PetInstance, StaticPet, Trigger } from "@/lib/types";
+import { PetData, StaticPet, Trigger } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 import { createAbilityMap } from "@/lib/pets/ability";
 
@@ -12,7 +12,7 @@ export const Beaver: Readonly<StaticPet> = {
   abilities: createAbilityMap({
     trigger: Trigger.sell,
     fn: (ctx) => {
-      const friends: { pet: PetInstance; idx: number }[] = [];
+      const friends: { pet: PetData; idx: number }[] = [];
       for (let i = 0; i < ctx.board.length; i++) {
         const p = ctx.board[i];
         if (p !== null && i !== ctx.selfIndex) {

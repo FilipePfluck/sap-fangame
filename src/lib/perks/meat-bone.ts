@@ -1,4 +1,5 @@
-import { OffensivePerk, DOES_NOT_DECAY } from "@/lib/types";
+
+import { DOES_NOT_DECAY, OffensivePerk } from "@/lib/game/perk";
 
 export const MeatBonePerk: OffensivePerk = {
   name: "Meat Bone",
@@ -7,4 +8,4 @@ export const MeatBonePerk: OffensivePerk = {
 
   instantKill: false,
   extraDamage: 3,
-}
+};

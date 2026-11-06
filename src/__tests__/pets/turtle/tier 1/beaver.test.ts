@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { PET_REGISTRY } from "@/lib/pets";
 import { makeBoard, makeShop, pet } from "@/__tests__/helpers";
 import { fireShopAbility } from "@/lib/game/shop-ability";
-import { PetInstance, Trigger } from "@/lib/types";
+import { PetData, Trigger } from "@/lib/types";
 
 describe("Beaver", () => {
   // TODO - Doesn't require ability to be random to pass
@@ -50,7 +50,7 @@ describe("Beaver", () => {
       makeShop(),
       PET_REGISTRY
     );
-    expect((result[1] as PetInstance).attack).toBe(2);
+    expect((result[1] as PetData).attack).toBe(2);
   });
 
   it("no-op when no friends on board", () => {
