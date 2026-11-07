@@ -2,7 +2,7 @@ import { StaticPet, Trigger } from "@/lib/types";
 import { createAbilityMap, tryIncrementTriggerCount } from "@/lib/pets/ability";
 import { createPet } from "@/lib/game/pet";
 import { BattleActions } from "@/lib/game/ability-actions";
-import { ZombieFly } from "@/lib/pets/turtle/token/zombie-fly";
+import { ZombieFly } from "@/lib/pets/BaseGame/turtle/token/zombie-fly";
 
 const TRIGGER_LIMIT = 3;
 

@@ -3,7 +3,7 @@ import { createAbilityMap } from "@/lib/pets/ability";
 import { createPet } from "@/lib/game/pet";
 import { BattleActions } from "@/lib/game/ability-actions";
 import { ChiliPerk } from "@/lib/perks/chili";
-import { Bus } from "@/lib/pets/turtle/token/bus";
+import { Bus } from "@/lib/pets/BaseGame/turtle/token/bus";
 
 export const Deer: Readonly<StaticPet> = {
   name: "Deer",
