@@ -1,4 +1,4 @@
-import type { DefensivePerk } from "@/lib/types";
+import { DefensivePerk } from "@/lib/game/perk";
 
 export const CoconutPerk: DefensivePerk = {
   name: "Coconut",

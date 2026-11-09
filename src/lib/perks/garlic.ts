@@ -1,4 +1,5 @@
-import { DefensivePerk, DOES_NOT_DECAY } from "@/lib/types";
+
+import { DefensivePerk, DOES_NOT_DECAY } from "@/lib/game/perk";
 
 export const GarlicPerk: DefensivePerk = {
   name: "Garlic",

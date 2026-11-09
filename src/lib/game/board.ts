@@ -1,6 +1,6 @@
 import { getSellValue } from "@/lib/game/costs";
 import { MAX_PET_EXPERIENCE, MAX_PET_LEVEL } from "@/lib/game/rules";
-import { ApiBoard, BuyResponse, PetInstance, ShopState } from "@/lib/types";
+import { ApiBoard, BuyResponse, PetData, ShopState } from "@/lib/types";
 import { prisma } from "@/lib/prisma";
 
 export type ResolvedBoardState = {
@@ -48,7 +48,7 @@ export async function getLastBoardState(
 export class Board {
   pets: ApiBoard;
 
-  constructor(pets: (PetInstance | null)[]) {
+  constructor(pets: (PetData | null)[]) {
     this.pets = pets;
   }
 
@@ -57,9 +57,9 @@ export class Board {
   }
 
   // The `count` back-most living pets, in board order.
-  back(count = 1): PetInstance[] {
+  back(count = 1): PetData[] {
     const living = this.pets.filter(
-      (pet): pet is PetInstance => pet !== null && pet.health > 0
+      (pet): pet is PetData => pet !== null && pet.health > 0
     );
     return living.slice(Math.max(0, living.length - count));
   }
@@ -76,7 +76,7 @@ export class Board {
     this.pets[to] = tempPet;
   }
 
-  buy(newPet: PetInstance, i: number): BuyResponse {
+  buy(newPet: PetData, i: number): BuyResponse {
     const occupant = this.pets[i];
     const response: BuyResponse = {
       success: false,
@@ -173,7 +173,7 @@ export class Board {
     return true;
   }
 
-  mergePets(a: PetInstance, b: PetInstance): PetInstance {
+  mergePets(a: PetData, b: PetData): PetData {
     // TODO: Update pets to have a reasonable method of handling stat changes
     // The "true" stat value should not be hidden behind visible stat - temp stat
     const mergedAttack =
@@ -200,11 +200,11 @@ export class Board {
     };
   }
 
-  mergedXp(a: PetInstance, b: PetInstance): number {
+  mergedXp(a: PetData, b: PetData): number {
     return Math.min(MAX_PET_EXPERIENCE, a.xp + b.xp + 1);
   }
 
-  mergeError(a: PetInstance, b: PetInstance): string | null {
+  mergeError(a: PetData, b: PetData): string | null {
     if (a === null || b === null) return "Pets must exist";
     if (a.type !== b.type) return "Pets must be the same type to merge";
     if (a.xp >= MAX_PET_EXPERIENCE || b.xp >= MAX_PET_EXPERIENCE) {

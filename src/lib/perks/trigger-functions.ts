@@ -1,9 +1,10 @@
-import { PetInstance, TriggerPerk } from "@/lib/types";
+import { PetData } from "@/lib/types";
 import { mushroomEffect } from "@/lib/perks/mushroom";
 import { honeyEffect } from "@/lib/perks/honey";
 import { breadEffect } from "@/lib/perks/bread";
 import { cakeEffect } from "@/lib/perks/cake";
 import { chiliEffect } from "@/lib/perks/chili";
+import { TriggerPerk } from "@/lib/game/perk";
 
 // Used for routing perk calls to their triggers.  Cannot be placed directly on the perk data itself, as it
 // functions present on the perk directly causes issues with serialization.
@@ -11,7 +12,7 @@ export function triggerEffect(
   perk: TriggerPerk,
   { ...args }
 ): {
-  summonRequest?: PetInstance;
+  summonRequest?: PetData;
 } {
   switch (perk.name) {
     case "Bread":

@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { simulateBattle } from "@/lib/game/battle";
-import type { PetInstance } from "@/lib/types";
+import type { PetData } from "@/lib/types";
 
-function sloth(overrides?: Partial<PetInstance>): PetInstance {
+function sloth(overrides?: Partial<PetData>): PetData {
   return { type: "Sloth", attack: 1, health: 1, perk: null, xp: 0, level: 1, ...overrides };
 }
 

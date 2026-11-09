@@ -4,14 +4,14 @@ import {
   incrementTriggerCount,
   tryIncrementTriggerCount,
 } from "@/lib/pets/ability";
-import { TransformPreserve, toPetData, transformPet } from "@/lib/game/pet";
+import { TransformPreserve, getTooltip, transformPet } from "@/lib/game/pet";
 import { AdultFlounder } from "@/lib/pets/BaseGame/customs/token/adult-flounder";
 import { HoneyPerk } from "@/lib/perks/honey";
 import { pet } from "@/__tests__/helpers";
 import {
   Trigger,
   type Ability,
-  type PetInstance,
+  type PetData,
   type StaticPet,
 } from "@/lib/types";
 
@@ -32,7 +32,7 @@ describe("pet ability data", () => {
     expect(abilities.get(Trigger.faint)).toBe(faintAbility);
   });
 
-  it("PetData includes only JSON-parseable data", () => {
+  it("PetTooltip includes only JSON-parseable data", () => {
     const pet: StaticPet = {
       name: "Test Pet",
       sprite: "/test.webp",
@@ -47,7 +47,7 @@ describe("pet ability data", () => {
       description: (level) => `Ability at level ${level}.`,
     };
 
-    const data = toPetData(pet, 2);
+    const data = getTooltip(pet, 2);
 
     expect(data).toMatchObject({
       name: "Test Pet",
@@ -60,7 +60,7 @@ describe("pet ability data", () => {
 });
 
 describe("pet trigger counts", () => {
-  const makePet = (): PetInstance => ({
+  const makePet = (): PetData => ({
     type: "Test Pet",
     attack: 1,
     health: 1,
@@ -105,7 +105,7 @@ describe("pet trigger counts", () => {
 });
 
 describe("transformPet", () => {
-  function transform(preserve?: Map<TransformPreserve, boolean>): PetInstance {
+  function transform(preserve?: Map<TransformPreserve, boolean>): PetData {
     const transformed = pet({ type: "Flounder", attack: 5, health: 6, perk: HoneyPerk, level: 2, xp: 3 });
     transformPet(transformed, AdultFlounder, [], preserve);
     return transformed;

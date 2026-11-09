@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { PET_REGISTRY } from "@/lib/pets";
 import { makeBoard, makeShop, pet } from "@/__tests__/helpers";
 import { fireShopAbility } from "@/lib/game/shop-ability";
-import { ApiBoard, PetInstance, Trigger } from "@/lib/types";
+import { ApiBoard, PetData, Trigger } from "@/lib/types";
 
 describe("Otter", () => {
   // TODO - Doesn't require ability to be random to pass
@@ -49,6 +49,6 @@ describe("Otter", () => {
       makeShop(),
       PET_REGISTRY
     );
-    expect((result[0] as PetInstance).health).toBe(1); // Otter unchanged
+    expect((result[0] as PetData).health).toBe(1); // Otter unchanged
   });
 });

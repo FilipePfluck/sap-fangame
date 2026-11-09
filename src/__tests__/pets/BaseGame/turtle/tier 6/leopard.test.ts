@@ -8,7 +8,7 @@ describe("Leopard", () => {
     { level: 1, expected: "LOSS" },
     { level: 2, expected: "DRAW" },
     { level: 3, expected: "WIN" },
-  ])("snipes %level pets at level $level", ({ level, expected }) => {
+  ])("snipes $level pets at level $level", ({ level, expected }) => {
     const { result } = simulateBattle(
       [pet({ type: "Leopard", attack: 2, health: 2, level })],
       [
