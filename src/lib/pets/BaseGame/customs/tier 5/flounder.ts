@@ -1,7 +1,7 @@
 import { StaticPet, Trigger } from "@/lib/types";
 import { createAbilityMap, incrementTriggerCount } from "@/lib/pets/ability";
 import { TransformPreserve, transformPet } from "@/lib/game/pet";
-import { AdultFlounder } from "@/lib/pets/SAPOther/adult-flounder";
+import { AdultFlounder } from "@/lib/pets/BaseGame/customs/token/adult-flounder";
 
 const FOODS_TO_TRANSFORM = 2;
 

@@ -15,6 +15,7 @@ import ShopItem from "./ShopItem";
 import BoardSlot from "./BoardSlot";
 import BattleView from "./BattleView";
 import PackViewer from "./PackViewer";
+import Tooltip from "./Tooltip";
 import { Board } from "@/lib/game/board";
 
 function frozenFromShop(shop: ShopState) {
@@ -710,13 +711,15 @@ export default function GameClient({
               >
                 Roll ({ROLL_COST}g)
               </button>
-              <button
-                onClick={() => setPackViewerOpen(true)}
-                aria-label="View pack"
-                className="px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
-              >
-                🐾
-              </button>
+              <Tooltip text="View pack">
+                <button
+                  onClick={() => setPackViewerOpen(true)}
+                  aria-label="View pack"
+                  className="px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
+                >
+                  🐾
+                </button>
+              </Tooltip>
               <button
                 onClick={handleEndTurn}
                 disabled={loading}

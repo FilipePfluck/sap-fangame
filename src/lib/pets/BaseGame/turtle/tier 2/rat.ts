@@ -3,7 +3,7 @@ import { numberToText } from "@/lib/utils/flavor-text";
 import { createAbilityMap } from "@/lib/pets/ability";
 import { createPet } from "@/lib/game/pet";
 import { BattleActions } from "@/lib/game/ability-actions";
-import { DirtyRat } from "@/lib/pets/turtle/token/dirty-rat";
+import { DirtyRat } from "@/lib/pets/BaseGame/turtle/token/dirty-rat";
 
 export const Rat: Readonly<StaticPet> = {
   name: "Rat",

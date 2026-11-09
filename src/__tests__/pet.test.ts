@@ -5,7 +5,7 @@ import {
   tryIncrementTriggerCount,
 } from "@/lib/pets/ability";
 import { TransformPreserve, getTooltip, transformPet } from "@/lib/game/pet";
-import { AdultFlounder } from "@/lib/pets/SAPOther/adult-flounder";
+import { AdultFlounder } from "@/lib/pets/BaseGame/customs/token/adult-flounder";
 import { HoneyPerk } from "@/lib/perks/honey";
 import { pet } from "@/__tests__/helpers";
 import {
