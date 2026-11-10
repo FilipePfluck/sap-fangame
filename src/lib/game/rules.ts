@@ -20,5 +20,17 @@ export const MAX_SUPER_TAGS_PER_PACK = 5;
 export const PETS_PER_TIER = 10;
 export const FOODS_PER_TIER = 3;
 export const MAX_PACKS_PER_USER = 5;
-// Names of static packs, which custom packs may not use (Pack spec).
-export const RESERVED_PACK_NAMES: readonly string[] = ["Bee", "Bell", "Cheetah", "Invasive", "King", "Roomba", "Shift", "Turtle"];
+// Names custom packs may not use (Pack spec): the static packs', and Custom,
+// which the pack menu uses for custom packs.
+export const RESERVED_PACK_NAMES: readonly string[] = [
+  "Bee",
+  "Bell",
+  "Cheetah",
+  "Custom",
+  "Invasive",
+  "King",
+  "Leaf",
+  "Roomba",
+  "Shift",
+  "Turtle",
+];

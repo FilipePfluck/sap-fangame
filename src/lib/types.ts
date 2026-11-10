@@ -229,6 +229,40 @@ export type PetData = Omit<StaticPet, "abilities" | "description"> & {
   description: string;
 };
 
+// One shop tier of a pack. `PackData.tier[0]` is tier 1.
+export type PackTier = Readonly<{
+  pets: readonly PetData[];
+  foods: readonly FoodType[];
+}>;
+
+// Tags spec. Never saved: worked out from the pets' tags when a pack is built.
+export type TagOverview = Readonly<{
+  // Super tags across the whole pack.
+  superTags: number;
+  // How many pets in each tier have each archetype. Index 0 is tier 1.
+  tierBreakdown: readonly Readonly<Partial<Record<Tag, number>>>[];
+}>;
+
+// Pack spec. `foods` is FoodType where the spec writes ShopFood, which is the
+// in-shop item and holds no food definition.
+export type PackData = Readonly<{
+  name: string;
+  // Pet ID whose sprite stands for the pack.
+  icon: number;
+  tier: readonly PackTier[];
+  isValid: boolean;
+  tagOverview: TagOverview;
+}>;
+
+// How a pack is saved and shared: pets and foods by ID (Pack spec).
+export type SerializedPack = Readonly<{
+  name: string;
+  icon: number;
+  pets: readonly number[];
+  foods: readonly number[];
+  isValid: boolean;
+}>;
+
 export type FoodApplyContext = {
   board: ApiBoard;
   boardPosition: number;

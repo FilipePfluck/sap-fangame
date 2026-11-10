@@ -1,9 +1,21 @@
 import { describe, it, expect } from "vitest";
-import { Pack, STATIC_PACKS, TURTLE_PACK, getTooltipPages, type SerializedPack } from "@/lib/game/pack";
+import {
+  ALL_PACK_SOURCES,
+  NO_PACK_FILTER,
+  PACK_SOURCE_NAMES,
+  Pack,
+  PackSource,
+  STATIC_PACKS,
+  TURTLE_PACK,
+  filterPack,
+  getRandomPackIds,
+  getTooltipPages,
+  type PackFilter,
+} from "@/lib/game/pack";
 import { RESERVED_PACK_NAMES } from "@/lib/game/rules";
-import { Tag } from "@/lib/types";
-import { FOOD_REGISTRY } from "@/lib/foods";
-import { PET_REGISTRY } from "@/lib/pets";
+import { Tag, type SerializedPack } from "@/lib/types";
+import { ALL_FOODS, FOOD_REGISTRY, TURTLE_PACK_FOODS } from "@/lib/foods";
+import { ALL_PETS, PET_REGISTRY, TURTLE_PACK_PETS } from "@/lib/pets";
 
 // Turtle's 60 pets (IDs 1–60) and three foods per tier: Apple, Honey and
 // Asparagus (27), then Turtle's foods 3–17.
@@ -26,6 +38,10 @@ function getTier(tier: number) {
 describe("STATIC_PACKS", () => {
   it("reserves every static pack's name", () => {
     expect(STATIC_PACKS.filter((pack) => !RESERVED_PACK_NAMES.includes(pack.data.name))).toEqual([]);
+  });
+
+  it("reserves every pack filter's name", () => {
+    expect(ALL_PACK_SOURCES.map((source) => PACK_SOURCE_NAMES[source]).filter((name) => !RESERVED_PACK_NAMES.includes(name))).toEqual([]);
   });
 
   it("keeps tokens out of Turtle's custom pets and foods", () => {
@@ -76,9 +92,9 @@ describe("Pack serialization", () => {
     expect(Pack.fromCode(Pack.fromSerialized(VALID_PACK).toCode()).serialize()).toEqual(VALID_PACK);
   });
 
-  it("round-trips a name with emoji", () => {
-    const pack = Pack.fromSerialized({ ...VALID_PACK, name: "Zoo 🐢" });
-    expect(Pack.fromCode(pack.toCode()).data.name).toBe("Zoo 🐢");
+  it("writes the name, icon, pet IDs and food IDs as JSON", () => {
+    const pack = Pack.fromSerialized({ name: "Zoo", icon: 1, pets: [1, 69], foods: [27], isValid: false });
+    expect(pack.toCode()).toBe('{"Title":"Zoo","Minion":1,"Minions":[1,69],"Spells":[27]}');
   });
 
   it("groups pets and foods into their tiers", () => {
@@ -104,9 +120,8 @@ describe("Pack serialization", () => {
   });
 
   it.each([
-    { case: "isn't base64", code: "not a code!" },
-    { case: "isn't JSON", code: btoa("not json") },
-    { case: "isn't a pack", code: btoa(JSON.stringify({ name: "My Pack" })) },
+    { case: "isn't JSON", code: "not a code" },
+    { case: "isn't a pack", code: JSON.stringify({ Title: "My Pack" }) },
   ])("rejects a code that $case", ({ code }) => {
     expect(() => Pack.fromCode(code)).toThrow("Not a pack code");
   });
@@ -176,6 +191,12 @@ describe("Pack.isWild", () => {
   });
 });
 
+describe("getRandomPackIds", () => {
+  it("makes a valid pack", () => {
+    expect(Pack.fromSerialized({ ...VALID_PACK, ...getRandomPackIds() }).data.isValid).toBe(true);
+  });
+});
+
 describe("Pack.validate", () => {
   it("passes a pack that follows every rule", () => {
     expect(isValid({})).toBe(true);
@@ -190,6 +211,8 @@ describe("Pack.validate", () => {
     { case: "the name is only spaces", changes: { name: "   " } },
     { case: "the name is reserved", changes: { name: "Turtle" } },
     { case: "the name is reserved in another case", changes: { name: " bee " } },
+    { case: "the name is Custom", changes: { name: "Custom" } },
+    { case: "the name is Leaf", changes: { name: "leaf" } },
     { case: "the icon isn't a pet ID", changes: { icon: 999 } },
     { case: "the icon is a token", changes: { icon: 61 } },
     { case: "the pack has a token pet", changes: { pets: [135, ...VALID_PACK.pets.slice(1)] } },
@@ -202,6 +225,76 @@ describe("Pack.validate", () => {
     const pack = new Pack({ ...Pack.fromSerialized(VALID_PACK).data, isValid: false });
     pack.validate();
     expect(pack.data.isValid).toBe(false);
+  });
+});
+
+describe("filterPack", () => {
+  const ENTRIES = [...ALL_PETS, ...ALL_FOODS];
+
+  function filteredNames(changes: Partial<PackFilter>): Set<string> {
+    return new Set(filterPack(ENTRIES, { ...NO_PACK_FILTER, ...changes }).map((entry) => entry.name));
+  }
+
+  it("keeps everything with no filter", () => {
+    expect(filterPack(ENTRIES, NO_PACK_FILTER)).toEqual(ENTRIES);
+  });
+
+  it("finds a name, ignoring case", () => {
+    expect(filteredNames({ query: "BlowFish" })).toEqual(new Set(["Blowfish"]));
+  });
+
+  it("finds ability text", () => {
+    expect(filteredNames({ query: "hurt" })).toEqual(
+      new Set(["Peacock", "Camel", "Blowfish", "Wolverine", "Gorilla", "Peanut"])
+    );
+  });
+
+  it("finds Turtle's pets and foods with pack:turtle", () => {
+    expect(filteredNames({ query: "pack:turtle" })).toEqual(
+      new Set([...TURTLE_PACK_PETS, ...TURTLE_PACK_FOODS].map((entry) => entry.name))
+    );
+  });
+
+  it("stacks a tier with a tag", () => {
+    expect(filteredNames({ tiers: [2], tags: [Tag.Hurt] })).toEqual(new Set(["Hedgehog", "Peacock", "Rat"]));
+  });
+
+  it("stacks a tier with a query", () => {
+    expect(filteredNames({ tiers: [3], query: "hurt" })).toEqual(new Set(["Camel"]));
+  });
+
+  it("finds pets with Super tags", () => {
+    expect(filteredNames({ superTag: true })).toEqual(new Set(["Spider", "Parrot", "Cat", "Tiger"]));
+  });
+
+  it("keeps a pack's pets and foods", () => {
+    expect(filteredNames({ packSources: [PackSource.Turtle] })).toEqual(
+      new Set([...TURTLE_PACK_PETS, ...TURTLE_PACK_FOODS].map((entry) => entry.name))
+    );
+  });
+
+  it("keeps entries from any selected pack", () => {
+    expect(filterPack(ENTRIES, { ...NO_PACK_FILTER, packSources: [PackSource.Turtle, PackSource.Custom] })).toEqual(ENTRIES);
+  });
+
+  it("finds nothing in a pack with no pets yet", () => {
+    expect(filteredNames({ packSources: [PackSource.Bee] })).toEqual(new Set());
+  });
+
+  it("finds nothing with pack: for a pack with no pets yet", () => {
+    expect(filteredNames({ query: "pack:bee" })).toEqual(new Set());
+  });
+
+  it("keeps entries in any selected tier", () => {
+    expect(filteredNames({ tiers: [2, 3], tags: [Tag.Hurt] })).toEqual(
+      new Set(["Hedgehog", "Peacock", "Rat", "Camel", "Elephant", "Sarcastic Fringehead"])
+    );
+  });
+
+  it("keeps pets with any selected tag, Super included", () => {
+    expect(filteredNames({ tiers: [2], tags: [Tag.Hurt, Tag.Food], superTag: true })).toEqual(
+      new Set(["Hedgehog", "Peacock", "Rat", "Worm", "Spider", "Albino Squirrel", "Dung Beetle", "Farmer Chicken"])
+    );
   });
 });
 

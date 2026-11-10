@@ -4,6 +4,7 @@ import { join } from "path";
 import { PET_REGISTRY } from "@/lib/pets";
 import { FOOD_REGISTRY } from "@/lib/foods";
 import { SUPER_TAG_DISPLAY, TAG_DISPLAY } from "@/lib/tags";
+import { PACK_SOURCE_NAMES, PACK_SOURCE_SPRITES, type PackSource } from "@/lib/game/pack";
 import { MicrowaveOven } from "@/lib/pets/BaseGame/customs/token/microwave-oven";
 
 const spriteDir = join(process.cwd(), "public", "sap");
@@ -13,6 +14,10 @@ const entries = [
   ...Object.values(PET_REGISTRY).map((p) => ({ name: p.name, sprite: p.sprite })),
   ...Object.values(FOOD_REGISTRY).map((f) => ({ name: f.name, sprite: f.sprite })),
   ...[...Object.values(TAG_DISPLAY), SUPER_TAG_DISPLAY].map((t) => ({ name: `${t.label} tag`, sprite: t.sprite })),
+  ...Object.entries(PACK_SOURCE_SPRITES).map(([source, sprite]) => ({
+    name: `${PACK_SOURCE_NAMES[Number(source) as PackSource]} pack`,
+    sprite,
+  })),
   // Toys aren't in a registry yet.
   { name: MicrowaveOven.name, sprite: MicrowaveOven.sprite },
 ];
