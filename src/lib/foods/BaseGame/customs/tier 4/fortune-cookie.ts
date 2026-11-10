@@ -2,6 +2,7 @@ import type { FoodType } from "@/lib/types";
 
 export const FortuneCookie: FoodType = {
   name: "Fortune Cookie",
+  id: 44,
   sprite: "/sap/Fortune_Cookie.png",
   tier: 4,
   isToken: false,

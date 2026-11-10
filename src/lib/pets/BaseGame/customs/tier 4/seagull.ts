@@ -3,6 +3,7 @@ import { createAbilityMap, tryIncrementTriggerCount } from "@/lib/pets/ability";
 
 export const Seagull: Readonly<StaticPet> = {
   name: "Seagull",
+  id: 109,
   sprite: "/sap/Seagull.webp",
   tier: 4,
   baseAttack: 4,

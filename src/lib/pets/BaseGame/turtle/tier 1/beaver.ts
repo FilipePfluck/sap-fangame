@@ -4,6 +4,7 @@ import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Beaver: Readonly<StaticPet> = {
   name: "Beaver",
+  id: 2,
   sprite: "/sap/beaver.webp",
   tier: 1,
   baseAttack: 3,

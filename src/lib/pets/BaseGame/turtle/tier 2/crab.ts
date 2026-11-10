@@ -4,6 +4,7 @@ import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Crab: Readonly<StaticPet> = {
   name: "Crab",
+  id: 11,
   sprite: "/sap/crab.webp",
   tier: 2,
   baseAttack: 4,

@@ -7,6 +7,7 @@ import { BattleActions } from "@/lib/game/ability-actions";
 
 export const Mosquito: Readonly<StaticPet> = {
   name: "Mosquito",
+  id: 7,
   sprite: "/sap/mosquito.webp",
   tier: 1,
   baseAttack: 2,

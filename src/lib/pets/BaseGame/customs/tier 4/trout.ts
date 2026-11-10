@@ -2,6 +2,7 @@ import { Tag, type StaticPet } from "@/lib/types";
 
 export const Trout: Readonly<StaticPet> = {
   name: "Trout",
+  id: 110,
   sprite: "/sap/Trout.webp",
   tier: 4,
   baseAttack: 3,

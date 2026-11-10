@@ -2,6 +2,7 @@ import { Tag, type StaticPet } from "@/lib/types";
 
 export const TarantulaHawk: Readonly<StaticPet> = {
   name: "Tarantula Hawk",
+  id: 118,
   sprite: "/sap/Tarantula_Hawk.png",
   tier: 5,
   baseAttack: 10,

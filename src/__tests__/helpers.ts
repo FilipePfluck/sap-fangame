@@ -28,6 +28,7 @@ export function pet(petData: Partial<PetInstance> = {}): PetInstance {
 export function staticPet(name: string, ability: Ability, tier = 1): StaticPet {
   return {
     name,
+    id: 0,
     sprite: "/sap/sloth.webp",
     tier,
     baseAttack: 1,

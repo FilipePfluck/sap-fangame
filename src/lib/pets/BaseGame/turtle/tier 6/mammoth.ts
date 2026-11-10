@@ -4,6 +4,7 @@ import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Mammoth: Readonly<StaticPet> = {
   name: "Mammoth",
+  id: 57,
   sprite: "/sap/Mammoth.png",
   tier: 6,
   baseAttack: 4,

@@ -10,6 +10,7 @@ const FRIENDS_HURT_PER_ACTIVATION = 4;
 
 export const Wolverine: Readonly<StaticPet> = {
   name: "Wolverine",
+  id: 60,
   sprite: "/sap/Wolverine.webp",
   tier: 6,
   baseAttack: 5,

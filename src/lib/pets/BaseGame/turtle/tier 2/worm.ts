@@ -11,6 +11,7 @@ const DISCOUNT = 1;
 
 export const Worm: Readonly<StaticPet> = {
   name: "Worm",
+  id: 20,
   sprite: "/sap/Worm.png",
   tier: 2,
   baseAttack: 1,

@@ -4,6 +4,7 @@ import { BattleActions } from "@/lib/game/ability-actions";
 
 export const Sheep: Readonly<StaticPet> = {
   name: "Sheep",
+  id: 30,
   sprite: "/sap/Sheep.webp",
   tier: 3,
   baseAttack: 2,

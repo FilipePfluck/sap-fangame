@@ -3,6 +3,7 @@ import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Squirrel: Readonly<StaticPet> = {
   name: "Squirrel",
+  id: 38,
   sprite: "/sap/squirrel.webp",
   tier: 4,
   baseAttack: 2,

@@ -5,6 +5,7 @@ import { getMinimumXpFor } from "@/lib/game/board";
 
 export const Whale: Readonly<StaticPet> = {
   name: "Whale",
+  id: 40,
   sprite: "/sap/Whale.webp",
   tier: 4,
   baseAttack: 3,

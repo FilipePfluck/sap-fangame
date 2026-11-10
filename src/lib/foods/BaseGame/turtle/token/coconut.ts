@@ -4,6 +4,7 @@ import { TOKEN_TIER } from "@/lib/game/rules";
 
 export const Coconut: FoodType = {
   name: "Coconut",
+  id: 26,
   sprite: "/sap/Coconut.png",
   tier: TOKEN_TIER,
   perk: CoconutPerk,

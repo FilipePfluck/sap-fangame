@@ -2,6 +2,7 @@ import { Tag, type StaticPet } from "@/lib/types";
 
 export const Bluejay: Readonly<StaticPet> = {
   name: "Bluejay",
+  id: 112,
   sprite: "/sap/Bluejay.png",
   tier: 5,
   baseAttack: 3,

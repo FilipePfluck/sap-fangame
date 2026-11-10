@@ -11,6 +11,7 @@ const TRIGGER_LIMIT = 1;
 // times per turn"; this one scales the attack with level instead.
 export const Ox: Readonly<StaticPet> = {
   name: "Ox",
+  id: 28,
   sprite: "/sap/Ox.webp",
   tier: 3,
   baseAttack: 1,

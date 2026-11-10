@@ -4,6 +4,7 @@ import { BattleActions } from "@/lib/game/ability-actions";
 
 export const Cricket: Readonly<StaticPet> = {
   name: "Cricket",
+  id: 3,
   sprite: "/sap/cricket.webp",
   tier: 1,
   baseAttack: 1,

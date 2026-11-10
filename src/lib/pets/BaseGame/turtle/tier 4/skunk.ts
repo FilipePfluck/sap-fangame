@@ -5,6 +5,7 @@ import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Skunk: Readonly<StaticPet> = {
   name: "Skunk",
+  id: 37,
   sprite: "/sap/skunk.webp",
   tier: 4,
   baseAttack: 3,

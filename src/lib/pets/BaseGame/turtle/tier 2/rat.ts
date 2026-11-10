@@ -7,6 +7,7 @@ import { DirtyRat } from "@/lib/pets/BaseGame/turtle/token/dirty-rat";
 
 export const Rat: Readonly<StaticPet> = {
   name: "Rat",
+  id: 16,
   sprite: "/sap/Rat.png",
   tier: 2,
   baseAttack: 3,

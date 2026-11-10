@@ -4,6 +4,7 @@ import { CoconutPerk } from "@/lib/perks/coconut";
 
 export const Gorilla: Readonly<StaticPet> = {
   name: "Gorilla",
+  id: 55,
   sprite: "/sap/Gorilla.webp",
   tier: 6,
   baseAttack: 7,

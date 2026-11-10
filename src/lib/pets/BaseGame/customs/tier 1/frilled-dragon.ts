@@ -2,6 +2,7 @@ import type { StaticPet } from "@/lib/types";
 
 export const FrilledDragon: Readonly<StaticPet> = {
   name: "Frilled Dragon",
+  id: 74,
   sprite: "/sap/Frilled_Dragon.png",
   tier: 1,
   baseAttack: 1,

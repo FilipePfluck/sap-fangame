@@ -2,6 +2,7 @@ import type { StaticPet } from "@/lib/types";
 
 export const Quetzalcoatlus: Readonly<StaticPet> = {
   name: "Quetzalcoatlus",
+  id: 95,
   sprite: "/sap/Quetzalcoatlus.webp",
   tier: 3,
   baseAttack: 4,

@@ -5,6 +5,7 @@ import { BattleActions } from "@/lib/game/ability-actions";
 
 export const Hedgehog: Readonly<StaticPet> = {
   name: "Hedgehog",
+  id: 13,
   sprite: "/sap/Hedgehog.webp",
   tier: 2,
   baseAttack: 4,

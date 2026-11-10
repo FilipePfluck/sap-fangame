@@ -4,6 +4,7 @@ import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Armadillo: Readonly<StaticPet> = {
   name: "Armadillo",
+  id: 41,
   sprite: "/sap/Armadillo.webp",
   tier: 5,
   baseAttack: 4,

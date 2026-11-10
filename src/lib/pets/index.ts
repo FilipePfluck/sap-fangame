@@ -432,6 +432,10 @@ export const PET_REGISTRY: Record<string, StaticPet> = Object.fromEntries([
   [Sloth.name, Sloth],
 ]);
 
+export const PET_BY_ID: Record<number, StaticPet> = Object.fromEntries(
+  Object.values(PET_REGISTRY).map((p) => [p.id, p])
+);
+
 // Ability-only pets, derived from isToken so the two can't disagree.
 export const TOKEN_PETS: StaticPet[] = ALL_PETS.filter((p) => p.isToken);
 

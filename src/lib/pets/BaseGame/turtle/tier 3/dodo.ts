@@ -3,6 +3,7 @@ import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Dodo: Readonly<StaticPet> = {
   name: "Dodo",
+  id: 23,
   sprite: "/sap/dodo.webp",
   tier: 3,
   baseAttack: 4,

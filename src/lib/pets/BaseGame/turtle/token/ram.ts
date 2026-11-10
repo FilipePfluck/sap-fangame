@@ -2,6 +2,7 @@ import { StaticPet } from "@/lib/types";
 
 export const Ram: Readonly<StaticPet> = {
   name: "Ram",
+  id: 67,
   sprite: "/sap/Ram.png",
   tier: 3,
   baseAttack: 2,

@@ -7,6 +7,7 @@ import { Bus } from "@/lib/pets/BaseGame/turtle/token/bus";
 
 export const Deer: Readonly<StaticPet> = {
   name: "Deer",
+  id: 33,
   sprite: "/sap/Deer.webp",
   tier: 4,
   baseAttack: 2,

@@ -4,6 +4,7 @@ import { ShopActions } from "@/lib/game/ability-actions";
 
 export const Swan: Readonly<StaticPet> = {
   name: "Swan",
+  id: 19,
   sprite: "/sap/swan.webp",
   tier: 2,
   baseAttack: 1,

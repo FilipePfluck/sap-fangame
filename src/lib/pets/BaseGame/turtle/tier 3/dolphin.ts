@@ -5,6 +5,7 @@ import { BattleActions } from "@/lib/game/ability-actions";
 
 export const Dolphin: Readonly<StaticPet> = {
   name: "Dolphin",
+  id: 25,
   sprite: "/sap/dolphin.webp",
   tier: 3,
   baseAttack: 4,

@@ -179,6 +179,10 @@ export const FOOD_REGISTRY: Record<string, FoodType> = Object.fromEntries(
   ALL_FOODS.map((f) => [f.name, f])
 );
 
+export const FOOD_BY_ID: Record<number, FoodType> = Object.fromEntries(
+  ALL_FOODS.map((f) => [f.id, f])
+);
+
 // Ability-only foods, derived from isToken so the two can't disagree.
 export const TOKEN_FOODS: FoodType[] = ALL_FOODS.filter((f) => f.isToken);
 

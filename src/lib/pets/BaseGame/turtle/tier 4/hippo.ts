@@ -8,6 +8,7 @@ const TRIGGER_LIMIT = 3;
 
 export const Hippo: Readonly<StaticPet> = {
   name: "Hippo",
+  id: 34,
   sprite: "/sap/hippo.webp",
   tier: 4,
   baseAttack: 4,

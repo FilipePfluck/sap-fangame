@@ -2,6 +2,7 @@ import type { FoodType } from "@/lib/types";
 
 export const Cupcake: FoodType = {
   name: "Cupcake",
+  id: 5,
   sprite: "/sap/cupcake.webp",
   tier: 2,
   isToken: false,

@@ -8,6 +8,7 @@ const TRIGGER_LIMIT = 4;
 
 export const Dragon: Readonly<StaticPet> = {
   name: "Dragon",
+  id: 53,
   sprite: "/sap/Dragon.png",
   tier: 6,
   baseAttack: 3,

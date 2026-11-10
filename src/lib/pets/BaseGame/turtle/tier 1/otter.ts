@@ -5,6 +5,7 @@ import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Otter: Readonly<StaticPet> = {
   name: "Otter",
+  id: 8,
   sprite: "/sap/otter.webp",
   tier: 1,
   baseAttack: 1,

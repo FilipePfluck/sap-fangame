@@ -3,6 +3,7 @@ import { Tag } from "@/lib/types";
 
 export const Tiger: Readonly<StaticPet> = {
   name: "Tiger",
+  id: 59,
   sprite: "/sap/tiger.webp",
   tier: 6,
   baseAttack: 6,

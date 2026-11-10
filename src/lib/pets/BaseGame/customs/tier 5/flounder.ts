@@ -7,6 +7,7 @@ const FOODS_TO_TRANSFORM = 2;
 
 export const Flounder: Readonly<StaticPet> = {
   name: "Flounder",
+  id: 115,
   sprite: "/sap/Flounder.webp",
   tier: 5,
   baseAttack: 2,

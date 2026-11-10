@@ -5,6 +5,7 @@ import { BattleActions } from "@/lib/game/ability-actions";
 
 export const Rhino: Readonly<StaticPet> = {
   name: "Rhino",
+  id: 45,
   sprite: "/sap/rhino.webp",
   tier: 5,
   baseAttack: 6,

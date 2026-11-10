@@ -2,6 +2,7 @@ import { Tag, type StaticPet } from "@/lib/types";
 
 export const Gelada: Readonly<StaticPet> = {
   name: "Gelada",
+  id: 104,
   sprite: "/sap/Gelada.webp",
   tier: 4,
   baseAttack: 4,

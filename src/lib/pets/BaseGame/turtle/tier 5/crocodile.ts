@@ -5,6 +5,7 @@ import { BattleActions } from "@/lib/game/ability-actions";
 
 export const Crocodile: Readonly<StaticPet> = {
   name: "Crocodile",
+  id: 43,
   sprite: "/sap/crocodile.webp",
   tier: 5,
   baseAttack: 8,

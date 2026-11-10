@@ -2,6 +2,7 @@ import type { FoodType } from "@/lib/types";
 
 export const Milk: FoodType = {
   name: "Milk",
+  id: 20,
   sprite: "/sap/Milk.webp",
   tier: 1,
   isToken: true,

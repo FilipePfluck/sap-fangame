@@ -3,6 +3,7 @@ import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Peacock: Readonly<StaticPet> = {
   name: "Peacock",
+  id: 15,
   sprite: "/sap/Peacock.webp",
   tier: 2,
   baseAttack: 2,

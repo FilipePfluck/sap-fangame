@@ -5,6 +5,7 @@ const TRIGGER_LIMIT = 1;
 
 export const Jerboa: Readonly<StaticPet> = {
   name: "Jerboa",
+  id: 105,
   sprite: "/sap/Jerboa.png",
   tier: 4,
   baseAttack: 1,

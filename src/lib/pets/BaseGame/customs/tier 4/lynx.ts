@@ -2,6 +2,7 @@ import { Tag, type StaticPet } from "@/lib/types";
 
 export const Lynx: Readonly<StaticPet> = {
   name: "Lynx",
+  id: 107,
   sprite: "/sap/Lynx.webp",
   tier: 4,
   baseAttack: 5,

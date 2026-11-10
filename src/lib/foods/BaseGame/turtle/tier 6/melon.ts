@@ -4,6 +4,7 @@ import { givePerkDescription } from "@/lib/perks/give-perk-description";
 
 export const Melon: FoodType = {
   name: "Melon",
+  id: 15,
   sprite: "/sap/melon.webp",
   tier: 6,
   perk: MelonPerk,

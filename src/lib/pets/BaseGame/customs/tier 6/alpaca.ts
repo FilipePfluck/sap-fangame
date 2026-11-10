@@ -7,6 +7,7 @@ const BATTLE_EXPERIENCE = 3;
 
 export const Alpaca: Readonly<StaticPet> = {
   name: "Alpaca",
+  id: 121,
   sprite: "/sap/Alpaca.webp",
   tier: 6,
   baseAttack: 3,

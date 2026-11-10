@@ -3,6 +3,7 @@ import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Giraffe: Readonly<StaticPet> = {
   name: "Giraffe",
+  id: 27,
   sprite: "/sap/Giraffe.webp",
   tier: 3,
   baseAttack: 1,

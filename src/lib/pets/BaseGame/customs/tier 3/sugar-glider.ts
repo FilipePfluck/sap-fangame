@@ -8,6 +8,7 @@ const EFFECT_BY_LEVEL = ["", " with double effect", " with triple effect"];
 
 export const SugarGlider: Readonly<StaticPet> = {
   name: "Sugar Glider",
+  id: 98,
   sprite: "/sap/Sugar_Glider.png",
   tier: 3,
   baseAttack: 1,

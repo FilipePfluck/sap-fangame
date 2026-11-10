@@ -2,6 +2,7 @@ import type { StaticPet } from "@/lib/types";
 
 export const Aardvark: Readonly<StaticPet> = {
   name: "Aardvark",
+  id: 87,
   sprite: "/sap/Aardvark.png",
   tier: 3,
   baseAttack: 2,

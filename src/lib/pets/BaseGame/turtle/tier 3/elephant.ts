@@ -4,6 +4,7 @@ import { BattleActions } from "@/lib/game/ability-actions";
 
 export const Elephant: Readonly<StaticPet> = {
   name: "Elephant",
+  id: 26,
   sprite: "/sap/Elephant.png",
   tier: 3,
   baseAttack: 3,

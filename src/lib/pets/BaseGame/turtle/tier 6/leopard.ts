@@ -7,6 +7,7 @@ import { BattleActions } from "@/lib/game/ability-actions";
 
 export const Leopard: Readonly<StaticPet> = {
   name: "Leopard",
+  id: 56,
   sprite: "/sap/leopard.webp",
   tier: 6,
   baseAttack: 10,

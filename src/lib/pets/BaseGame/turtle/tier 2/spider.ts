@@ -8,6 +8,7 @@ const SUMMONED_TIER = 3;
 
 export const Spider: Readonly<StaticPet> = {
   name: "Spider",
+  id: 18,
   sprite: "/sap/Spider.webp",
   tier: 2,
   baseAttack: 2,

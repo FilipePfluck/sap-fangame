@@ -6,6 +6,7 @@ import { BattleActions } from "@/lib/game/ability-actions";
 
 export const Blowfish: Readonly<StaticPet> = {
   name: "Blowfish",
+  id: 32,
   sprite: "/sap/Blowfish.png",
   tier: 4,
   baseAttack: 3,

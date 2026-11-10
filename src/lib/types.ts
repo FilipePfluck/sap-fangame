@@ -205,6 +205,8 @@ export type AbilityData = Pick<Ability, "trigger">;
 
 export type StaticPet = {
   name: string;
+  // Unique among pets (a food may share it). Packs store pets by ID, so it never changes.
+  id: number;
   sprite: string;
   tier: number;
   baseAttack: number;
@@ -235,6 +237,8 @@ export type FoodApplyContext = {
 
 export type FoodType = {
   name: string;
+  // Unique among foods (a pet may share it). Packs store foods by ID, so it never changes.
+  id: number;
   sprite: string;
   tier: number;
   foodGroup?: "apple";

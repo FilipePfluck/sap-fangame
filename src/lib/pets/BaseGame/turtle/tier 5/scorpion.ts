@@ -4,6 +4,7 @@ import { PeanutPerk } from "@/lib/perks/peanut";
 
 export const Scorpion: Readonly<StaticPet> = {
   name: "Scorpion",
+  id: 47,
   sprite: "/sap/scorpion.webp",
   tier: 5,
   baseAttack: 1,

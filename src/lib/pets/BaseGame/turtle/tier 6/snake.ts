@@ -11,6 +11,7 @@ const TRIGGER_LIMIT = 5;
 
 export const Snake: Readonly<StaticPet> = {
   name: "Snake",
+  id: 58,
   sprite: "/sap/Snake.webp",
   tier: 6,
   baseAttack: 8,

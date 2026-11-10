@@ -5,6 +5,7 @@ const STATS_PER_LEVEL = 2;
 
 export const Shark: Readonly<StaticPet> = {
   name: "Shark",
+  id: 49,
   sprite: "/sap/Shark.png",
   tier: 5,
   baseAttack: 2,

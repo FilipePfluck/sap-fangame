@@ -4,6 +4,7 @@ import { givePerkDescription } from "@/lib/perks/give-perk-description";
 
 export const Mushroom: FoodType = {
   name: "Mushroom",
+  id: 17,
   sprite: "/sap/mushroom.webp",
   tier: 6,
   perk: MushroomPerk,

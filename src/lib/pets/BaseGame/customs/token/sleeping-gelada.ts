@@ -2,6 +2,7 @@ import type { StaticPet } from "@/lib/types";
 
 export const SleepingGelada: Readonly<StaticPet> = {
   name: "Sleeping Gelada",
+  id: 138,
   sprite: "/sap/Sleeping_Gelada.png",
   tier: 4,
   baseAttack: 4,

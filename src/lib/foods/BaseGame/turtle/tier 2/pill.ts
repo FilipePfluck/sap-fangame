@@ -4,6 +4,7 @@ import { Board } from "@/lib/game/board";
 
 export const Pill: FoodType = {
   name: "Pill",
+  id: 3,
   sprite: "/sap/pill.webp",
   tier: 2,
   isToken: false,

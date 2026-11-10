@@ -10,6 +10,7 @@ const MILKS_STOCKED = 2;
 
 export const Cow: Readonly<StaticPet> = {
   name: "Cow",
+  id: 42,
   sprite: "/sap/Cow.webp",
   tier: 5,
   baseAttack: 4,

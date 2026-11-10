@@ -6,6 +6,7 @@ import { BreadCrumbs } from "@/lib/foods/BaseGame/turtle/token/bread-crumbs";
 
 export const Pigeon: Readonly<StaticPet> = {
   name: "Pigeon",
+  id: 10,
   sprite: "/sap/pigeon.webp",
   tier: 1,
   baseAttack: 3,

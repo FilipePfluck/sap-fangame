@@ -2,6 +2,7 @@ import { Tag, type StaticPet } from "@/lib/types";
 
 export const SarcasticFringehead: Readonly<StaticPet> = {
   name: "Sarcastic Fringehead",
+  id: 96,
   sprite: "/sap/Sarcastic_Fringehead.webp",
   tier: 3,
   baseAttack: 4,

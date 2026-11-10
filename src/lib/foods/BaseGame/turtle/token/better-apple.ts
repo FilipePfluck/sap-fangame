@@ -2,6 +2,7 @@ import type { FoodType } from "@/lib/types";
 
 export const BetterApple: FoodType = {
   name: "Better Apple",
+  id: 23,
   sprite: "/sap/Better_Apple.png",
   tier: 2,
   foodGroup: "apple",

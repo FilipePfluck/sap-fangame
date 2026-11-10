@@ -12,10 +12,10 @@ import { CUSTOMS_FOODS, FOOD_REGISTRY, SHOP_FOOD_POOL, getFoodTooltipText, getPe
 import type { StaticPet, FoodType } from "@/lib/types";
 
 // Minimal multi-tier pack for tier-unlock tests
-const TIER1_PET: StaticPet = { name: "Sloth", sprite: "", tier: 1, baseAttack: 1, baseHealth: 1, isToken: false, tags: [], superTags: 0, abilities: new Map(), description: "" };
-const TIER2_PET: StaticPet = { name: "Tiger", sprite: "", tier: 2, baseAttack: 4, baseHealth: 3, isToken: false, tags: [], superTags: 0, abilities: new Map(), description: "" };
-const TIER1_FOOD: FoodType = { name: "Apple", sprite: "", tier: 1, isToken: false, effect: { attack: 1, health: 1 }, description: "" };
-const TIER2_FOOD: FoodType = { name: "Salad", sprite: "", tier: 2, isToken: false, effect: { health: 2 }, description: "" };
+const TIER1_PET: StaticPet = { name: "Sloth", id: 0, sprite: "", tier: 1, baseAttack: 1, baseHealth: 1, isToken: false, tags: [], superTags: 0, abilities: new Map(), description: "" };
+const TIER2_PET: StaticPet = { name: "Tiger", id: 0, sprite: "", tier: 2, baseAttack: 4, baseHealth: 3, isToken: false, tags: [], superTags: 0, abilities: new Map(), description: "" };
+const TIER1_FOOD: FoodType = { name: "Apple", id: 0, sprite: "", tier: 1, isToken: false, effect: { attack: 1, health: 1 }, description: "" };
+const TIER2_FOOD: FoodType = { name: "Salad", id: 0, sprite: "", tier: 2, isToken: false, effect: { health: 2 }, description: "" };
 const MULTI_TIER_PETS = [TIER1_PET, TIER2_PET];
 const MULTI_TIER_FOODS = [TIER1_FOOD, TIER2_FOOD];
 
@@ -256,6 +256,7 @@ describe("getPetTooltipText", () => {
   it("shows only the pet ability and not any note text", () => {
     const pet = {
       name: "Duck",
+      id: 0,
       sprite: "",
       tier: 1,
       baseAttack: 1,
