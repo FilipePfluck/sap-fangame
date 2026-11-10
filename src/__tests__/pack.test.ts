@@ -1,15 +1,29 @@
 import { describe, it, expect } from "vitest";
-import { PACK_TIER_ROWS, getTooltipPages } from "@/lib/game/pack";
+import { STATIC_PACKS, TURTLE_PACK, getPackTierRows, getTooltipPages } from "@/lib/game/pack";
+import { RESERVED_PACK_NAMES } from "@/lib/game/rules";
 import { FOOD_REGISTRY } from "@/lib/foods";
 import { PET_REGISTRY } from "@/lib/pets";
 
+const TURTLE_ROWS = getPackTierRows(TURTLE_PACK.pets, TURTLE_PACK.foods);
+
 function getRow(tier: number) {
-  return PACK_TIER_ROWS.find((row) => row.tier === tier)!;
+  return TURTLE_ROWS.find((row) => row.tier === tier)!;
 }
 
-describe("PACK_TIER_ROWS", () => {
+describe("STATIC_PACKS", () => {
+  it("reserves every static pack's name", () => {
+    expect(STATIC_PACKS.filter((pack) => !RESERVED_PACK_NAMES.includes(pack.name))).toEqual([]);
+  });
+
+  it("keeps tokens out of Turtle's custom pets and foods", () => {
+    const entries = [...TURTLE_PACK.customPets, ...TURTLE_PACK.customFoods];
+    expect(entries.filter((entry) => entry.isToken)).toEqual([]);
+  });
+});
+
+describe("Turtle pack tier rows", () => {
   it("has a row per tier with its unlock turn", () => {
-    expect(PACK_TIER_ROWS.map(({ tier, unlockTurn }) => ({ tier, unlockTurn }))).toEqual([
+    expect(TURTLE_ROWS.map(({ tier, unlockTurn }) => ({ tier, unlockTurn }))).toEqual([
       { tier: 1, unlockTurn: 1 },
       { tier: 2, unlockTurn: 3 },
       { tier: 3, unlockTurn: 5 },
@@ -42,7 +56,7 @@ describe("PACK_TIER_ROWS", () => {
   });
 
   it("leaves out tokens", () => {
-    const entries = PACK_TIER_ROWS.flatMap((row) => [...row.pets, ...row.foods]);
+    const entries = TURTLE_ROWS.flatMap((row) => [...row.pets, ...row.foods]);
     expect(entries.filter((entry) => entry.isToken)).toEqual([]);
   });
 });

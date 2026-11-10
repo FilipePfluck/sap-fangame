@@ -12,3 +12,10 @@ export const TOKEN_TIER = 7;
 // Tag limits on a single pet (Tags spec).
 export const MAX_TAGS_PER_PET = 3;
 export const MAX_SUPER_TAGS_PER_PET = 3;
+// Soft pack rules (Pack spec): a custom pack can be saved without them, but
+// can't start a game.
+export const PETS_PER_TIER = 10;
+export const FOODS_PER_TIER = 3;
+export const MAX_PACKS_PER_USER = 5;
+// Names of static packs, which custom packs may not use (Pack spec).
+export const RESERVED_PACK_NAMES: readonly string[] = ["Bee", "Bell", "Cheetah", "Invasive", "King", "Roomba", "Shift", "Turtle"];

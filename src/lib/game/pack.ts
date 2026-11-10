@@ -6,6 +6,7 @@ import {
   Chick,
   Cow,
   Cricket,
+  CUSTOMS_PETS,
   Deer,
   DirtyRat,
   Flounder,
@@ -37,6 +38,7 @@ import {
   Chili,
   Coconut,
   Cupcake,
+  CUSTOMS_FOODS,
   Honey,
   Melon,
   Milk,
@@ -49,6 +51,30 @@ import { getTierUnlockTurn } from "@/lib/game/shop";
 
 export type TooltipEntry = StaticPet | FoodType;
 
+// A pre-built pack. The pack creation rules only apply to custom packs (Pack
+// spec), so a static pack is never checked against them.
+export type StaticPack = Readonly<{
+  name: string;
+  // Pet ID whose sprite stands for the pack.
+  icon: number;
+  pets: readonly StaticPet[];
+  foods: readonly FoodType[];
+  // The fangame's own pets and foods, shown by the viewer's "Custom exclusive" checkbox.
+  customPets: readonly StaticPet[];
+  customFoods: readonly FoodType[];
+}>;
+
+export const TURTLE_PACK: StaticPack = {
+  name: "Turtle",
+  icon: Turtle.id,
+  pets: SHOP_PET_POOL,
+  foods: SHOP_FOOD_POOL,
+  customPets: CUSTOMS_PETS.filter((pet) => !pet.isToken),
+  customFoods: CUSTOMS_FOODS.filter((food) => !food.isToken),
+};
+
+export const STATIC_PACKS: readonly StaticPack[] = [TURTLE_PACK];
+
 type PackTierRow = Readonly<{
   tier: number;
   unlockTurn: number;
@@ -56,15 +82,17 @@ type PackTierRow = Readonly<{
   foods: readonly FoodType[];
 }>;
 
-export const PACK_TIER_ROWS: readonly PackTierRow[] = Array.from({ length: MAX_TIER }, (_, index) => {
-  const tier = index + 1;
-  return {
-    tier,
-    unlockTurn: getTierUnlockTurn(tier),
-    pets: SHOP_PET_POOL.filter((pet) => pet.tier === tier),
-    foods: SHOP_FOOD_POOL.filter((food) => food.tier === tier),
-  };
-});
+export function getPackTierRows(pets: readonly StaticPet[], foods: readonly FoodType[]): readonly PackTierRow[] {
+  return Array.from({ length: MAX_TIER }, (_, index) => {
+    const tier = index + 1;
+    return {
+      tier,
+      unlockTurn: getTierUnlockTurn(tier),
+      pets: pets.filter((pet) => pet.tier === tier),
+      foods: foods.filter((food) => food.tier === tier),
+    };
+  });
+}
 
 // The tokens and foods each pet or food names, shown as extra tooltip pages.
 const TOOLTIP_LINKS = new Map<TooltipEntry, readonly TooltipEntry[]>([

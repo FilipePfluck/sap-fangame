@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { PACK_TIER_ROWS, getTooltipPages, type TooltipEntry } from "@/lib/game/pack";
+import { useState } from "react";
+import { TURTLE_PACK, getPackTierRows, getTooltipPages, type TooltipEntry } from "@/lib/game/pack";
 import Tooltip from "./Tooltip";
 
 type PackSpriteProps = {
@@ -23,6 +24,11 @@ type PackViewerProps = {
 };
 
 export default function PackViewer({ onClose }: PackViewerProps) {
+  const [customExclusive, setCustomExclusive] = useState(false);
+  const rows = customExclusive
+    ? getPackTierRows(TURTLE_PACK.customPets, TURTLE_PACK.customFoods)
+    : getPackTierRows(TURTLE_PACK.pets, TURTLE_PACK.foods);
+
   return (
     <div
       role="dialog"
@@ -31,7 +37,15 @@ export default function PackViewer({ onClose }: PackViewerProps) {
       className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 p-4"
     >
       <div className="w-full max-w-5xl max-h-full overflow-y-auto rounded-xl border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 p-4">
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between">
+          <label className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+            <input
+              type="checkbox"
+              checked={customExclusive}
+              onChange={(event) => setCustomExclusive(event.target.checked)}
+            />
+            Custom exclusive
+          </label>
           <button
             onClick={onClose}
             aria-label="Close"
@@ -40,7 +54,7 @@ export default function PackViewer({ onClose }: PackViewerProps) {
             ✕
           </button>
         </div>
-        {PACK_TIER_ROWS.map(({ tier, unlockTurn, pets, foods }) => (
+        {rows.map(({ tier, unlockTurn, pets, foods }) => (
           <div
             key={tier}
             className="flex items-start gap-4 py-3 border-b border-zinc-200 dark:border-zinc-700 last:border-b-0"
