@@ -1,36 +1,49 @@
 import { describe, it, expect } from "vitest";
-import { STATIC_PACKS, TURTLE_PACK, getPackTierRows, getTooltipPages } from "@/lib/game/pack";
+import { Pack, STATIC_PACKS, TURTLE_PACK, getTooltipPages, type SerializedPack } from "@/lib/game/pack";
 import { RESERVED_PACK_NAMES } from "@/lib/game/rules";
 import { FOOD_REGISTRY } from "@/lib/foods";
 import { PET_REGISTRY } from "@/lib/pets";
 
-const TURTLE_ROWS = getPackTierRows(TURTLE_PACK.pets, TURTLE_PACK.foods);
+// Turtle's 60 pets (IDs 1–60) and three foods per tier: Apple, Honey and
+// Asparagus (27), then Turtle's foods 3–17.
+const VALID_PACK: SerializedPack = {
+  name: "My Pack",
+  icon: 1,
+  pets: Array.from({ length: 60 }, (_, index) => index + 1),
+  foods: [1, 2, 27, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+  isValid: true,
+};
 
-function getRow(tier: number) {
-  return TURTLE_ROWS.find((row) => row.tier === tier)!;
+function isValid(changes: Partial<SerializedPack>): boolean {
+  return Pack.fromSerialized({ ...VALID_PACK, ...changes }).data.isValid;
+}
+
+function getTier(tier: number) {
+  return TURTLE_PACK.data.tier[tier - 1];
 }
 
 describe("STATIC_PACKS", () => {
   it("reserves every static pack's name", () => {
-    expect(STATIC_PACKS.filter((pack) => !RESERVED_PACK_NAMES.includes(pack.name))).toEqual([]);
+    expect(STATIC_PACKS.filter((pack) => !RESERVED_PACK_NAMES.includes(pack.data.name))).toEqual([]);
   });
 
   it("keeps tokens out of Turtle's custom pets and foods", () => {
-    const entries = [...TURTLE_PACK.customPets, ...TURTLE_PACK.customFoods];
+    const entries = TURTLE_PACK.customTier.flatMap(({ pets, foods }) => [...pets, ...foods]);
     expect(entries.filter((entry) => entry.isToken)).toEqual([]);
+  });
+
+  it("keeps Turtle valid although tier 1 has 2 foods and tier 6 has 4", () => {
+    expect(TURTLE_PACK.validate().data.isValid).toBe(true);
+  });
+
+  it("keeps Turtle's custom pets and foods through validate", () => {
+    expect(TURTLE_PACK.validate().customTier).toBe(TURTLE_PACK.customTier);
   });
 });
 
-describe("Turtle pack tier rows", () => {
-  it("has a row per tier with its unlock turn", () => {
-    expect(TURTLE_ROWS.map(({ tier, unlockTurn }) => ({ tier, unlockTurn }))).toEqual([
-      { tier: 1, unlockTurn: 1 },
-      { tier: 2, unlockTurn: 3 },
-      { tier: 3, unlockTurn: 5 },
-      { tier: 4, unlockTurn: 7 },
-      { tier: 5, unlockTurn: 9 },
-      { tier: 6, unlockTurn: 11 },
-    ]);
+describe("Turtle pack tiers", () => {
+  it("has a tier per shop tier", () => {
+    expect(TURTLE_PACK.data.tier).toHaveLength(6);
   });
 
   it.each([
@@ -41,7 +54,7 @@ describe("Turtle pack tier rows", () => {
     { tier: 5, names: ["Scorpion", "Crocodile", "Rhino", "Armadillo", "Turkey", "Monkey", "Seal", "Rooster", "Cow", "Shark"] },
     { tier: 6, names: ["Leopard", "Boar", "Tiger", "Dragon", "Mammoth", "Snake", "Wolverine", "Gorilla", "Fly", "Cat"] },
   ])("has exactly the tier $tier pets", ({ tier, names }) => {
-    expect(new Set(getRow(tier).pets.map((pet) => pet.name))).toEqual(new Set(names));
+    expect(new Set(getTier(tier).pets.map((pet) => pet.name))).toEqual(new Set(names));
   });
 
   it.each([
@@ -52,12 +65,97 @@ describe("Turtle pack tier rows", () => {
     { tier: 5, names: ["Sushi", "Chili", "Chocolate"] },
     { tier: 6, names: ["Melon", "Steak", "Mushroom", "Pizza"] },
   ])("has exactly the tier $tier foods", ({ tier, names }) => {
-    expect(new Set(getRow(tier).foods.map((food) => food.name))).toEqual(new Set(names));
+    expect(new Set(getTier(tier).foods.map((food) => food.name))).toEqual(new Set(names));
   });
 
   it("leaves out tokens", () => {
-    const entries = TURTLE_ROWS.flatMap((row) => [...row.pets, ...row.foods]);
+    const entries = TURTLE_PACK.data.tier.flatMap(({ pets, foods }) => [...pets, ...foods]);
     expect(entries.filter((entry) => entry.isToken)).toEqual([]);
+  });
+});
+
+describe("Pack serialization", () => {
+  it("round-trips through serialize", () => {
+    expect(Pack.fromSerialized(VALID_PACK).serialize()).toEqual(VALID_PACK);
+  });
+
+  it("round-trips through a code", () => {
+    expect(Pack.fromCode(Pack.fromSerialized(VALID_PACK).toCode()).serialize()).toEqual(VALID_PACK);
+  });
+
+  it("round-trips a name with emoji", () => {
+    const pack = Pack.fromSerialized({ ...VALID_PACK, name: "Zoo 🐢" });
+    expect(Pack.fromCode(pack.toCode()).data.name).toBe("Zoo 🐢");
+  });
+
+  it("groups pets and foods into their tiers", () => {
+    const tierOne = Pack.fromSerialized(VALID_PACK).data.tier[0];
+    expect([tierOne.pets.map((pet) => pet.id), tierOne.foods.map((food) => food.id)]).toEqual([
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      [1, 2, 27],
+    ]);
+  });
+
+  it("works out isValid again instead of trusting it", () => {
+    expect(Pack.fromSerialized({ ...VALID_PACK, name: "", isValid: true }).data.isValid).toBe(false);
+  });
+
+  it.each([
+    { case: "an unknown pet ID", changes: { pets: [...VALID_PACK.pets, 999] }, error: "Unknown pet ID 999" },
+    { case: "an unknown food ID", changes: { foods: [...VALID_PACK.foods, 999] }, error: "Unknown food ID 999" },
+    { case: "a repeated pet ID", changes: { pets: [...VALID_PACK.pets, 1] }, error: "Repeated pet ID" },
+    { case: "a repeated food ID", changes: { foods: [...VALID_PACK.foods, 1] }, error: "Repeated food ID" },
+    { case: "a tier 7 food", changes: { foods: [...VALID_PACK.foods, 58] }, error: "Peanut Butter is not in a shop tier" },
+  ])("rejects $case on import", ({ changes, error }) => {
+    expect(() => Pack.fromSerialized({ ...VALID_PACK, ...changes })).toThrow(error);
+  });
+
+  it.each([
+    { case: "isn't base64", code: "not a code!" },
+    { case: "isn't JSON", code: btoa("not json") },
+    { case: "isn't a pack", code: btoa(JSON.stringify({ name: "My Pack" })) },
+  ])("rejects a code that $case", ({ code }) => {
+    expect(() => Pack.fromCode(code)).toThrow("Not a pack code");
+  });
+});
+
+describe("Pack.getSprites", () => {
+  it("gives a custom pack's sprites", () => {
+    const pack = Pack.fromSerialized({ name: "My Pack", icon: 69, pets: [69], foods: [27], isValid: false });
+    expect(pack.getSprites()).toEqual(["/sap/Chinchilla.webp", "/sap/Asparagus.png"]);
+  });
+
+  it("gives a static pack's sprites, then its custom sprites", () => {
+    expect(TURTLE_PACK.getSprites()).toHaveLength(60 + 18 + 66 + 26);
+  });
+});
+
+describe("Pack.validate", () => {
+  it("passes a pack that follows every rule", () => {
+    expect(isValid({})).toBe(true);
+  });
+
+  it.each([
+    { case: "a tier has 9 pets", changes: { pets: VALID_PACK.pets.slice(1) } },
+    { case: "a tier has 11 pets", changes: { pets: [...VALID_PACK.pets, 69] } },
+    { case: "a tier has 2 foods", changes: { foods: VALID_PACK.foods.slice(1) } },
+    { case: "a tier has 4 foods", changes: { foods: [...VALID_PACK.foods, 28] } },
+    { case: "the name is empty", changes: { name: "" } },
+    { case: "the name is only spaces", changes: { name: "   " } },
+    { case: "the name is reserved", changes: { name: "Turtle" } },
+    { case: "the name is reserved in another case", changes: { name: " bee " } },
+    { case: "the icon isn't a pet ID", changes: { icon: 999 } },
+    { case: "the icon is a token", changes: { icon: 61 } },
+    { case: "the pack has a token pet", changes: { pets: [135, ...VALID_PACK.pets.slice(1)] } },
+    { case: "the pack has a token food", changes: { foods: [1, 2, 53, ...VALID_PACK.foods.slice(3)] } },
+  ])("fails when $case", ({ changes }) => {
+    expect(isValid(changes)).toBe(false);
+  });
+
+  it("leaves the original pack unchanged", () => {
+    const pack = new Pack({ ...Pack.fromSerialized(VALID_PACK).data, isValid: false });
+    pack.validate();
+    expect(pack.data.isValid).toBe(false);
   });
 });
 

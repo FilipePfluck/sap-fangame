@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Image from "next/image";
 import { ALL_TAGS, SUPER_TAG_DISPLAY, TAG_DISPLAY, type TagDisplay } from "@/lib/tags";
-import PackViewer from "@/app/arena/[gameId]/PackViewer";
+import { TURTLE_PACK } from "@/lib/game/pack";
+import PackViewer, { usePreloadPackSprites } from "@/app/arena/[gameId]/PackViewer";
 import Tooltip from "@/app/arena/[gameId]/Tooltip";
 import { BUTTON_CLASS, toggleButtonClass } from "../styles";
 
@@ -100,6 +101,7 @@ export default function PackEditor() {
   const [selectedTag, setSelectedTag] = useState<TagDisplay | null>(null);
   const [search, setSearch] = useState("");
   const [packViewerOpen, setPackViewerOpen] = useState(false);
+  usePreloadPackSprites(TURTLE_PACK);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
@@ -145,7 +147,7 @@ export default function PackEditor() {
       </div>
 
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
-      {packViewerOpen && <PackViewer onClose={() => setPackViewerOpen(false)} />}
+      {packViewerOpen && <PackViewer pack={TURTLE_PACK} onClose={() => setPackViewerOpen(false)} />}
     </div>
   );
 }
