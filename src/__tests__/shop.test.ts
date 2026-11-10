@@ -245,9 +245,9 @@ describe("generateShop", () => {
 });
 
 describe("getAllLevelsTooltipText", () => {
-  it("puts each level's ability on its own line", () => {
+  it("puts the base stats after the name, then each level's ability on its own line", () => {
     expect(getAllLevelsTooltipText(Duck)).toBe(
-      "Duck\nL1 Sell: Give shop pets +1 health.\nL2 Sell: Give shop pets +2 health.\nL3 Sell: Give shop pets +3 health."
+      "Duck 2/2\nL1 Sell: Give shop pets +1 health.\nL2 Sell: Give shop pets +2 health.\nL3 Sell: Give shop pets +3 health."
     );
   });
 });

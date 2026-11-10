@@ -468,5 +468,5 @@ export function getAllLevelsTooltipText(pet: StaticPet): string {
     const level = index + 1;
     return `L${level} ${getPetDescription(pet, level) ?? ""}`;
   });
-  return [pet.name, ...levelLines].join("\n");
+  return [`${pet.name} ${pet.baseAttack}/${pet.baseHealth}`, ...levelLines].join("\n");
 }

@@ -1,4 +1,4 @@
-import type { FoodType, PetData, StaticPet } from "@/lib/types";
+import type { FoodType, PetData, StaticPet, Tag } from "@/lib/types";
 import {
   AdultFlounder,
   Bee,
@@ -48,7 +48,14 @@ import {
   SHOP_FOOD_POOL,
   getFoodTooltipText,
 } from "@/lib/foods";
-import { FOODS_PER_TIER, MAX_TIER, PETS_PER_TIER, RESERVED_PACK_NAMES } from "@/lib/game/rules";
+import {
+  FOODS_PER_TIER,
+  MAX_SAME_TAG_PER_TIER,
+  MAX_SUPER_TAGS_PER_PACK,
+  MAX_TIER,
+  PETS_PER_TIER,
+  RESERVED_PACK_NAMES,
+} from "@/lib/game/rules";
 import { toPetData } from "@/lib/game/pet";
 
 export type TooltipEntry = StaticPet | FoodType;
@@ -59,6 +66,14 @@ export type PackTier = Readonly<{
   foods: readonly FoodType[];
 }>;
 
+// Tags spec. Never saved: Pack.tagOverview works it out from the pets' tags.
+export type TagOverview = Readonly<{
+  // Super tags across the whole pack.
+  superTags: number;
+  // How many pets in each tier have each archetype. Index 0 is tier 1.
+  tierBreakdown: readonly Readonly<Partial<Record<Tag, number>>>[];
+}>;
+
 // Pack spec. `foods` is FoodType where the spec writes ShopFood, which is the
 // in-shop item and holds no food definition.
 export type PackData = Readonly<{
@@ -67,6 +82,7 @@ export type PackData = Readonly<{
   icon: number;
   tier: readonly PackTier[];
   isValid: boolean;
+  tagOverview: TagOverview;
 }>;
 
 // How a pack is saved and shared: pets and foods by ID (Pack spec).
@@ -119,7 +135,7 @@ function isSerializedPack(value: unknown): value is SerializedPack {
 
 // The pack creation rules (Pack spec), plus two token rules: no tokens in the
 // pack, and a non-token icon.
-function followsPackRules({ name, icon, tier }: Omit<PackData, "isValid">): boolean {
+function followsPackRules({ name, icon, tier }: Pick<PackData, "name" | "icon" | "tier">): boolean {
   const trimmedName = name.trim();
   const isReservedName = RESERVED_PACK_NAMES.some(
     (reserved) => reserved.toLowerCase() === trimmedName.toLowerCase()
@@ -146,14 +162,23 @@ export class Pack {
     this.data = data;
   }
 
+  // Tags spec. Stored on PackData when a pack is built.
+  static tagOverview(tier: readonly PackTier[]): TagOverview {
+    return {
+      superTags: tier.flatMap(({ pets }) => pets).reduce((total, pet) => total + pet.superTags, 0),
+      tierBreakdown: tier.map(({ pets }) => {
+        const tagCounts: Partial<Record<Tag, number>> = {};
+        for (const tag of pets.flatMap((pet) => pet.tags)) tagCounts[tag] = (tagCounts[tag] ?? 0) + 1;
+        return tagCounts;
+      }),
+    };
+  }
+
   // Throws for a pet or food ID that doesn't exist, is repeated, or is
   // outside the shop tiers. `isValid` is worked out again, not trusted.
   static fromSerialized({ name, icon, pets, foods }: SerializedPack): Pack {
-    const data = {
-      name,
-      icon,
-      tier: groupByTier(lookUpIds(pets, PET_BY_ID, "pet"), lookUpIds(foods, FOOD_BY_ID, "food")),
-    };
+    const tier = groupByTier(lookUpIds(pets, PET_BY_ID, "pet"), lookUpIds(foods, FOOD_BY_ID, "food"));
+    const data = { name, icon, tier, tagOverview: Pack.tagOverview(tier) };
     return new Pack({ ...data, isValid: followsPackRules(data) });
   }
 
@@ -173,6 +198,17 @@ export class Pack {
   // A copy with `isValid` set; this pack is left unchanged.
   validate(): Pack {
     return new Pack({ ...this.data, isValid: followsPackRules(this.data) });
+  }
+
+  // Tags spec: some tier has more than MAX_SAME_TAG_PER_TIER pets with one
+  // archetype, or the pack has more than MAX_SUPER_TAGS_PER_PACK Super tags.
+  // Kept separate from isValid.
+  isWild(): boolean {
+    const { superTags, tierBreakdown } = this.data.tagOverview;
+    return (
+      superTags > MAX_SUPER_TAGS_PER_PACK ||
+      tierBreakdown.some((tagCounts) => Object.values(tagCounts).some((count) => count > MAX_SAME_TAG_PER_TIER))
+    );
   }
 
   serialize(): SerializedPack {
@@ -198,8 +234,9 @@ export class Pack {
   }
 }
 
-// A pre-built pack. The pack creation rules only apply to custom packs (Pack
-// spec), so a static pack is always valid.
+// A pre-built pack. The pack creation rules and WILD only apply to custom
+// packs (Pack and Tags specs), so a static pack is built valid and is never
+// passed to validate() or isWild().
 export class StaticPack extends Pack {
   // The fangame's own pets and foods, shown by the viewer's "Custom exclusive" checkbox.
   readonly customTier: readonly PackTier[];
@@ -209,21 +246,20 @@ export class StaticPack extends Pack {
     this.customTier = customTier;
   }
 
-  validate(): StaticPack {
-    return new StaticPack({ ...this.data, isValid: true }, this.customTier);
-  }
-
   getSprites(): string[] {
     return [...super.getSprites(), ...getTierSprites(this.customTier)];
   }
 }
 
+const TURTLE_TIER = groupByTier(SHOP_PET_POOL, SHOP_FOOD_POOL);
+
 export const TURTLE_PACK = new StaticPack(
   {
     name: "Turtle",
     icon: Turtle.id,
-    tier: groupByTier(SHOP_PET_POOL, SHOP_FOOD_POOL),
+    tier: TURTLE_TIER,
     isValid: true,
+    tagOverview: Pack.tagOverview(TURTLE_TIER),
   },
   groupByTier(
     CUSTOMS_PETS.filter((pet) => !pet.isToken),

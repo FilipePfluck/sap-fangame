@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { Pack, STATIC_PACKS, TURTLE_PACK, getTooltipPages, type SerializedPack } from "@/lib/game/pack";
 import { RESERVED_PACK_NAMES } from "@/lib/game/rules";
+import { Tag } from "@/lib/types";
 import { FOOD_REGISTRY } from "@/lib/foods";
 import { PET_REGISTRY } from "@/lib/pets";
 
@@ -30,14 +31,6 @@ describe("STATIC_PACKS", () => {
   it("keeps tokens out of Turtle's custom pets and foods", () => {
     const entries = TURTLE_PACK.customTier.flatMap(({ pets, foods }) => [...pets, ...foods]);
     expect(entries.filter((entry) => entry.isToken)).toEqual([]);
-  });
-
-  it("keeps Turtle valid although tier 1 has 2 foods and tier 6 has 4", () => {
-    expect(TURTLE_PACK.validate().data.isValid).toBe(true);
-  });
-
-  it("keeps Turtle's custom pets and foods through validate", () => {
-    expect(TURTLE_PACK.validate().customTier).toBe(TURTLE_PACK.customTier);
   });
 });
 
@@ -130,6 +123,59 @@ describe("Pack.getSprites", () => {
   });
 });
 
+describe("Pack tag overview", () => {
+  // Hedgehog (13) and Peacock (15) are Hurt, Spider (18) is Summon with 2 Super
+  // tags, and Camel (22) is Hurt.
+  const pack = Pack.fromSerialized({ ...VALID_PACK, pets: [13, 15, 18, 22] });
+
+  it("counts each archetype per tier", () => {
+    expect(pack.data.tagOverview.tierBreakdown).toEqual([{}, { [Tag.Hurt]: 2, [Tag.Summon]: 1 }, { [Tag.Hurt]: 1 }, {}, {}, {}]);
+  });
+
+  it("counts Super tags across the pack", () => {
+    expect(pack.data.tagOverview.superTags).toBe(2);
+  });
+
+  it("leaves the tag overview out of the serialized pack", () => {
+    expect(Object.keys(pack.serialize())).toEqual(["name", "icon", "pets", "foods", "isValid"]);
+  });
+});
+
+describe("Pack.isWild", () => {
+  function isWild(pets: number[]): boolean {
+    return Pack.fromSerialized({ ...VALID_PACK, pets }).isWild();
+  }
+
+  it("is Standard with 2 Hurt pets in a tier", () => {
+    // Hedgehog and Peacock.
+    expect(isWild([13, 15])).toBe(false);
+  });
+
+  it("is WILD with 3 Hurt pets in a tier", () => {
+    // Hedgehog, Peacock and Rat.
+    expect(isWild([13, 15, 16])).toBe(true);
+  });
+
+  it("is Standard with 2 Hurt pets in each of two tiers", () => {
+    // Hedgehog and Peacock in tier 2, Camel and Elephant in tier 3.
+    expect(isWild([13, 15, 22, 26])).toBe(false);
+  });
+
+  it("is Standard with 5 Super tags", () => {
+    // Spider 2, Parrot 2 and Cat 1.
+    expect(isWild([18, 35, 52])).toBe(false);
+  });
+
+  it("is WILD with 6 Super tags", () => {
+    // Spider 2, Parrot 2 and Tiger 2.
+    expect(isWild([18, 35, 59])).toBe(true);
+  });
+
+  it("doesn't depend on isValid", () => {
+    expect(Pack.fromSerialized({ ...VALID_PACK, name: "", pets: [13, 15, 16] }).isWild()).toBe(true);
+  });
+});
+
 describe("Pack.validate", () => {
   it("passes a pack that follows every rule", () => {
     expect(isValid({})).toBe(true);
@@ -163,7 +209,7 @@ describe("getTooltipPages for foods", () => {
   it("gives Honey its description, then Bee", () => {
     expect(getTooltipPages(FOOD_REGISTRY["Honey"])).toEqual([
       "Honey\nGive one pet the Honey perk. Faint: Summon a 1/1 Bee.",
-      "Bee\nL1 No ability.\nL2 No ability.\nL3 No ability.",
+      "Bee 1/1\nL1 No ability.\nL2 No ability.\nL3 No ability.",
     ]);
   });
 
@@ -178,35 +224,35 @@ describe("getTooltipPages for foods", () => {
 describe("getTooltipPages for pets", () => {
   it("gives Deer its ability, then Bus, then Chili", () => {
     expect(getTooltipPages(PET_REGISTRY["Deer"])).toEqual([
-      "Deer\nL1 Faint: Summon one 5/3 Bus with Chili.\nL2 Faint: Summon one 10/6 Bus with Chili.\nL3 Faint: Summon one 15/9 Bus with Chili.",
-      "Bus\nL1 No ability.\nL2 No ability.\nL3 No ability.",
+      "Deer 2/2\nL1 Faint: Summon one 5/3 Bus with Chili.\nL2 Faint: Summon one 10/6 Bus with Chili.\nL3 Faint: Summon one 15/9 Bus with Chili.",
+      "Bus 5/3\nL1 No ability.\nL2 No ability.\nL3 No ability.",
       "Chili\nGive one pet the Chili perk. Attack second enemy for 5 damage.",
     ]);
   });
 
   it("shows a linked pet's scaling ability per level", () => {
     expect(getTooltipPages(PET_REGISTRY["Flounder"])[1]).toBe(
-      "Adult Flounder\nL1 Transformed: Give the two back-most friends +1 experience.\nL2 Transformed: Give the two back-most friends +2 experience.\nL3 Transformed: Give the two back-most friends +3 experience."
+      "Adult Flounder 2/4\nL1 Transformed: Give the two back-most friends +1 experience.\nL2 Transformed: Give the two back-most friends +2 experience.\nL3 Transformed: Give the two back-most friends +3 experience."
     );
   });
 
   it.each([
     { name: "Pigeon", links: ["Bread Crumbs"] },
-    { name: "Cricket", links: ["Zombie Cricket"] },
+    { name: "Cricket", links: ["Zombie Cricket 1/1"] },
     { name: "Worm", links: ["Apple", "Better Apple", "Best Apple"] },
-    { name: "Rat", links: ["Dirty Rat"] },
+    { name: "Rat", links: ["Dirty Rat 1/1"] },
     { name: "Sugar Glider", links: ["Cupcake"] },
-    { name: "Sheep", links: ["Ram"] },
+    { name: "Sheep", links: ["Ram 2/2"] },
     { name: "Turtle", links: ["Melon"] },
     { name: "Ox", links: ["Melon"] },
     { name: "Jerboa", links: ["Apple"] },
     { name: "Scorpion", links: ["Peanut"] },
-    { name: "Rooster", links: ["Chick"] },
+    { name: "Rooster", links: ["Chick 1/1"] },
     { name: "Cow", links: ["Milk", "Better Milk", "Best Milk"] },
-    { name: "Flounder", links: ["Adult Flounder"] },
-    { name: "Deer", links: ["Bus", "Chili"] },
+    { name: "Flounder", links: ["Adult Flounder 2/4"] },
+    { name: "Deer", links: ["Bus 5/3", "Chili"] },
     { name: "Gorilla", links: ["Coconut"] },
-    { name: "Fly", links: ["Zombie Fly"] },
+    { name: "Fly", links: ["Zombie Fly 4/4"] },
   ])("links $name to $links", ({ name, links }) => {
     const linkedPages = getTooltipPages(PET_REGISTRY[name]).slice(1);
     expect(linkedPages.map((page) => page.split("\n")[0])).toEqual(links);
