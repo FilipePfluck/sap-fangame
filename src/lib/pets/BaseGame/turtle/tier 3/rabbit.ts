@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import {
   createAbilityMap,
   tryIncrementTriggerCount,
@@ -13,6 +13,8 @@ export const Rabbit: Readonly<StaticPet> = {
   baseAttack: 1,
   baseHealth: 2,
   isToken: false,
+  tags: [Tag.Food],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.friend_ate_food,
     fn: (ctx) => {

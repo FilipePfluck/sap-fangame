@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { livingPets } from "@/lib/utils/combat";
 import { createAbilityMap } from "@/lib/pets/ability";
 import { BattleActions } from "@/lib/game/ability-actions";
@@ -10,6 +10,8 @@ export const Hedgehog: Readonly<StaticPet> = {
   baseAttack: 4,
   baseHealth: 2,
   isToken: false,
+  tags: [Tag.Hurt],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.faint,
     fn: (ctx) => {

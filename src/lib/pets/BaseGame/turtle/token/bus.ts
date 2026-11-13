@@ -7,6 +7,8 @@ export const Bus: Readonly<StaticPet> = {
   baseAttack: 5,
   baseHealth: 3,
   isToken: true,
+  tags: [],
+  superTags: 0,
   abilities: new Map(),
   description: "No ability.",
 };

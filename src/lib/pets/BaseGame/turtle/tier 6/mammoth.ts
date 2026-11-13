@@ -9,6 +9,8 @@ export const Mammoth: Readonly<StaticPet> = {
   baseAttack: 4,
   baseHealth: 12,
   isToken: false,
+  tags: [],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.faint,
     fn: (ctx) => {

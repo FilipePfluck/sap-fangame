@@ -13,6 +13,8 @@ export const Hippo: Readonly<StaticPet> = {
   baseAttack: 4,
   baseHealth: 7,
   isToken: false,
+  tags: [],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.knock_out,
     fn: (ctx) => {

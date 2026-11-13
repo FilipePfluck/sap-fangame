@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { livingPets } from "@/lib/utils/combat";
 import { pickRandom } from "@/lib/utils/random";
 import { createAbilityMap } from "@/lib/pets/ability";
@@ -11,6 +11,8 @@ export const Blowfish: Readonly<StaticPet> = {
   baseAttack: 3,
   baseHealth: 6,
   isToken: false,
+  tags: [Tag.Hurt, Tag.Disruption],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.hurt,
     fn: (ctx) => {

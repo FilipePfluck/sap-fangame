@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Camel: Readonly<StaticPet> = {
@@ -8,6 +8,8 @@ export const Camel: Readonly<StaticPet> = {
   baseAttack: 3,
   baseHealth: 3,
   isToken: false,
+  tags: [Tag.Hurt],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.hurt,
     fn: (ctx) => {

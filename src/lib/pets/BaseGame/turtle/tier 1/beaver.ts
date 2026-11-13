@@ -1,4 +1,4 @@
-import { PetInstance, StaticPet, Trigger } from "@/lib/types";
+import { PetInstance, StaticPet, Trigger, Tag } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 import { createAbilityMap } from "@/lib/pets/ability";
 
@@ -9,6 +9,8 @@ export const Beaver: Readonly<StaticPet> = {
   baseAttack: 3,
   baseHealth: 2,
   isToken: false,
+  tags: [Tag.Cycle],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.sell,
     fn: (ctx) => {

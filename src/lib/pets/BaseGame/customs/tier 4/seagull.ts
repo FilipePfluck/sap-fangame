@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap, tryIncrementTriggerCount } from "@/lib/pets/ability";
 
 export const Seagull: Readonly<StaticPet> = {
@@ -8,6 +8,8 @@ export const Seagull: Readonly<StaticPet> = {
   baseAttack: 4,
   baseHealth: 3,
   isToken: false,
+  tags: [Tag.Summon, Tag.Perk],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.friend_summoned,
     fn: (ctx) => {

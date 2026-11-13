@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Squirrel: Readonly<StaticPet> = {
@@ -8,6 +8,8 @@ export const Squirrel: Readonly<StaticPet> = {
   baseAttack: 2,
   baseHealth: 5,
   isToken: false,
+  tags: [Tag.Food],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.start_of_turn,
     fn: (ctx) => {

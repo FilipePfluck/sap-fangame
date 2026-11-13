@@ -9,6 +9,8 @@ export const Crab: Readonly<StaticPet> = {
   baseAttack: 4,
   baseHealth: 1,
   isToken: false,
+  tags: [],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.start_of_battle,
     fn: (ctx) => {

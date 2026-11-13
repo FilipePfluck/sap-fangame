@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Monkey: Readonly<StaticPet> = {
@@ -8,6 +8,8 @@ export const Monkey: Readonly<StaticPet> = {
   baseAttack: 1,
   baseHealth: 2,
   isToken: false,
+  tags: [Tag.Buff],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.end_turn,
     fn: (ctx) => {

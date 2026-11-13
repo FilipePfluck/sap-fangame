@@ -33,6 +33,8 @@ export function staticPet(name: string, ability: Ability, tier = 1): StaticPet {
     baseAttack: 1,
     baseHealth: 1,
     isToken: false,
+    tags: [],
+    superTags: 0,
     abilities: new Map([[ability.trigger, ability]]),
     description: "",
   };

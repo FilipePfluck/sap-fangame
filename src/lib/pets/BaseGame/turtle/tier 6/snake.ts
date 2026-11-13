@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { pickRandom } from "@/lib/utils/random";
 import { livingPets } from "@/lib/utils/combat";
 import {
@@ -16,6 +16,8 @@ export const Snake: Readonly<StaticPet> = {
   baseAttack: 8,
   baseHealth: 3,
   isToken: false,
+  tags: [Tag.Guard, Tag.Disruption],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.friend_ahead_attacks,
     fn: (ctx) => {

@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap } from "@/lib/pets/ability";
 import { BattleActions } from "@/lib/game/ability-actions";
 import { getMinimumXpFor } from "@/lib/game/board";
@@ -10,6 +10,8 @@ export const Whale: Readonly<StaticPet> = {
   baseAttack: 3,
   baseHealth: 7,
   isToken: false,
+  tags: [Tag.Summon],
+  superTags: 0,
   abilities: createAbilityMap(
     {
       trigger: Trigger.start_of_battle,

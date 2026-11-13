@@ -22,10 +22,10 @@ describe("PACK_TIER_ROWS", () => {
   it.each([
     { tier: 1, names: ["Duck", "Beaver", "Pigeon", "Otter", "Pig", "Ant", "Mosquito", "Fish", "Cricket", "Horse"] },
     { tier: 2, names: ["Snail", "Crab", "Swan", "Peacock", "Kangaroo", "Hedgehog", "Flamingo", "Worm", "Spider", "Rat"] },
-    { tier: 3, names: ["Dodo", "Badger", "Dolphin", "Elephant", "Rabbit", "Giraffe", "Camel", "Dog", "Sheep", "Ox", "Sugar Glider"] },
-    { tier: 4, names: ["Skunk", "Hippo", "Bison", "Squirrel", "Penguin", "Blowfish", "Turtle", "Whale", "Deer", "Seagull", "Jerboa"] },
-    { tier: 5, names: ["Scorpion", "Crocodile", "Rhino", "Armadillo", "Turkey", "Monkey", "Seal", "Rooster", "Cow", "Shark", "Flounder"] },
-    { tier: 6, names: ["Leopard", "Boar", "Tiger", "Dragon", "Mammoth", "Snake", "Wolverine", "Gorilla", "Fly", "Cat", "Alpaca"] },
+    { tier: 3, names: ["Dodo", "Badger", "Dolphin", "Elephant", "Rabbit", "Giraffe", "Camel", "Dog", "Sheep", "Ox"] },
+    { tier: 4, names: ["Skunk", "Hippo", "Bison", "Squirrel", "Penguin", "Blowfish", "Turtle", "Whale", "Deer", "Parrot"] },
+    { tier: 5, names: ["Scorpion", "Crocodile", "Rhino", "Armadillo", "Turkey", "Monkey", "Seal", "Rooster", "Cow", "Shark"] },
+    { tier: 6, names: ["Leopard", "Boar", "Tiger", "Dragon", "Mammoth", "Snake", "Wolverine", "Gorilla", "Fly", "Cat"] },
   ])("has exactly the tier $tier pets", ({ tier, names }) => {
     expect(new Set(getRow(tier).pets.map((pet) => pet.name))).toEqual(new Set(names));
   });

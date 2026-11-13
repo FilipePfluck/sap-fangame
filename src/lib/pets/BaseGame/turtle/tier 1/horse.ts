@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Horse: Readonly<StaticPet> = {
@@ -8,6 +8,8 @@ export const Horse: Readonly<StaticPet> = {
   baseAttack: 2,
   baseHealth: 1,
   isToken: false,
+  tags: [Tag.Summon],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.friend_summoned,
     fn: (ctx) => {

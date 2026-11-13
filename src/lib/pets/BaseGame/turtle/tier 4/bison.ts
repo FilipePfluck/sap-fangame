@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Bison: Readonly<StaticPet> = {
@@ -8,6 +8,8 @@ export const Bison: Readonly<StaticPet> = {
   baseAttack: 4,
   baseHealth: 4,
   isToken: false,
+  tags: [Tag.LevelUp],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.end_turn,
     fn: (ctx) => {

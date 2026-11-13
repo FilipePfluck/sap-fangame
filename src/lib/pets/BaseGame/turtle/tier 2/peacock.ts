@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Peacock: Readonly<StaticPet> = {
@@ -8,6 +8,8 @@ export const Peacock: Readonly<StaticPet> = {
   baseAttack: 2,
   baseHealth: 5,
   isToken: false,
+  tags: [Tag.Hurt],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.hurt,
     fn: (ctx) => {

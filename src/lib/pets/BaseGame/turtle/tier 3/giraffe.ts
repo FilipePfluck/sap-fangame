@@ -1,4 +1,4 @@
-import { PetInstance, StaticPet, Trigger } from "@/lib/types";
+import { PetInstance, StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Giraffe: Readonly<StaticPet> = {
@@ -8,6 +8,8 @@ export const Giraffe: Readonly<StaticPet> = {
   baseAttack: 1,
   baseHealth: 2,
   isToken: false,
+  tags: [Tag.Buff],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.start_of_turn,
     fn: (ctx) => {

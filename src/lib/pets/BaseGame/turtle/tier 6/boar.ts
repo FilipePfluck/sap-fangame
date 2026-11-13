@@ -8,6 +8,8 @@ export const Boar: Readonly<StaticPet> = {
   baseAttack: 10,
   baseHealth: 6,
   isToken: false,
+  tags: [],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.before_attack,
     fn: (ctx) => {

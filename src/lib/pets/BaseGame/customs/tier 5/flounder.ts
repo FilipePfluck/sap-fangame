@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap, incrementTriggerCount } from "@/lib/pets/ability";
 import { TransformPreserve, transformPet } from "@/lib/game/pet";
 import { AdultFlounder } from "@/lib/pets/BaseGame/customs/token/adult-flounder";
@@ -12,6 +12,8 @@ export const Flounder: Readonly<StaticPet> = {
   baseAttack: 2,
   baseHealth: 4,
   isToken: false,
+  tags: [Tag.LevelUp],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.friend_ate_food,
     fn: (ctx) => {

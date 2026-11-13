@@ -10,6 +10,8 @@ export const Ant: Readonly<StaticPet> = {
   baseAttack: 2,
   baseHealth: 2,
   isToken: false,
+  tags: [],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.faint,
     fn: (ctx) => {

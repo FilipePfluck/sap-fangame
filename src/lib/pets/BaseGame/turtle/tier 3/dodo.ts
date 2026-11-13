@@ -8,6 +8,8 @@ export const Dodo: Readonly<StaticPet> = {
   baseAttack: 4,
   baseHealth: 2,
   isToken: false,
+  tags: [],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.start_of_battle,
     fn: (ctx) => {

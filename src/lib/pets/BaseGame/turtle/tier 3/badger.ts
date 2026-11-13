@@ -9,6 +9,8 @@ export const Badger: Readonly<StaticPet> = {
   baseAttack: 6,
   baseHealth: 3,
   isToken: false,
+  tags: [],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.faint,
     fn: (ctx) => {
