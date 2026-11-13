@@ -1,13 +1,16 @@
-import { PetInstance, StaticPet, Trigger } from "@/lib/types";
+import { PetInstance, StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Giraffe: Readonly<StaticPet> = {
   name: "Giraffe",
+  id: 27,
   sprite: "/sap/Giraffe.webp",
   tier: 3,
   baseAttack: 1,
   baseHealth: 2,
   isToken: false,
+  tags: [Tag.Buff],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.start_of_turn,
     fn: (ctx) => {

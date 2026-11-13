@@ -1,15 +1,18 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { livingPets } from "@/lib/utils/combat";
 import { createAbilityMap } from "@/lib/pets/ability";
 import { BattleActions } from "@/lib/game/ability-actions";
 
 export const Rhino: Readonly<StaticPet> = {
   name: "Rhino",
+  id: 45,
   sprite: "/sap/rhino.webp",
   tier: 5,
   baseAttack: 6,
   baseHealth: 7,
   isToken: false,
+  tags: [Tag.Disruption],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.knock_out,
     fn: (ctx) => {

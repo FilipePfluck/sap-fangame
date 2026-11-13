@@ -8,11 +8,14 @@ const FRIENDS_GIVEN_EXPERIENCE = 2;
 // What a Flounder transforms into.
 export const AdultFlounder: Readonly<StaticPet> = {
   name: "Adult Flounder",
+  id: 139,
   sprite: "/sap/Adult_Flounder.png",
   tier: 5,
   baseAttack: 2,
   baseHealth: 4,
   isToken: true,
+  tags: [],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.transformed,
     fn: (ctx) => {

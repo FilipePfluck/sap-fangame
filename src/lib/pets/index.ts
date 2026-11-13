@@ -71,6 +71,72 @@ export { Jerboa } from "./BaseGame/customs/tier 4/jerboa";
 export { SugarGlider } from "./BaseGame/customs/tier 3/sugar-glider";
 export { Flounder } from "./BaseGame/customs/tier 5/flounder";
 export { AdultFlounder } from "./BaseGame/customs/token/adult-flounder";
+export { Parrot } from "./BaseGame/turtle/tier 4/parrot";
+export { Chinchilla } from "./BaseGame/customs/tier 1/chinchilla";
+export { Moth } from "./BaseGame/customs/tier 1/moth";
+export { Marmoset } from "./BaseGame/customs/tier 1/marmoset";
+export { Budgie } from "./BaseGame/customs/tier 1/budgie";
+export { FarmerMouse } from "./BaseGame/customs/tier 1/farmer-mouse";
+export { FrilledDragon } from "./BaseGame/customs/tier 1/frilled-dragon";
+export { Weevil } from "./BaseGame/customs/tier 1/weevil";
+export { Goldfish } from "./BaseGame/customs/tier 2/goldfish";
+export { Shrimp } from "./BaseGame/customs/tier 2/shrimp";
+export { AlbinoSquirrel } from "./BaseGame/customs/tier 2/albino-squirrel";
+export { DungBeetle } from "./BaseGame/customs/tier 2/dung-beetle";
+export { FarmerChicken } from "./BaseGame/customs/tier 2/farmer-chicken";
+export { Frigatebird } from "./BaseGame/customs/tier 2/frigatebird";
+export { Mink } from "./BaseGame/customs/tier 2/mink";
+export { Vervet } from "./BaseGame/customs/tier 2/vervet";
+export { Wombat } from "./BaseGame/customs/tier 2/wombat";
+export { Mole } from "./BaseGame/customs/tier 3/mole";
+export { Toucan } from "./BaseGame/customs/tier 3/toucan";
+export { Bear } from "./BaseGame/customs/tier 3/bear";
+export { BrazilianTreehopper } from "./BaseGame/customs/tier 3/brazilian-treehopper";
+export { EmperorTamarin } from "./BaseGame/customs/tier 3/emperor-tamarin";
+export { FarmerPig } from "./BaseGame/customs/tier 3/farmer-pig";
+export { Pony } from "./BaseGame/customs/tier 3/pony";
+export { Porcupine } from "./BaseGame/customs/tier 3/porcupine";
+export { QuailChick } from "./BaseGame/customs/tier 3/quail-chick";
+export { Quetzalcoatlus } from "./BaseGame/customs/tier 3/quetzalcoatlus";
+export { SarcasticFringehead } from "./BaseGame/customs/tier 3/sarcastic-fringehead";
+export { SilkieChicken } from "./BaseGame/customs/tier 3/silkie-chicken";
+export { Wasp } from "./BaseGame/customs/tier 3/wasp";
+export { Aardvark } from "./BaseGame/customs/tier 3/aardvark";
+export { Doberman } from "./BaseGame/customs/tier 4/doberman";
+export { Andrewsarchus } from "./BaseGame/customs/tier 4/andrewsarchus";
+export { Cuckoo } from "./BaseGame/customs/tier 4/cuckoo";
+export { FarmerCat } from "./BaseGame/customs/tier 4/farmer-cat";
+export { Gelada } from "./BaseGame/customs/tier 4/gelada";
+export { Locust } from "./BaseGame/customs/tier 4/locust";
+export { Lynx } from "./BaseGame/customs/tier 4/lynx";
+export { PoodleMoth } from "./BaseGame/customs/tier 4/poodle-moth";
+export { Trout } from "./BaseGame/customs/tier 4/trout";
+export { YetiCrab } from "./BaseGame/customs/tier 4/yeti-crab";
+export { Bluejay } from "./BaseGame/customs/tier 5/bluejay";
+export { Dragonfly } from "./BaseGame/customs/tier 5/dragonfly";
+export { FarmerCrow } from "./BaseGame/customs/tier 5/farmer-crow";
+export { Moose } from "./BaseGame/customs/tier 5/moose";
+export { Raccoon } from "./BaseGame/customs/tier 5/raccoon";
+export { TarantulaHawk } from "./BaseGame/customs/tier 5/tarantula-hawk";
+export { VenusFlytrap } from "./BaseGame/customs/tier 5/venus-flytrap";
+export { Lionfish } from "./BaseGame/customs/tier 6/lionfish";
+export { Albatross } from "./BaseGame/customs/tier 6/albatross";
+export { BlackBear } from "./BaseGame/customs/tier 6/black-bear";
+export { Chimpanzee } from "./BaseGame/customs/tier 6/chimpanzee";
+export { CoconutCrab } from "./BaseGame/customs/tier 6/coconut-crab";
+export { EagleOwl } from "./BaseGame/customs/tier 6/eagle-owl";
+export { FarmerDog } from "./BaseGame/customs/tier 6/farmer-dog";
+export { HarpyEagle } from "./BaseGame/customs/tier 6/harpy-eagle";
+export { Lamprey } from "./BaseGame/customs/tier 6/lamprey";
+export { Lioness } from "./BaseGame/customs/tier 6/lioness";
+export { Tanystropheus } from "./BaseGame/customs/tier 6/tanystropheus";
+export { Tapir } from "./BaseGame/customs/tier 6/tapir";
+export { Walrus } from "./BaseGame/customs/tier 6/walrus";
+export { WhiteTiger } from "./BaseGame/customs/tier 6/white-tiger";
+export { LoyalChinchilla } from "./BaseGame/customs/token/loyal-chinchilla";
+export { CuckooChick } from "./BaseGame/customs/token/cuckoo-chick";
+export { Quail } from "./BaseGame/customs/token/quail";
+export { SleepingGelada } from "./BaseGame/customs/token/sleeping-gelada";
 
 import { Sloth } from "./BaseGame/turtle/token/sloth";
 import { Duck } from "./BaseGame/turtle/tier 1/duck";
@@ -145,6 +211,72 @@ import { Jerboa } from "./BaseGame/customs/tier 4/jerboa";
 import { SugarGlider } from "./BaseGame/customs/tier 3/sugar-glider";
 import { Flounder } from "./BaseGame/customs/tier 5/flounder";
 import { AdultFlounder } from "./BaseGame/customs/token/adult-flounder";
+import { Parrot } from "./BaseGame/turtle/tier 4/parrot";
+import { Chinchilla } from "./BaseGame/customs/tier 1/chinchilla";
+import { Moth } from "./BaseGame/customs/tier 1/moth";
+import { Marmoset } from "./BaseGame/customs/tier 1/marmoset";
+import { Budgie } from "./BaseGame/customs/tier 1/budgie";
+import { FarmerMouse } from "./BaseGame/customs/tier 1/farmer-mouse";
+import { FrilledDragon } from "./BaseGame/customs/tier 1/frilled-dragon";
+import { Weevil } from "./BaseGame/customs/tier 1/weevil";
+import { Goldfish } from "./BaseGame/customs/tier 2/goldfish";
+import { Shrimp } from "./BaseGame/customs/tier 2/shrimp";
+import { AlbinoSquirrel } from "./BaseGame/customs/tier 2/albino-squirrel";
+import { DungBeetle } from "./BaseGame/customs/tier 2/dung-beetle";
+import { FarmerChicken } from "./BaseGame/customs/tier 2/farmer-chicken";
+import { Frigatebird } from "./BaseGame/customs/tier 2/frigatebird";
+import { Mink } from "./BaseGame/customs/tier 2/mink";
+import { Vervet } from "./BaseGame/customs/tier 2/vervet";
+import { Wombat } from "./BaseGame/customs/tier 2/wombat";
+import { Mole } from "./BaseGame/customs/tier 3/mole";
+import { Toucan } from "./BaseGame/customs/tier 3/toucan";
+import { Bear } from "./BaseGame/customs/tier 3/bear";
+import { BrazilianTreehopper } from "./BaseGame/customs/tier 3/brazilian-treehopper";
+import { EmperorTamarin } from "./BaseGame/customs/tier 3/emperor-tamarin";
+import { FarmerPig } from "./BaseGame/customs/tier 3/farmer-pig";
+import { Pony } from "./BaseGame/customs/tier 3/pony";
+import { Porcupine } from "./BaseGame/customs/tier 3/porcupine";
+import { QuailChick } from "./BaseGame/customs/tier 3/quail-chick";
+import { Quetzalcoatlus } from "./BaseGame/customs/tier 3/quetzalcoatlus";
+import { SarcasticFringehead } from "./BaseGame/customs/tier 3/sarcastic-fringehead";
+import { SilkieChicken } from "./BaseGame/customs/tier 3/silkie-chicken";
+import { Wasp } from "./BaseGame/customs/tier 3/wasp";
+import { Aardvark } from "./BaseGame/customs/tier 3/aardvark";
+import { Doberman } from "./BaseGame/customs/tier 4/doberman";
+import { Andrewsarchus } from "./BaseGame/customs/tier 4/andrewsarchus";
+import { Cuckoo } from "./BaseGame/customs/tier 4/cuckoo";
+import { FarmerCat } from "./BaseGame/customs/tier 4/farmer-cat";
+import { Gelada } from "./BaseGame/customs/tier 4/gelada";
+import { Locust } from "./BaseGame/customs/tier 4/locust";
+import { Lynx } from "./BaseGame/customs/tier 4/lynx";
+import { PoodleMoth } from "./BaseGame/customs/tier 4/poodle-moth";
+import { Trout } from "./BaseGame/customs/tier 4/trout";
+import { YetiCrab } from "./BaseGame/customs/tier 4/yeti-crab";
+import { Bluejay } from "./BaseGame/customs/tier 5/bluejay";
+import { Dragonfly } from "./BaseGame/customs/tier 5/dragonfly";
+import { FarmerCrow } from "./BaseGame/customs/tier 5/farmer-crow";
+import { Moose } from "./BaseGame/customs/tier 5/moose";
+import { Raccoon } from "./BaseGame/customs/tier 5/raccoon";
+import { TarantulaHawk } from "./BaseGame/customs/tier 5/tarantula-hawk";
+import { VenusFlytrap } from "./BaseGame/customs/tier 5/venus-flytrap";
+import { Lionfish } from "./BaseGame/customs/tier 6/lionfish";
+import { Albatross } from "./BaseGame/customs/tier 6/albatross";
+import { BlackBear } from "./BaseGame/customs/tier 6/black-bear";
+import { Chimpanzee } from "./BaseGame/customs/tier 6/chimpanzee";
+import { CoconutCrab } from "./BaseGame/customs/tier 6/coconut-crab";
+import { EagleOwl } from "./BaseGame/customs/tier 6/eagle-owl";
+import { FarmerDog } from "./BaseGame/customs/tier 6/farmer-dog";
+import { HarpyEagle } from "./BaseGame/customs/tier 6/harpy-eagle";
+import { Lamprey } from "./BaseGame/customs/tier 6/lamprey";
+import { Lioness } from "./BaseGame/customs/tier 6/lioness";
+import { Tanystropheus } from "./BaseGame/customs/tier 6/tanystropheus";
+import { Tapir } from "./BaseGame/customs/tier 6/tapir";
+import { Walrus } from "./BaseGame/customs/tier 6/walrus";
+import { WhiteTiger } from "./BaseGame/customs/tier 6/white-tiger";
+import { LoyalChinchilla } from "./BaseGame/customs/token/loyal-chinchilla";
+import { CuckooChick } from "./BaseGame/customs/token/cuckoo-chick";
+import { Quail } from "./BaseGame/customs/token/quail";
+import { SleepingGelada } from "./BaseGame/customs/token/sleeping-gelada";
 import { MAX_PET_LEVEL } from "@/lib/game/rules";
 import type { StaticPet } from "@/lib/types";
 
@@ -193,6 +325,7 @@ export const TURTLE_PACK_PETS = [
   Blowfish,
   Turtle,
   Whale,
+  Parrot,
   Turkey,
   Monkey,
   Seal,
@@ -225,6 +358,71 @@ export const CUSTOMS_PETS = [
   SugarGlider,
   Flounder,
   AdultFlounder,
+  Chinchilla,
+  Moth,
+  Marmoset,
+  Budgie,
+  FarmerMouse,
+  FrilledDragon,
+  Weevil,
+  Goldfish,
+  Shrimp,
+  AlbinoSquirrel,
+  DungBeetle,
+  FarmerChicken,
+  Frigatebird,
+  Mink,
+  Vervet,
+  Wombat,
+  Mole,
+  Toucan,
+  Bear,
+  BrazilianTreehopper,
+  EmperorTamarin,
+  FarmerPig,
+  Pony,
+  Porcupine,
+  QuailChick,
+  Quetzalcoatlus,
+  SarcasticFringehead,
+  SilkieChicken,
+  Wasp,
+  Aardvark,
+  Doberman,
+  Andrewsarchus,
+  Cuckoo,
+  FarmerCat,
+  Gelada,
+  Locust,
+  Lynx,
+  PoodleMoth,
+  Trout,
+  YetiCrab,
+  Bluejay,
+  Dragonfly,
+  FarmerCrow,
+  Moose,
+  Raccoon,
+  TarantulaHawk,
+  VenusFlytrap,
+  Lionfish,
+  Albatross,
+  BlackBear,
+  Chimpanzee,
+  CoconutCrab,
+  EagleOwl,
+  FarmerDog,
+  HarpyEagle,
+  Lamprey,
+  Lioness,
+  Tanystropheus,
+  Tapir,
+  Walrus,
+  WhiteTiger,
+  LoyalChinchilla,
+  CuckooChick,
+  Quail,
+  SleepingGelada,
 ];
 
 export const ALL_PETS = [...TURTLE_PACK_PETS, ...CUSTOMS_PETS];
@@ -234,7 +432,15 @@ export const PET_REGISTRY: Record<string, StaticPet> = Object.fromEntries([
   [Sloth.name, Sloth],
 ]);
 
-export const SHOP_PET_POOL: StaticPet[] = ALL_PETS.filter((p) => !p.isToken);
+export const PET_BY_ID: Record<number, StaticPet> = Object.fromEntries(
+  Object.values(PET_REGISTRY).map((p) => [p.id, p])
+);
+
+// Ability-only pets, derived from isToken so the two can't disagree.
+export const TOKEN_PETS: StaticPet[] = ALL_PETS.filter((p) => p.isToken);
+
+// Every game rolls the Turtle pack until games use their own pack.
+export const SHOP_PET_POOL: StaticPet[] = TURTLE_PACK_PETS.filter((p) => !p.isToken);
 
 function stripTooltipNotes(text: string): string {
   return text
@@ -262,5 +468,5 @@ export function getAllLevelsTooltipText(pet: StaticPet): string {
     const level = index + 1;
     return `L${level} ${getPetDescription(pet, level) ?? ""}`;
   });
-  return [pet.name, ...levelLines].join("\n");
+  return [`${pet.name} ${pet.baseAttack}/${pet.baseHealth}`, ...levelLines].join("\n");
 }

@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import {
   createAbilityMap,
   tryIncrementTriggerCount,
@@ -8,11 +8,14 @@ const TRIGGER_LIMIT = 4;
 
 export const Dragon: Readonly<StaticPet> = {
   name: "Dragon",
+  id: 53,
   sprite: "/sap/Dragon.png",
   tier: 6,
   baseAttack: 3,
   baseHealth: 8,
   isToken: false,
+  tags: [Tag.Cycle, Tag.Buff],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.friend_bought,
     fn: (ctx) => {

@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap, tryIncrementTriggerCount } from "@/lib/pets/ability";
 
 const TIMES_BY_LEVEL = ["two", "three", "four"];
@@ -6,11 +6,14 @@ const TRIGGER_LIMIT = 2;
 
 export const Cat: Readonly<StaticPet> = {
   name: "Cat",
+  id: 52,
   sprite: "/sap/Cat.webp",
   tier: 6,
   baseAttack: 4,
   baseHealth: 5,
   isToken: false,
+  tags: [Tag.Food, Tag.Buff],
+  superTags: 1,
   abilities: createAbilityMap({
     trigger: Trigger.food_bought,
     fn: (ctx) => {

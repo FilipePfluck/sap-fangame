@@ -1,0 +1,11 @@
+import type { FoodType } from "@/lib/types";
+
+export const Cupcake: FoodType = {
+  name: "Cupcake",
+  id: 5,
+  sprite: "/sap/cupcake.webp",
+  tier: 2,
+  isToken: false,
+  effect: { attack: 3, health: 3, temporary: true },
+  description: "Give one pet +3 attack and +3 health until next turn.",
+};

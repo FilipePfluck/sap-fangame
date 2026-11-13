@@ -1,13 +1,16 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Snail: Readonly<StaticPet> = {
   name: "Snail",
+  id: 17,
   sprite: "/sap/snail.webp",
   tier: 2,
   baseAttack: 2,
   baseHealth: 3,
   isToken: false,
+  tags: [Tag.Buff],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.end_turn,
     fn: (ctx) => {

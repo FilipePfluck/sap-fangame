@@ -4,11 +4,14 @@ import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Crab: Readonly<StaticPet> = {
   name: "Crab",
+  id: 11,
   sprite: "/sap/crab.webp",
   tier: 2,
   baseAttack: 4,
   baseHealth: 1,
   isToken: false,
+  tags: [],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.start_of_battle,
     fn: (ctx) => {

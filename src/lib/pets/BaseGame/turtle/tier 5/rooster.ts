@@ -1,15 +1,18 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { numberToText } from "@/lib/utils/flavor-text";
 import { createAbilityMap } from "@/lib/pets/ability";
 import { BattleActions } from "@/lib/game/ability-actions";
 
 export const Rooster: Readonly<StaticPet> = {
   name: "Rooster",
+  id: 46,
   sprite: "/sap/Rooster.webp",
   tier: 5,
   baseAttack: 6,
   baseHealth: 4,
   isToken: false,
+  tags: [Tag.Summon],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.faint,
     fn: (ctx) => {

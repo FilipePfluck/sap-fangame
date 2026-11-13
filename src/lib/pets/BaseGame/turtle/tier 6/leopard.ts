@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 import { livingPets } from "@/lib/utils/combat";
 import { numberToText } from "@/lib/utils/flavor-text";
@@ -7,11 +7,14 @@ import { BattleActions } from "@/lib/game/ability-actions";
 
 export const Leopard: Readonly<StaticPet> = {
   name: "Leopard",
+  id: 56,
   sprite: "/sap/leopard.webp",
   tier: 6,
   baseAttack: 10,
   baseHealth: 4,
   isToken: false,
+  tags: [Tag.Disruption],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.start_of_battle,
     fn: (ctx) => {

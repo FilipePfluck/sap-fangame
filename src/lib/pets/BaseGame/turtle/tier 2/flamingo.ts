@@ -3,11 +3,14 @@ import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Flamingo: Readonly<StaticPet> = {
   name: "Flamingo",
+  id: 12,
   sprite: "/sap/Flamingo.png",
   tier: 2,
   baseAttack: 3,
   baseHealth: 2,
   isToken: false,
+  tags: [],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.faint,
     fn: (ctx) => {

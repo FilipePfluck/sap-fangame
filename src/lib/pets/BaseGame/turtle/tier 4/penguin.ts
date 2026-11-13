@@ -1,14 +1,17 @@
-import { PetInstance, StaticPet, Trigger } from "@/lib/types";
+import { PetInstance, StaticPet, Trigger, Tag } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Penguin: Readonly<StaticPet> = {
   name: "Penguin",
+  id: 36,
   sprite: "/sap/Penguin.png",
   tier: 4,
   baseAttack: 2,
   baseHealth: 3,
   isToken: false,
+  tags: [Tag.Buff],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.start_of_turn,
     fn: (ctx) => {

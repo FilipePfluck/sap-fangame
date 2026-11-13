@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap, tryIncrementTriggerCount } from "@/lib/pets/ability";
 import { createPet } from "@/lib/game/pet";
 import { BattleActions } from "@/lib/game/ability-actions";
@@ -8,11 +8,14 @@ const TRIGGER_LIMIT = 3;
 
 export const Fly: Readonly<StaticPet> = {
   name: "Fly",
+  id: 54,
   sprite: "/sap/Fly.png",
   tier: 6,
   baseAttack: 4,
   baseHealth: 4,
   isToken: false,
+  tags: [Tag.Summon],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.friend_faints,
     fn: (ctx) => {

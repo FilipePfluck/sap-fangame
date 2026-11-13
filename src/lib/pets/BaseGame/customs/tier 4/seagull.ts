@@ -1,13 +1,16 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap, tryIncrementTriggerCount } from "@/lib/pets/ability";
 
 export const Seagull: Readonly<StaticPet> = {
   name: "Seagull",
+  id: 109,
   sprite: "/sap/Seagull.webp",
   tier: 4,
   baseAttack: 4,
   baseHealth: 3,
   isToken: false,
+  tags: [Tag.Summon, Tag.Perk],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.friend_summoned,
     fn: (ctx) => {

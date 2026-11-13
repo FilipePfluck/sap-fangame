@@ -4,7 +4,8 @@ import { useState, type ReactNode } from "react";
 import Image from "next/image";
 import { Turtle } from "@/lib/pets";
 import Link from "next/link";
-import PackViewer from "@/app/arena/[gameId]/PackViewer";
+import { TURTLE_PACK } from "@/lib/game/pack";
+import PackViewer, { usePreloadPackSprites } from "@/app/arena/[gameId]/PackViewer";
 import Tooltip from "@/app/arena/[gameId]/Tooltip";
 import { BUTTON_CLASS } from "./styles";
 
@@ -73,6 +74,7 @@ export default function PackMenu({ startGame }: PackMenuProps) {
   const [matchmakingMode, setMatchmakingMode] = useState(MatchmakingMode.SamePack);
   const [selectedCard, setSelectedCard] = useState(PackCard.Turtle);
   const [packViewerOpen, setPackViewerOpen] = useState(false);
+  usePreloadPackSprites(TURTLE_PACK);
   const matchmakingButton = MATCHMAKING_BUTTONS[matchmakingMode];
 
   return (
@@ -137,7 +139,7 @@ export default function PackMenu({ startGame }: PackMenuProps) {
         </PackCardFrame>
       </div>
 
-      {packViewerOpen && <PackViewer onClose={() => setPackViewerOpen(false)} />}
+      {packViewerOpen && <PackViewer pack={TURTLE_PACK} onClose={() => setPackViewerOpen(false)} />}
     </div>
   );
 }

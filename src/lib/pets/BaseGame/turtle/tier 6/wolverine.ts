@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { removeHealth } from "@/lib/utils/combat";
 import {
   createAbilityMap,
@@ -10,11 +10,14 @@ const FRIENDS_HURT_PER_ACTIVATION = 4;
 
 export const Wolverine: Readonly<StaticPet> = {
   name: "Wolverine",
+  id: 60,
   sprite: "/sap/Wolverine.webp",
   tier: 6,
   baseAttack: 5,
   baseHealth: 7,
   isToken: false,
+  tags: [Tag.Hurt],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.friend_hurt,
     fn: (ctx) => {

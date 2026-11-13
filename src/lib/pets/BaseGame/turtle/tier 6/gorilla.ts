@@ -1,14 +1,17 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap, tryIncrementTriggerCount } from "@/lib/pets/ability";
 import { CoconutPerk } from "@/lib/perks/coconut";
 
 export const Gorilla: Readonly<StaticPet> = {
   name: "Gorilla",
+  id: 55,
   sprite: "/sap/Gorilla.webp",
   tier: 6,
   baseAttack: 7,
   baseHealth: 10,
   isToken: false,
+  tags: [Tag.Hurt],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.hurt,
     fn: (ctx) => {

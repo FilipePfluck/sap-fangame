@@ -1,14 +1,17 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap } from "@/lib/pets/ability";
 import { ShopActions } from "@/lib/game/ability-actions";
 
 export const Swan: Readonly<StaticPet> = {
   name: "Swan",
+  id: 19,
   sprite: "/sap/swan.webp",
   tier: 2,
   baseAttack: 1,
   baseHealth: 2,
   isToken: false,
+  tags: [Tag.Gold],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.start_of_turn,
     fn: (ctx) => {

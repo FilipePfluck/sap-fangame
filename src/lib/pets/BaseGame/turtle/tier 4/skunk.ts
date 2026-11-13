@@ -1,15 +1,18 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { removePercentageHealth } from "@/lib/utils/combat";
 import { livingPets } from "@/lib/utils/combat";
 import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Skunk: Readonly<StaticPet> = {
   name: "Skunk",
+  id: 37,
   sprite: "/sap/skunk.webp",
   tier: 4,
   baseAttack: 3,
   baseHealth: 5,
   isToken: false,
+  tags: [Tag.Disruption],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.start_of_battle,
     fn: (ctx) => {
