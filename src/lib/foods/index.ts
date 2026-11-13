@@ -41,6 +41,12 @@ export { Tofu } from "./BaseGame/customs/tier 5/tofu";
 export { ChickenLeg } from "./BaseGame/customs/tier 6/chicken-leg";
 export { RainbowJelly } from "./BaseGame/customs/tier 6/rainbow-jelly";
 export { SoftIce } from "./BaseGame/customs/tier 6/soft-ice";
+export { Corncob } from "./BaseGame/customs/token/corncob";
+export { Egg } from "./BaseGame/customs/token/egg";
+export { Rice } from "./BaseGame/customs/token/rice";
+export { MelonSlice } from "./BaseGame/customs/token/melon-slice";
+export { Popcorn } from "./BaseGame/customs/token/popcorn";
+export { PeanutButter } from "./BaseGame/customs/token/peanut-butter";
 
 import type { FoodType } from "@/lib/types";
 import { Cupcake } from "@/lib/foods/BaseGame/turtle/tier 2/cupcake";
@@ -95,6 +101,12 @@ import { Tofu } from "@/lib/foods/BaseGame/customs/tier 5/tofu";
 import { ChickenLeg } from "@/lib/foods/BaseGame/customs/tier 6/chicken-leg";
 import { RainbowJelly } from "@/lib/foods/BaseGame/customs/tier 6/rainbow-jelly";
 import { SoftIce } from "@/lib/foods/BaseGame/customs/tier 6/soft-ice";
+import { Corncob } from "@/lib/foods/BaseGame/customs/token/corncob";
+import { Egg } from "@/lib/foods/BaseGame/customs/token/egg";
+import { Rice } from "@/lib/foods/BaseGame/customs/token/rice";
+import { MelonSlice } from "@/lib/foods/BaseGame/customs/token/melon-slice";
+import { Popcorn } from "@/lib/foods/BaseGame/customs/token/popcorn";
+import { PeanutButter } from "@/lib/foods/BaseGame/customs/token/peanut-butter";
 
 export const TURTLE_PACK_FOODS: FoodType[] = [
   BreadCrumbs,
@@ -153,6 +165,12 @@ export const CUSTOMS_FOODS: FoodType[] = [
   ChickenLeg,
   RainbowJelly,
   SoftIce,
+  Corncob,
+  Egg,
+  Rice,
+  MelonSlice,
+  Popcorn,
+  PeanutButter,
 ];
 
 export const ALL_FOODS: FoodType[] = [...TURTLE_PACK_FOODS, ...CUSTOMS_FOODS];
@@ -160,6 +178,9 @@ export const ALL_FOODS: FoodType[] = [...TURTLE_PACK_FOODS, ...CUSTOMS_FOODS];
 export const FOOD_REGISTRY: Record<string, FoodType> = Object.fromEntries(
   ALL_FOODS.map((f) => [f.name, f])
 );
+
+// Ability-only foods, derived from isToken so the two can't disagree.
+export const TOKEN_FOODS: FoodType[] = ALL_FOODS.filter((f) => f.isToken);
 
 // Every game rolls the Turtle pack until games use their own pack.
 export const SHOP_FOOD_POOL: FoodType[] = TURTLE_PACK_FOODS.filter((f) => !f.isToken);

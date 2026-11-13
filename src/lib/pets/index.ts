@@ -133,6 +133,10 @@ export { Tanystropheus } from "./BaseGame/customs/tier 6/tanystropheus";
 export { Tapir } from "./BaseGame/customs/tier 6/tapir";
 export { Walrus } from "./BaseGame/customs/tier 6/walrus";
 export { WhiteTiger } from "./BaseGame/customs/tier 6/white-tiger";
+export { LoyalChinchilla } from "./BaseGame/customs/token/loyal-chinchilla";
+export { CuckooChick } from "./BaseGame/customs/token/cuckoo-chick";
+export { Quail } from "./BaseGame/customs/token/quail";
+export { SleepingGelada } from "./BaseGame/customs/token/sleeping-gelada";
 
 import { Sloth } from "./BaseGame/turtle/token/sloth";
 import { Duck } from "./BaseGame/turtle/tier 1/duck";
@@ -269,6 +273,10 @@ import { Tanystropheus } from "./BaseGame/customs/tier 6/tanystropheus";
 import { Tapir } from "./BaseGame/customs/tier 6/tapir";
 import { Walrus } from "./BaseGame/customs/tier 6/walrus";
 import { WhiteTiger } from "./BaseGame/customs/tier 6/white-tiger";
+import { LoyalChinchilla } from "./BaseGame/customs/token/loyal-chinchilla";
+import { CuckooChick } from "./BaseGame/customs/token/cuckoo-chick";
+import { Quail } from "./BaseGame/customs/token/quail";
+import { SleepingGelada } from "./BaseGame/customs/token/sleeping-gelada";
 import { MAX_PET_LEVEL } from "@/lib/game/rules";
 import type { StaticPet } from "@/lib/types";
 
@@ -411,6 +419,10 @@ export const CUSTOMS_PETS = [
   Tapir,
   Walrus,
   WhiteTiger,
+  LoyalChinchilla,
+  CuckooChick,
+  Quail,
+  SleepingGelada,
 ];
 
 export const ALL_PETS = [...TURTLE_PACK_PETS, ...CUSTOMS_PETS];
@@ -419,6 +431,9 @@ export const PET_REGISTRY: Record<string, StaticPet> = Object.fromEntries([
   ...ALL_PETS.map((p) => [p.name, p]),
   [Sloth.name, Sloth],
 ]);
+
+// Ability-only pets, derived from isToken so the two can't disagree.
+export const TOKEN_PETS: StaticPet[] = ALL_PETS.filter((p) => p.isToken);
 
 // Every game rolls the Turtle pack until games use their own pack.
 export const SHOP_PET_POOL: StaticPet[] = TURTLE_PACK_PETS.filter((p) => !p.isToken);
