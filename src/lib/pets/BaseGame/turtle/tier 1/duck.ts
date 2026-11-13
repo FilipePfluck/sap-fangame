@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Duck: Readonly<StaticPet> = {
@@ -8,6 +8,8 @@ export const Duck: Readonly<StaticPet> = {
   baseAttack: 2,
   baseHealth: 2,
   isToken: false,
+  tags: [Tag.Buff],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.sell,
     fn: (ctx) => {

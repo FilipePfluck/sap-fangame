@@ -210,6 +210,10 @@ export type StaticPet = {
   baseAttack: number;
   baseHealth: number;
   isToken: boolean;
+  // Archetype tags, each at most once, in the pack editor's order.
+  tags: Tag[];
+  // Super tags can repeat, so they're a count. tags + superTags is at most 3.
+  superTags: number;
   abilities: Map<Trigger, Ability>;
   innatePerk?: BasePerkType | OffensivePerk | DefensivePerk | TriggerPerk | null;
   // Pet types this pet's abilities never activate on (e.g. Fly ignores a

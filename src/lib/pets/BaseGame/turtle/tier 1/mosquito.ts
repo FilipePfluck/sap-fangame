@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 import { livingPets } from "@/lib/utils/combat";
 import { numberToText } from "@/lib/utils/flavor-text";
@@ -12,6 +12,8 @@ export const Mosquito: Readonly<StaticPet> = {
   baseAttack: 2,
   baseHealth: 2,
   isToken: false,
+  tags: [Tag.Disruption],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.start_of_battle,
     fn: (ctx) => {

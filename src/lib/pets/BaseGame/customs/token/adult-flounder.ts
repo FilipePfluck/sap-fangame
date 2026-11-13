@@ -13,6 +13,8 @@ export const AdultFlounder: Readonly<StaticPet> = {
   baseAttack: 2,
   baseHealth: 4,
   isToken: true,
+  tags: [],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.transformed,
     fn: (ctx) => {

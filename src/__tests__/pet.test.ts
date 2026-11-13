@@ -40,6 +40,8 @@ describe("pet ability data", () => {
       baseAttack: 1,
       baseHealth: 1,
       isToken: false,
+      tags: [],
+      superTags: 0,
       abilities: createAbilityMap({
         trigger: Trigger.buy,
         fn: () => {},

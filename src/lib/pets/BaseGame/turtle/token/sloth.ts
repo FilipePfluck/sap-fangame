@@ -7,6 +7,8 @@ export const Sloth: Readonly<StaticPet> = {
   baseAttack: 1,
   baseHealth: 1,
   isToken: false,
+  tags: [],
+  superTags: 0,
   abilities: new Map(),
   description: "No ability.",
 };

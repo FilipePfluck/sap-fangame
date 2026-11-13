@@ -7,6 +7,8 @@ export const ZombieCricket: Readonly<StaticPet> = {
   baseAttack: 1,
   baseHealth: 1,
   isToken: true,
+  tags: [],
+  superTags: 0,
   abilities: new Map(),
   description: "No ability.",
 };

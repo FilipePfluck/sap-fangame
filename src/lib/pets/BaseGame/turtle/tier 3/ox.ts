@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { MelonPerk } from "@/lib/perks/melon";
 import {
   createAbilityMap,
@@ -16,6 +16,8 @@ export const Ox: Readonly<StaticPet> = {
   baseAttack: 1,
   baseHealth: 3,
   isToken: false,
+  tags: [Tag.Perk],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.friend_ahead_faints,
     fn: (ctx) => {

@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { numberToText } from "@/lib/utils/flavor-text";
 import { createAbilityMap } from "@/lib/pets/ability";
 import { createPet } from "@/lib/game/pet";
@@ -12,6 +12,8 @@ export const Rat: Readonly<StaticPet> = {
   baseAttack: 3,
   baseHealth: 6,
   isToken: false,
+  tags: [Tag.Hurt],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.faint,
     fn: (ctx) => {

@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { livingPets } from "@/lib/utils/combat";
 import { createAbilityMap } from "@/lib/pets/ability";
 import { BattleActions } from "@/lib/game/ability-actions";
@@ -10,6 +10,8 @@ export const Crocodile: Readonly<StaticPet> = {
   baseAttack: 8,
   baseHealth: 4,
   isToken: false,
+  tags: [Tag.Disruption],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.start_of_battle,
     fn: (ctx) => {

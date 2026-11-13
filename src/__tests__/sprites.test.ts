@@ -12,6 +12,7 @@ const entries = [
   ...Object.values(PET_REGISTRY).map((p) => ({ name: p.name, sprite: p.sprite })),
   ...Object.values(FOOD_REGISTRY).map((f) => ({ name: f.name, sprite: f.sprite })),
   ...[...Object.values(TAG_DISPLAY), SUPER_TAG_DISPLAY].map((t) => ({ name: `${t.label} tag`, sprite: t.sprite })),
+  // Toys aren't in a registry yet.
 ];
 
 describe("sprites", () => {

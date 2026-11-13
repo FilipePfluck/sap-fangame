@@ -1,8 +1,8 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap } from "@/lib/pets/ability";
 import { ShopActions } from "@/lib/game/ability-actions";
 import { FOOD_COST } from "@/lib/game/costs";
-import { Cupcake } from "@/lib/foods/cupcake";
+import { Cupcake } from "@/lib/foods/BaseGame/turtle/tier 2/cupcake";
 
 const EFFECT_BY_LEVEL = ["", " with double effect", " with triple effect"];
 
@@ -13,6 +13,8 @@ export const SugarGlider: Readonly<StaticPet> = {
   baseAttack: 1,
   baseHealth: 3,
   isToken: false,
+  tags: [Tag.Food],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.start_of_turn,
     fn: (ctx) => {

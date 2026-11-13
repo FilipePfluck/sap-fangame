@@ -1,10 +1,11 @@
 import type { FoodType } from "@/lib/types";
 import { CoconutPerk } from "@/lib/perks/coconut";
+import { TOKEN_TIER } from "@/lib/game/rules";
 
 export const Coconut: FoodType = {
   name: "Coconut",
   sprite: "/sap/Coconut.png",
-  tier: 7,
+  tier: TOKEN_TIER,
   perk: CoconutPerk,
   isToken: true,
   effect: {},

@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap, tryIncrementTriggerCount } from "@/lib/pets/ability";
 import { grantExperience } from "@/lib/game/merge";
 
@@ -12,6 +12,8 @@ export const Alpaca: Readonly<StaticPet> = {
   baseAttack: 3,
   baseHealth: 7,
   isToken: false,
+  tags: [Tag.Summon, Tag.LevelUp],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.friend_summoned,
     fn: (ctx) => {

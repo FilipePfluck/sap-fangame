@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { removeHealth } from "@/lib/utils/combat";
 import {
   createAbilityMap,
@@ -15,6 +15,8 @@ export const Wolverine: Readonly<StaticPet> = {
   baseAttack: 5,
   baseHealth: 7,
   isToken: false,
+  tags: [Tag.Hurt],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.friend_hurt,
     fn: (ctx) => {
