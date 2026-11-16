@@ -11,7 +11,7 @@ describe("parsePackRequest", () => {
 
   it.each([
     { case: "an unknown pet ID", body: { ...PACK_REQUEST, pets: [9999] }, error: "Unknown pet ID 9999" },
-    { case: "a name over 100 characters", body: { ...PACK_REQUEST, name: "a".repeat(101) }, error: "Invalid request" },
+    { case: "a name over 20 characters", body: { ...PACK_REQUEST, name: "a".repeat(21) }, error: "Invalid request" },
     { case: "no body", body: null, error: "Invalid request" },
   ])("rejects $case", ({ body, error }) => {
     expect(parsePackRequest(body)).toEqual({ error });

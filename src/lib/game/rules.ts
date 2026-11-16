@@ -20,8 +20,8 @@ export const MAX_SUPER_TAGS_PER_PACK = 5;
 export const PETS_PER_TIER = 10;
 export const FOODS_PER_TIER = 3;
 export const MAX_PACKS_PER_USER = 5;
-// Not in the Pack spec: caps what the packs API accepts.
-export const MAX_PACK_NAME_LENGTH = 100;
+// Not in the Pack spec: keeps names short enough for a pack card.
+export const MAX_PACK_NAME_LENGTH = 20;
 // Names custom packs may not use (Pack spec): the static packs', and Custom,
 // which the pack menu uses for custom packs.
 export const RESERVED_PACK_NAMES: readonly string[] = [

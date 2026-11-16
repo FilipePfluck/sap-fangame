@@ -23,6 +23,7 @@ import {
 } from "@/lib/game/pack";
 import {
   FOODS_PER_TIER,
+  MAX_PACK_NAME_LENGTH,
   MAX_SAME_TAG_PER_TIER,
   MAX_SUPER_TAGS_PER_PACK,
   PETS_PER_TIER,
@@ -430,6 +431,7 @@ function SettingsModal({ pack, isSaved, onRename, onImport, onRandomize, onClear
             <input
               value={name}
               onChange={(event) => onRename(event.target.value, icon)}
+              maxLength={MAX_PACK_NAME_LENGTH}
               aria-label="Pack name"
               className={`px-3 py-2 ${BUTTON_CLASS}`}
             />

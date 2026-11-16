@@ -534,6 +534,11 @@ describe("PackEditor", () => {
       expect(container.querySelector('[aria-label="Pack name"]:not(input)')!.textContent).toBe("Zoo");
     });
 
+    it("limits the pack name to 20 characters", () => {
+      openSetting("Change name");
+      expect(settingsInput("Pack name").maxLength).toBe(20);
+    });
+
     it("changes the pack icon", () => {
       openSetting("Change name");
       const select = settingsModal()!.querySelector<HTMLSelectElement>('[aria-label="Pack icon"]')!;
