@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import type { Prisma } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { ShopState, PetInstance, ApiBoard } from "@/lib/types";
 import { PET_REGISTRY, getPetTooltipText } from "@/lib/pets";
@@ -10,7 +11,7 @@ import { applyFoodEffect, feedError, needsTarget } from "@/lib/game/food";
 import { getPetCost, getFoodCost, getSellValue, ROLL_COST } from "@/lib/game/costs";
 import { createPet } from "@/lib/game/pet";
 import { STARTING_LIVES } from "@/lib/game/rules";
-import { TURTLE_PACK } from "@/lib/game/pack";
+import { getGamePack } from "@/lib/game/pack";
 import { PET_SPRITES, FOOD_SPRITES } from "@/lib/sprites";
 import ShopItem from "./ShopItem";
 import BoardSlot from "./BoardSlot";
@@ -60,6 +61,8 @@ type NextState = {
 
 type GameClientProps = {
   gameId: string;
+  // Game.pack, read with getGamePack.
+  gamePack: Prisma.JsonValue;
   initialBoard: ApiBoard;
   initialShop: ShopState;
   initialGold: number;
@@ -70,6 +73,7 @@ type GameClientProps = {
 
 export default function GameClient({
   gameId,
+  gamePack,
   initialBoard,
   initialShop,
   initialGold,
@@ -109,7 +113,8 @@ export default function GameClient({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [packViewerOpen, setPackViewerOpen] = useState(false);
-  usePreloadPackSprites(TURTLE_PACK);
+  const pack = useMemo(() => getGamePack(gamePack), [gamePack]);
+  usePreloadPackSprites(pack);
 
   const selectedFoodDef =
     selectedItem?.kind === "food" ? FOOD_MAP[shop.shopFoods[selectedItem.index]?.type] : undefined;
@@ -731,7 +736,7 @@ export default function GameClient({
               </button>
             </div>
 
-            {packViewerOpen && <PackViewer pack={TURTLE_PACK} onClose={() => setPackViewerOpen(false)} />}
+            {packViewerOpen && <PackViewer pack={pack} onClose={() => setPackViewerOpen(false)} />}
           </>
         ) : (
           battleData && (

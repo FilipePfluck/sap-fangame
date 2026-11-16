@@ -3,7 +3,7 @@ import { prisma, toPrismaJson } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { FOOD_REGISTRY } from "@/lib/foods";
 import { PET_REGISTRY } from "@/lib/pets";
-import { getGamePack } from "@/lib/game/pack-store";
+import { getGamePack } from "@/lib/game/pack";
 import { applyFoodEffect, feedError } from "@/lib/game/food";
 import { applyFrozenFlags, getRewardTier } from "@/lib/game/shop";
 import { resolveExperienceLevelUps } from "@/lib/game/shop-ability";

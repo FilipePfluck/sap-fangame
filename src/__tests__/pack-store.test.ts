@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { TURTLE_PACK } from "@/lib/game/pack";
-import { getGamePack, loadStartingPack, toPackRowData, toSerializedPack } from "@/lib/game/pack-store";
+import { loadStartingPack, toPackRowData, toSerializedPack } from "@/lib/game/pack-store";
 import type { SerializedPack } from "@/lib/types";
 
 const prisma = vi.hoisted(() => ({ pack: { findFirst: vi.fn() } }));
@@ -23,20 +23,6 @@ describe("toPackRowData", () => {
 describe("toSerializedPack", () => {
   it("reads the pack back from the Pack table's columns", () => {
     expect(toSerializedPack({ name: "My Pack", iconId: 3, petsId: [1, 2], foodsId: [4] })).toEqual(SAVED_PACK);
-  });
-});
-
-describe("getGamePack", () => {
-  it("rolls Turtle for a game from before packs", () => {
-    expect(getGamePack(null)).toBe(TURTLE_PACK);
-  });
-
-  it("finds a static pack by name", () => {
-    expect(getGamePack({ ...SAVED_PACK, name: "Turtle" })).toBe(TURTLE_PACK);
-  });
-
-  it("rolls the game's custom pack", () => {
-    expect(getGamePack(SAVED_PACK).serialize()).toEqual(SAVED_PACK);
   });
 });
 

@@ -4,7 +4,7 @@ import { getLastBoardState } from "@/lib/game/board";
 import { ROLL_COST } from "@/lib/game/costs";
 import { generateShop, pickFrozenItems } from "@/lib/game/shop";
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
-import { getGamePack } from "@/lib/game/pack-store";
+import { getGamePack } from "@/lib/game/pack";
 import { z } from "zod";
 
 const RollSchema = z.object(FrozenPositionsShape);

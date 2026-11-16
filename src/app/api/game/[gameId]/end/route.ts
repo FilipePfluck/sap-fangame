@@ -6,7 +6,7 @@ import { generateShop, getUnlockedTiers, pickFrozenItems, clearDiscount } from "
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import { fireBoardShopAbility } from "@/lib/game/shop-ability";
 import { PET_REGISTRY } from "@/lib/pets";
-import { getGamePack } from "@/lib/game/pack-store";
+import { getGamePack } from "@/lib/game/pack";
 import { pickRandom } from "@/lib/utils/random";
 import { createPet } from "@/lib/game/pet";
 import { TURN_GOLD, TROPHIES_TO_WIN } from "@/lib/game/rules";

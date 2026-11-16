@@ -5,7 +5,7 @@ import { mergePets, mergeError, levelUpRewardEarned } from "@/lib/game/merge";
 import { applyFrozenFlags, getRewardTier } from "@/lib/game/shop";
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import { PET_REGISTRY } from "@/lib/pets";
-import { getGamePack } from "@/lib/game/pack-store";
+import { getGamePack } from "@/lib/game/pack";
 import { resolveLevelUp } from "@/lib/game/shop-ability";
 import { z } from "zod";
 import { ApiBoard, ShopState } from "@/lib/types";

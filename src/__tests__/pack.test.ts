@@ -9,6 +9,7 @@ import {
   TURTLE_PACK,
   filterPack,
   getRandomPackIds,
+  getGamePack,
   getTooltipPages,
   hasRoomForPack,
   type PackFilter,
@@ -383,5 +384,19 @@ describe("shop pools", () => {
 
   it("rolls the same foods for Turtle as the Turtle shop pool", () => {
     expect(new Set(TURTLE_PACK.shopFoods())).toEqual(new Set(SHOP_FOOD_POOL));
+  });
+});
+
+describe("getGamePack", () => {
+  it("rolls Turtle for a game from before packs", () => {
+    expect(getGamePack(null)).toBe(TURTLE_PACK);
+  });
+
+  it("finds a static pack by name", () => {
+    expect(getGamePack({ ...VALID_PACK, name: "Turtle" })).toBe(TURTLE_PACK);
+  });
+
+  it("rolls the game's custom pack", () => {
+    expect(getGamePack({ ...VALID_PACK, name: "My Pack" }).serialize()).toEqual({ ...VALID_PACK, name: "My Pack" });
   });
 });

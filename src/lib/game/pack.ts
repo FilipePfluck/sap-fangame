@@ -278,6 +278,15 @@ export const TURTLE_PACK = new StaticPack(
 
 export const STATIC_PACKS: readonly StaticPack[] = [TURTLE_PACK];
 
+// A game's pack from Game.pack (prisma/schema.prisma), which startGame writes
+// as a SerializedPack. Custom packs can't use a static pack's name (Pack spec),
+// so a static pack is found by name and uses its current pets and foods.
+export function getGamePack(gamePack: unknown): Pack {
+  if (gamePack === null) return TURTLE_PACK;
+  const serializedPack = gamePack as SerializedPack;
+  return STATIC_PACKS.find((pack) => pack.data.name === serializedPack.name) ?? Pack.fromSerialized(serializedPack);
+}
+
 // The tokens and foods each pet or food names, shown as extra tooltip pages.
 const TOOLTIP_LINKS = new Map<TooltipEntry, readonly TooltipEntry[]>([
   [Pigeon, [BreadCrumbs]],

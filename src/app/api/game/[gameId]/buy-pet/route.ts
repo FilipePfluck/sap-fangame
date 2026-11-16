@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { prisma, toPrismaJson } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { PET_REGISTRY } from "@/lib/pets";
-import { getGamePack } from "@/lib/game/pack-store";
+import { getGamePack } from "@/lib/game/pack";
 import { applyFrozenFlags, getRewardTier } from "@/lib/game/shop";
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import {
