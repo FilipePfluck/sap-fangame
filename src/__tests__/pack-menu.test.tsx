@@ -213,7 +213,13 @@ describe("PackMenu", () => {
       renderSavedPacks([VALID_PACK]);
       click(button("Select Full pack"));
       await act(async () => container.querySelector<HTMLButtonElement>('form button[type="submit"]')!.click());
-      expect(startGame).toHaveBeenCalledWith(9, expect.any(FormData));
+      expect(startGame).toHaveBeenCalledWith(9, "SAME_PACK", expect.any(FormData));
+    });
+
+    it("starts the game with the matchmaking mode", async () => {
+      click(button("Same pack"));
+      await act(async () => container.querySelector<HTMLButtonElement>('form button[type="submit"]')!.click());
+      expect(startGame).toHaveBeenCalledWith(null, "ALL_PACKS", expect.any(FormData));
     });
 
     it("disables ➕ at 5 saved packs", () => {

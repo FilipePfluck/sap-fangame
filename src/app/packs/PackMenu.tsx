@@ -8,14 +8,10 @@ import { Pack, TURTLE_PACK, hasRoomForPack } from "@/lib/game/pack";
 import type { SavedPackJson } from "@/lib/game/pack-request";
 import type { SavedPack } from "@/lib/game/pack-store";
 import { FOODS_PER_TIER, MAX_PACKS_PER_USER, PETS_PER_TIER } from "@/lib/game/rules";
+import { MatchmakingMode } from "@/lib/game/matchmaking";
 import PackViewer, { usePreloadPackSprites } from "@/app/arena/[gameId]/PackViewer";
 import Tooltip from "@/app/arena/[gameId]/Tooltip";
 import { BUTTON_CLASS, PRIMARY_BUTTON_CLASS } from "./styles";
-
-enum MatchmakingMode {
-  SamePack,
-  AllPacks,
-}
 
 type MatchmakingButton = { icon: string; label: string; description: string; next: MatchmakingMode };
 
@@ -142,7 +138,7 @@ function ActiveGameButtons({ activeGameId, abandonGame }: ActiveGameButtonsProps
 
 type PackMenuProps = {
   // `packId` is the selected saved pack, or null for Turtle.
-  startGame: (packId: number | null) => void | Promise<void>;
+  startGame: (packId: number | null, matchmakingMode: MatchmakingMode) => void | Promise<void>;
   abandonGame: (gameId: string) => Promise<void>;
   // The player's game in progress, if any.
   activeGameId: string | null;
@@ -178,7 +174,7 @@ export default function PackMenu({ startGame, abandonGame, activeGameId, savedPa
           <ActiveGameButtons activeGameId={activeGameId} abandonGame={abandonGame} />
         ) : (
           <Tooltip text={selectedPack.data.isValid ? undefined : INVALID_PACK_TOOLTIP}>
-            <form action={startGame.bind(null, selectedPackId)}>
+            <form action={startGame.bind(null, selectedPackId, matchmakingMode)}>
               <button type="submit" disabled={!selectedPack.data.isValid} className={PRIMARY_BUTTON_CLASS}>
                 Start game
               </button>

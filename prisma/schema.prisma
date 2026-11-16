@@ -47,6 +47,18 @@ enum GameStatus {
   LOST
 }
 
+// Whether a pack is one of the game's static packs or a player's custom pack.
+enum PackKind {
+  STATIC
+  CUSTOM
+}
+
+// The pack menu's matchmaking toggle (see opponentPackKinds in lib/game/matchmaking.ts).
+enum MatchmakingMode {
+  SAME_PACK
+  ALL_PACKS
+}
+
 enum BattleResult {
   WIN
   DRAW
@@ -60,6 +72,7 @@ model Game {
   status      GameStatus @default(ACTIVE)
   // The pack this game rolls, as a SerializedPack. Null for games from before packs, which roll Turtle.
   pack        Json?
+  matchmakingMode MatchmakingMode @default(SAME_PACK)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
@@ -120,8 +133,9 @@ model SubmittedTeam {
   lives      Int
   trophies   Int
   team       Json
+  packKind   PackKind @default(STATIC)
   createdAt  DateTime @default(now())
 
-  @@index([turnNumber, lives, trophies])
+  @@index([turnNumber, packKind, lives, trophies])
   @@index([playerId])
 }

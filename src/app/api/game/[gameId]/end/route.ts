@@ -7,6 +7,7 @@ import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import { fireBoardShopAbility } from "@/lib/game/shop-ability";
 import { PET_REGISTRY } from "@/lib/pets";
 import { getGamePack } from "@/lib/game/pack";
+import { getPackKind, opponentPackKinds, type MatchmakingMode } from "@/lib/game/matchmaking";
 import { pickRandom } from "@/lib/utils/random";
 import { createPet } from "@/lib/game/pet";
 import { TURN_GOLD, TROPHIES_TO_WIN } from "@/lib/game/rules";
@@ -61,6 +62,7 @@ export async function POST(
 
   const { lives, trophies, turnNumber } = state.turn;
   const pack = getGamePack(game.pack);
+  const packKind = getPackKind(pack);
   const emptyShop = { shopPets: [], shopFoods: [] };
 
   // End-turn fires before this turn's battle (reacting to the *previous*
@@ -83,6 +85,7 @@ export async function POST(
       lives,
       trophies,
       team: toPrismaJson(preBattleBoard),
+      packKind,
     },
   });
 
@@ -91,6 +94,7 @@ export async function POST(
   >`
     SELECT "playerName", "team" FROM "SubmittedTeam"
     WHERE "playerId" != ${session.user.id} AND "turnNumber" = ${turnNumber}
+      AND "packKind"::text = ANY(${opponentPackKinds(packKind, game.matchmakingMode as MatchmakingMode)})
     ORDER BY
       CASE WHEN "lives" = ${lives} AND "trophies" = ${trophies} THEN 0 ELSE 1 END,
       "createdAt" ASC

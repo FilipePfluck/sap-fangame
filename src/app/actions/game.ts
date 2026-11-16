@@ -7,10 +7,11 @@ import { revalidatePath } from "next/cache";
 import { STARTING_LIVES, TURN_GOLD } from "@/lib/game/rules";
 import { generateShop } from "@/lib/game/shop";
 import { loadStartingPack } from "@/lib/game/pack-store";
+import { isMatchmakingMode, type MatchmakingMode } from "@/lib/game/matchmaking";
 import { deleteActiveGame, findActiveGameId } from "@/lib/game/active-game";
 
 // `packId` is the saved pack to play, or null for Turtle.
-export async function startGame(packId: number | null) {
+export async function startGame(packId: number | null, matchmakingMode: MatchmakingMode) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
@@ -18,13 +19,14 @@ export async function startGame(packId: number | null) {
   if (activeGameId) redirect(`/arena/${activeGameId}`);
 
   const pack = await loadStartingPack(session.user.id, packId);
-  if (!pack) redirect("/packs");
+  if (!pack || !isMatchmakingMode(matchmakingMode)) redirect("/packs");
 
   const shop = generateShop({ turn: 1, pack: pack.shopPets(), foodTypes: pack.shopFoods() });
   const game = await prisma.game.create({
     data: {
       playerId: session.user.id,
       pack: toPrismaJson(pack.serialize()),
+      matchmakingMode,
       turns: { create: { turnNumber: 1, lives: STARTING_LIVES, trophies: 0 } },
     },
     include: { turns: true },
