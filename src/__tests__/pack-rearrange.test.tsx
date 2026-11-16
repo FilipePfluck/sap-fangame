@@ -12,6 +12,8 @@ type DragEndEvent = {
 };
 let onDragEnd: (event: DragEndEvent) => void;
 
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn() }) }));
+
 vi.mock("@dnd-kit/react", () => ({
   DragDropProvider: (props: { children: ReactNode; onDragEnd: (event: DragEndEvent) => void }) => {
     onDragEnd = props.onDragEnd;

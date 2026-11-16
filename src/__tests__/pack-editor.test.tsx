@@ -1,8 +1,17 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import PackEditor from "@/app/packs/editor/PackEditor";
 import { PET_REGISTRY } from "@/lib/pets";
+import type { SavedPackJson } from "@/lib/game/pack-request";
+
+const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => router }));
+
+const SAVED_PACK: SavedPackJson = {
+  id: 7,
+  pack: { name: "Zoo", icon: 1, pets: [1], foods: [], isValid: false },
+};
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -19,7 +28,26 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   container.remove();
+  vi.unstubAllGlobals();
+  vi.clearAllMocks();
 });
+
+function renderSavedPack() {
+  act(() => root.unmount());
+  root = createRoot(container);
+  act(() => root.render(<PackEditor savedPack={SAVED_PACK} />));
+}
+
+// Answers every fetch with `body` and `status`.
+function stubFetch(status: number, body: unknown = null) {
+  const fetchMock = vi.fn(async () => new Response(body === null ? null : JSON.stringify(body), { status }));
+  vi.stubGlobal("fetch", fetchMock);
+  return fetchMock;
+}
+
+async function clickAndWait(element: HTMLElement) {
+  await act(async () => element.click());
+}
 
 function button(label: string): HTMLButtonElement {
   return container.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)!;
@@ -210,13 +238,14 @@ describe("PackEditor", () => {
     expect(container.querySelector('[role="dialog"][aria-label="Pack viewer"]')).not.toBeNull();
   });
 
-  it("opens the settings modal from 🔧 with Delete disabled until packs are saved", () => {
+  it("opens the settings modal from 🔧 with Delete disabled for a new pack", () => {
     click(button("Pack settings"));
     const modal = settingsModal()!;
     const settings = [...modal.querySelectorAll<HTMLButtonElement>("button:not([aria-label])")];
     expect([modal.getAttribute("aria-modal"), settings.map((setting) => [setting.textContent, setting.disabled])]).toEqual([
       "true",
       [
+        ["Save", false],
         ["Change name", false],
         ["Export", false],
         ["Import", false],
@@ -565,6 +594,77 @@ describe("PackEditor", () => {
       typeInto(settingsInput("Pack code"), "not a code");
       click(settingsButton("Import"));
       expect(settingsModal()!.querySelector('[role="alert"]')!.textContent).toBe("Not a pack code");
+    });
+  });
+
+  describe("saving", () => {
+    it("loads a saved pack", () => {
+      renderSavedPack();
+      expect(container.querySelector('[aria-label="Pack name"]:not(input)')!.textContent).toBe("Zoo");
+    });
+
+    it("enables Delete for a saved pack", () => {
+      renderSavedPack();
+      click(button("Pack settings"));
+      expect(settingsButton("Delete").disabled).toBe(false);
+    });
+
+    it("creates a new pack", async () => {
+      const fetchMock = stubFetch(201, SAVED_PACK);
+      click(button("Pack settings"));
+      await clickAndWait(settingsButton("Save"));
+      expect(fetchMock).toHaveBeenCalledWith("/api/packs", expect.objectContaining({ method: "POST" }));
+    });
+
+    it("updates a saved pack", async () => {
+      renderSavedPack();
+      const fetchMock = stubFetch(200, SAVED_PACK);
+      click(button("Pack settings"));
+      await clickAndWait(settingsButton("Save"));
+      expect(fetchMock).toHaveBeenCalledWith("/api/packs/7", expect.objectContaining({ method: "PUT" }));
+    });
+
+    it("moves to the pack's address after its first save", async () => {
+      stubFetch(201, SAVED_PACK);
+      click(button("Pack settings"));
+      await clickAndWait(settingsButton("Save"));
+      expect(router.replace).toHaveBeenCalledWith("/packs/editor?packId=7");
+    });
+
+    it("says the pack was saved", async () => {
+      stubFetch(201, SAVED_PACK);
+      click(button("Pack settings"));
+      await clickAndWait(settingsButton("Save"));
+      expect(settingsModal()!.querySelector('[role="status"]')!.textContent).toBe("Saved.");
+    });
+
+    it("shows why a save failed", async () => {
+      stubFetch(409, { error: "You've saved the most packs you can" });
+      click(button("Pack settings"));
+      await clickAndWait(settingsButton("Save"));
+      expect(settingsModal()!.querySelector('[role="alert"]')!.textContent).toBe("You've saved the most packs you can");
+    });
+
+    it("asks before deleting", () => {
+      renderSavedPack();
+      openSetting("Delete");
+      expect(settingsModal()!.querySelector("span")!.textContent).toBe("Delete Zoo? This can't be undone.");
+    });
+
+    it("deletes the saved pack", async () => {
+      renderSavedPack();
+      const fetchMock = stubFetch(204);
+      openSetting("Delete");
+      await clickAndWait(settingsButton("Delete pack"));
+      expect(fetchMock).toHaveBeenCalledWith("/api/packs/7", { method: "DELETE" });
+    });
+
+    it("returns to the pack menu after deleting", async () => {
+      renderSavedPack();
+      stubFetch(204);
+      openSetting("Delete");
+      await clickAndWait(settingsButton("Delete pack"));
+      expect(router.push).toHaveBeenCalledWith("/packs");
     });
   });
 });
