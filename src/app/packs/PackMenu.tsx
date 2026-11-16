@@ -7,7 +7,7 @@ import Link from "next/link";
 import { Pack, TURTLE_PACK, hasRoomForPack } from "@/lib/game/pack";
 import type { SavedPackJson } from "@/lib/game/pack-request";
 import type { SavedPack } from "@/lib/game/pack-store";
-import { MAX_PACKS_PER_USER } from "@/lib/game/rules";
+import { FOODS_PER_TIER, MAX_PACKS_PER_USER, PETS_PER_TIER } from "@/lib/game/rules";
 import PackViewer, { usePreloadPackSprites } from "@/app/arena/[gameId]/PackViewer";
 import Tooltip from "@/app/arena/[gameId]/Tooltip";
 import { BUTTON_CLASS, PRIMARY_BUTTON_CLASS } from "./styles";
@@ -65,6 +65,9 @@ function PackCardFrame({ selected, onSelect, selectLabel, actions, children }: P
     </div>
   );
 }
+
+// Pack spec: what a pack needs before it can start a game.
+const INVALID_PACK_TOOLTIP = `Finish this pack to play it: ${PETS_PER_TIER} pets and ${FOODS_PER_TIER} foods in every tier, an allowed name and an icon.`;
 
 const NEW_PACK_CARD_CLASS = `${CARD_CLASS} flex-col gap-2 border border-zinc-300 dark:border-zinc-600`;
 
@@ -138,7 +141,8 @@ function ActiveGameButtons({ activeGameId, abandonGame }: ActiveGameButtonsProps
 }
 
 type PackMenuProps = {
-  startGame: () => void | Promise<void>;
+  // `packId` is the selected saved pack, or null for Turtle.
+  startGame: (packId: number | null) => void | Promise<void>;
   abandonGame: (gameId: string) => Promise<void>;
   // The player's game in progress, if any.
   activeGameId: string | null;
@@ -173,10 +177,9 @@ export default function PackMenu({ startGame, abandonGame, activeGameId, savedPa
         {activeGameId ? (
           <ActiveGameButtons activeGameId={activeGameId} abandonGame={abandonGame} />
         ) : (
-          // TODO - Start games with a custom pack (PR 3b).
-          <Tooltip text={selectedPackId === null ? undefined : "Custom packs can't start games yet."}>
-            <form action={startGame}>
-              <button type="submit" disabled={selectedPackId !== null} className={PRIMARY_BUTTON_CLASS}>
+          <Tooltip text={selectedPack.data.isValid ? undefined : INVALID_PACK_TOOLTIP}>
+            <form action={startGame.bind(null, selectedPackId)}>
+              <button type="submit" disabled={!selectedPack.data.isValid} className={PRIMARY_BUTTON_CLASS}>
                 Start game
               </button>
             </form>

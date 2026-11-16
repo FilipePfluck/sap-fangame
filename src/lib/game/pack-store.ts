@@ -46,6 +46,15 @@ export async function loadUserPack(userId: string, packId: number): Promise<Save
   return row ? toSavedPack(row) : null;
 }
 
+// The pack a new game rolls: Turtle when `packId` is null, otherwise the user's
+// saved pack. Null when that pack doesn't exist or isn't valid (Pack spec: only
+// valid packs can start a game).
+export async function loadStartingPack(userId: string, packId: number | null): Promise<Pack | null> {
+  if (packId === null) return TURTLE_PACK;
+  const savedPack = await loadUserPack(userId, packId);
+  return savedPack?.pack.data.isValid ? savedPack.pack : null;
+}
+
 // Null when the user already has MAX_PACKS_PER_USER packs.
 export async function createUserPack(userId: string, pack: Pack): Promise<SavedPack | null> {
   if (!hasRoomForPack(await prisma.pack.count({ where: { ownerId: userId } }))) return null;

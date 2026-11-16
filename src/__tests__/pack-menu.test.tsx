@@ -37,12 +37,13 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+const startGame = vi.fn(async () => {});
 const abandonGame = vi.fn(async () => {});
 
 function renderMenu({ savedPacks = [], activeGameId = null }: { savedPacks?: readonly SavedPackJson[]; activeGameId?: string | null } = {}) {
   act(() =>
     root.render(
-      <PackMenu startGame={() => {}} abandonGame={abandonGame} activeGameId={activeGameId} savedPacks={savedPacks} />
+      <PackMenu startGame={startGame} abandonGame={abandonGame} activeGameId={activeGameId} savedPacks={savedPacks} />
     )
   );
 }
@@ -189,10 +190,30 @@ describe("PackMenu", () => {
       expect(viewer()).not.toBeNull();
     });
 
-    it("disables Start game while a saved pack is selected", () => {
+    it("disables Start game for a pack that isn't valid", () => {
       renderSavedPacks([INCOMPLETE_PACK]);
       click(button("Select Zoo pack"));
       expect(container.querySelector<HTMLButtonElement>('form button[type="submit"]')!.disabled).toBe(true);
+    });
+
+    it("says what a pack needs before it can start a game", () => {
+      renderSavedPacks([INCOMPLETE_PACK]);
+      click(button("Select Zoo pack"));
+      hover(container.querySelector<HTMLElement>("form")!);
+      expect(tooltip()).toBe("Finish this pack to play it: 10 pets and 3 foods in every tier, an allowed name and an icon.");
+    });
+
+    it("enables Start game for a valid pack", () => {
+      renderSavedPacks([VALID_PACK]);
+      click(button("Select Full pack"));
+      expect(container.querySelector<HTMLButtonElement>('form button[type="submit"]')!.disabled).toBe(false);
+    });
+
+    it("starts the game with the selected pack", async () => {
+      renderSavedPacks([VALID_PACK]);
+      click(button("Select Full pack"));
+      await act(async () => container.querySelector<HTMLButtonElement>('form button[type="submit"]')!.click());
+      expect(startGame).toHaveBeenCalledWith(9, expect.any(FormData));
     });
 
     it("disables ➕ at 5 saved packs", () => {

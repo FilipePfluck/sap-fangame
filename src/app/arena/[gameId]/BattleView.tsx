@@ -7,7 +7,6 @@ import type { BattleStep, PetInstance } from "@/lib/types";
 import { PET_SPRITES, FOOD_SPRITES } from "@/lib/sprites";
 import { PET_REGISTRY, getPetTooltipText } from "@/lib/pets";
 import { getPerkTooltipText } from "@/lib/foods";
-import { startGame } from "@/app/actions/game";
 import Tooltip from "./Tooltip";
 
 type BattleData = {
@@ -143,14 +142,13 @@ export default function BattleView({ battleData, gameWon, onBackToShop }: Battle
                 >
                   Back to Menu
                 </button>
-                <form action={startGame}>
-                  <button
-                    type="submit"
-                    className="px-6 py-2 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-sm hover:bg-zinc-700 dark:hover:bg-zinc-200 transition-colors"
-                  >
-                    Play Again
-                  </button>
-                </form>
+                {/* The pack menu, so the player picks the pack to play next. */}
+                <button
+                  onClick={() => router.push("/packs")}
+                  className="px-6 py-2 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-sm hover:bg-zinc-700 dark:hover:bg-zinc-200 transition-colors"
+                >
+                  Play Again
+                </button>
               </div>
             </>
           ) : (
