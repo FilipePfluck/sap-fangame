@@ -1,7 +1,23 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import PackMenu from "@/app/packs/PackMenu";
+import type { SavedPackJson } from "@/lib/game/pack-request";
+
+const INCOMPLETE_PACK: SavedPackJson = { id: 7, pack: { name: "Zoo", icon: 1, pets: [1], foods: [], isValid: false } };
+// Beaver, Otter and Pig: three tier 1 Cycle pets.
+const WILD_PACK: SavedPackJson = { id: 8, pack: { name: "Cycles", icon: 2, pets: [2, 8, 9], foods: [], isValid: false } };
+// Turtle's 60 pets (IDs 1–60) and three foods per tier, as in pack.test.ts.
+const VALID_PACK: SavedPackJson = {
+  id: 9,
+  pack: {
+    name: "Full",
+    icon: 1,
+    pets: Array.from({ length: 60 }, (_, index) => index + 1),
+    foods: [1, 2, 27, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+    isValid: true,
+  },
+};
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -12,13 +28,24 @@ beforeEach(() => {
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
-  act(() => root.render(<PackMenu startGame={() => {}} />));
+  renderMenu();
 });
 
 afterEach(() => {
   act(() => root.unmount());
   container.remove();
+  vi.clearAllMocks();
 });
+
+const abandonGame = vi.fn(async () => {});
+
+function renderMenu({ savedPacks = [], activeGameId = null }: { savedPacks?: readonly SavedPackJson[]; activeGameId?: string | null } = {}) {
+  act(() =>
+    root.render(
+      <PackMenu startGame={() => {}} abandonGame={abandonGame} activeGameId={activeGameId} savedPacks={savedPacks} />
+    )
+  );
+}
 
 function button(label: string): HTMLButtonElement {
   return container.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)!;
@@ -33,6 +60,23 @@ function hover(element: HTMLElement) {
   act(() => {
     element.parentElement!.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
   });
+}
+
+function renderSavedPacks(savedPacks: readonly SavedPackJson[]) {
+  renderMenu({ savedPacks });
+}
+
+function buttonWithText(text: string): HTMLButtonElement {
+  return [...container.querySelectorAll("button")].find((element) => element.textContent === text)!;
+}
+
+function newPackCard(): HTMLElement {
+  return container.querySelector<HTMLElement>('[aria-label="New custom pack"]')!;
+}
+
+function statusLabels(packName: string): string[] {
+  const labels = button(`Select ${packName} pack`).querySelectorAll("span span");
+  return [...labels].map((label) => label.textContent!);
 }
 
 function tooltip() {
@@ -65,13 +109,8 @@ describe("PackMenu", () => {
     expect(tooltip()).toBe("View pack");
   });
 
-  it("shows an Open pack editor tooltip on the Custom card's 🔧", () => {
-    hover(container.querySelector<HTMLElement>('a[aria-label="Open pack editor"]')!);
-    expect(tooltip()).toBe("Open pack editor");
-  });
-
   it("titles the ➕ card Custom", () => {
-    expect(button("Select custom pack").textContent).toBe("➕Custom");
+    expect(newPackCard().textContent).toBe("➕Custom");
   });
 
   it("shows the Turtle sprite on the Turtle card", () => {
@@ -81,13 +120,6 @@ describe("PackMenu", () => {
 
   it("selects the Turtle pack by default", () => {
     expect(button("Select Turtle pack").getAttribute("aria-pressed")).toBe("true");
-    expect(button("Select custom pack").getAttribute("aria-pressed")).toBe("false");
-  });
-
-  it("selects the Custom card when ➕ is pressed", () => {
-    click(button("Select custom pack"));
-    expect(button("Select custom pack").getAttribute("aria-pressed")).toBe("true");
-    expect(button("Select Turtle pack").getAttribute("aria-pressed")).toBe("false");
   });
 
   it("opens the pack viewer from 🔍 and closes it from ✕", () => {
@@ -98,13 +130,106 @@ describe("PackMenu", () => {
     expect(viewer()).toBeNull();
   });
 
-  it("links 🔧 on the Custom card to the editor", () => {
-    const edit = container.querySelector('a[aria-label="Open pack editor"]')!;
-    expect(edit.getAttribute("href")).toBe("/packs/editor");
+  it("links ➕ to a new pack in the editor", () => {
+    expect(newPackCard().getAttribute("href")).toBe("/packs/editor");
   });
 
   it("has a Start game submit button", () => {
     const start = container.querySelector<HTMLButtonElement>('form button[type="submit"]')!;
     expect(start.textContent).toBe("Start game");
+  });
+
+  describe("saved packs", () => {
+    it("shows a card for each saved pack", () => {
+      renderSavedPacks([INCOMPLETE_PACK, WILD_PACK]);
+      const cards = [...container.querySelectorAll("button[aria-pressed]")].map((card) => card.getAttribute("aria-label"));
+      expect(cards).toEqual(["Select Turtle pack", "Select Zoo pack", "Select Cycles pack"]);
+    });
+
+    it("shows the saved pack's icon", () => {
+      renderSavedPacks([WILD_PACK]);
+      expect(button("Select Cycles pack").querySelector("img")!.getAttribute("alt")).toBe("Beaver");
+    });
+
+    it("labels a pack that can't start a game Invalid", () => {
+      renderSavedPacks([INCOMPLETE_PACK]);
+      expect(statusLabels("Zoo")).toEqual(["Invalid"]);
+    });
+
+    it("labels a pack past the tag limits WILD", () => {
+      renderSavedPacks([WILD_PACK]);
+      expect(statusLabels("Cycles")).toEqual(["Invalid", "WILD"]);
+    });
+
+    it("doesn't label a valid pack Invalid", () => {
+      renderSavedPacks([VALID_PACK]);
+      expect(statusLabels("Full")).toEqual(["WILD"]);
+    });
+
+    it("selects a saved pack", () => {
+      renderSavedPacks([INCOMPLETE_PACK]);
+      click(button("Select Zoo pack"));
+      expect(button("Select Zoo pack").getAttribute("aria-pressed")).toBe("true");
+    });
+
+    it("deselects Turtle when a saved pack is selected", () => {
+      renderSavedPacks([INCOMPLETE_PACK]);
+      click(button("Select Zoo pack"));
+      expect(button("Select Turtle pack").getAttribute("aria-pressed")).toBe("false");
+    });
+
+    it("links 🔧 to the saved pack in the editor", () => {
+      renderSavedPacks([INCOMPLETE_PACK]);
+      expect(container.querySelector('a[aria-label="Edit pack"]')!.getAttribute("href")).toBe("/packs/editor?packId=7");
+    });
+
+    it("opens the saved pack in the pack viewer", () => {
+      renderSavedPacks([INCOMPLETE_PACK]);
+      click(button("Select Zoo pack").parentElement!.querySelector<HTMLButtonElement>('button[aria-label="View pack"]')!);
+      expect(viewer()).not.toBeNull();
+    });
+
+    it("disables Start game while a saved pack is selected", () => {
+      renderSavedPacks([INCOMPLETE_PACK]);
+      click(button("Select Zoo pack"));
+      expect(container.querySelector<HTMLButtonElement>('form button[type="submit"]')!.disabled).toBe(true);
+    });
+
+    it("disables ➕ at 5 saved packs", () => {
+      renderSavedPacks([5, 6, 7, 8, 9].map((id) => ({ ...INCOMPLETE_PACK, id })));
+      expect(newPackCard().getAttribute("aria-disabled")).toBe("true");
+    });
+  });
+
+  describe("game in progress", () => {
+    beforeEach(() => renderMenu({ activeGameId: "game-1" }));
+
+    it("links Continue to the game", () => {
+      const continueLink = [...container.querySelectorAll("a")].find((link) => link.textContent === "Continue")!;
+      expect(continueLink.getAttribute("href")).toBe("/arena/game-1");
+    });
+
+    it("hides Start game", () => {
+      expect(container.querySelector('form button[type="submit"]')).toBeNull();
+    });
+
+    it("asks before abandoning", () => {
+      click(buttonWithText("Abandon"));
+      expect(container.querySelector('[role="group"][aria-label="Abandon game"] span')!.textContent).toBe(
+        "Abandon your game? It will be deleted."
+      );
+    });
+
+    it("abandons the game once confirmed", async () => {
+      click(buttonWithText("Abandon"));
+      await act(async () => buttonWithText("Abandon game").click());
+      expect(abandonGame).toHaveBeenCalledWith("game-1");
+    });
+
+    it("keeps the game from Keep playing", () => {
+      click(buttonWithText("Abandon"));
+      click(buttonWithText("Keep playing"));
+      expect(abandonGame).not.toHaveBeenCalled();
+    });
   });
 });

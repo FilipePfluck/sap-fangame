@@ -35,11 +35,14 @@ describe("pet ability data", () => {
   it("PetData includes only JSON-parseable data", () => {
     const pet: StaticPet = {
       name: "Test Pet",
+      id: 0,
       sprite: "/test.webp",
       tier: 1,
       baseAttack: 1,
       baseHealth: 1,
       isToken: false,
+      tags: [],
+      superTags: 0,
       abilities: createAbilityMap({
         trigger: Trigger.buy,
         fn: () => {},

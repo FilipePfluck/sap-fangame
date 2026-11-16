@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap } from "@/lib/pets/ability";
 import { createPet } from "@/lib/game/pet";
 import { BattleActions } from "@/lib/game/ability-actions";
@@ -7,11 +7,14 @@ import { Bus } from "@/lib/pets/BaseGame/turtle/token/bus";
 
 export const Deer: Readonly<StaticPet> = {
   name: "Deer",
+  id: 33,
   sprite: "/sap/Deer.webp",
   tier: 4,
   baseAttack: 2,
   baseHealth: 2,
   isToken: false,
+  tags: [Tag.Summon],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.faint,
     fn: (ctx) => {

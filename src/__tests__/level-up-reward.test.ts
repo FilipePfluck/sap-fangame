@@ -4,7 +4,7 @@ import { levelUpRewardEarned } from "@/lib/game/merge";
 import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
 import { applyFoodEffect } from "@/lib/game/food";
 import { resolveExperienceLevelUps, resolveLevelUp } from "@/lib/game/shop-ability";
-import { Chocolate } from "@/lib/foods/chocolate";
+import { Chocolate } from "@/lib/foods/BaseGame/turtle/tier 5/chocolate";
 import type { ApiBoard, ShopState } from "@/lib/types";
 import { EMPTY_SHOP, pet } from "./helpers";
 

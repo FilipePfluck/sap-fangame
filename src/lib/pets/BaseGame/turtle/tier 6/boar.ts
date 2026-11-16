@@ -3,11 +3,14 @@ import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Boar: Readonly<StaticPet> = {
   name: "Boar",
+  id: 51,
   sprite: "/sap/boar.webp",
   tier: 6,
   baseAttack: 10,
   baseHealth: 6,
   isToken: false,
+  tags: [],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.before_attack,
     fn: (ctx) => {

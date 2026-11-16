@@ -1,15 +1,18 @@
-import { PetInstance, StaticPet, Trigger } from "@/lib/types";
+import { PetInstance, StaticPet, Trigger, Tag } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 import { numberToText } from "@/lib/utils/flavor-text";
 import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Otter: Readonly<StaticPet> = {
   name: "Otter",
+  id: 8,
   sprite: "/sap/otter.webp",
   tier: 1,
   baseAttack: 1,
   baseHealth: 3,
   isToken: false,
+  tags: [Tag.Cycle],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.buy,
     fn: (ctx) => {

@@ -1,13 +1,16 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Turkey: Readonly<StaticPet> = {
   name: "Turkey",
+  id: 50,
   sprite: "/sap/Turkey.webp",
   tier: 5,
   baseAttack: 3,
   baseHealth: 4,
   isToken: false,
+  tags: [Tag.Summon],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.friend_summoned,
     fn: (ctx) => {

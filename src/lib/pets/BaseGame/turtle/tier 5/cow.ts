@@ -1,20 +1,23 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap } from "@/lib/pets/ability";
 import { ShopActions } from "@/lib/game/ability-actions";
-import { Milk } from "@/lib/foods/milk";
-import { BetterMilk } from "@/lib/foods/better-milk";
-import { BestMilk } from "@/lib/foods/best-milk";
+import { Milk } from "@/lib/foods/BaseGame/turtle/token/milk";
+import { BetterMilk } from "@/lib/foods/BaseGame/turtle/token/better-milk";
+import { BestMilk } from "@/lib/foods/BaseGame/turtle/token/best-milk";
 
 const MILK_BY_LEVEL = [Milk, BetterMilk, BestMilk];
 const MILKS_STOCKED = 2;
 
 export const Cow: Readonly<StaticPet> = {
   name: "Cow",
+  id: 42,
   sprite: "/sap/Cow.webp",
   tier: 5,
   baseAttack: 4,
   baseHealth: 6,
   isToken: false,
+  tags: [Tag.Food, Tag.Cycle],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.buy,
     fn: (ctx) => {

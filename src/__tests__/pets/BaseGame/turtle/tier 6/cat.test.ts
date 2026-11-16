@@ -3,8 +3,8 @@ import { applyFoodEffect } from "@/lib/game/food";
 import { fireBoardShopAbility } from "@/lib/game/shop-ability";
 import { PET_REGISTRY } from "@/lib/pets";
 import { Apple, Sushi } from "@/lib/foods";
-import { Chocolate } from "@/lib/foods/chocolate";
-import { MeatBone } from "@/lib/foods/meat-bone";
+import { Chocolate } from "@/lib/foods/BaseGame/turtle/tier 5/chocolate";
+import { MeatBone } from "@/lib/foods/BaseGame/turtle/tier 2/meat-bone";
 import { ApiBoard, Trigger } from "@/lib/types";
 import { EMPTY_SHOP, pet } from "@/__tests__/helpers";
 

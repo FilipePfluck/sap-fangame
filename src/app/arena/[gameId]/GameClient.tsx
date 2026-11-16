@@ -10,11 +10,12 @@ import { applyFoodEffect, feedError, needsTarget } from "@/lib/game/food";
 import { getPetCost, getFoodCost, getSellValue, ROLL_COST } from "@/lib/game/costs";
 import { createPet } from "@/lib/game/pet";
 import { STARTING_LIVES } from "@/lib/game/rules";
+import { TURTLE_PACK } from "@/lib/game/pack";
 import { PET_SPRITES, FOOD_SPRITES } from "@/lib/sprites";
 import ShopItem from "./ShopItem";
 import BoardSlot from "./BoardSlot";
 import BattleView from "./BattleView";
-import PackViewer from "./PackViewer";
+import PackViewer, { usePreloadPackSprites } from "./PackViewer";
 import Tooltip from "./Tooltip";
 import { Board } from "@/lib/game/board";
 
@@ -108,6 +109,7 @@ export default function GameClient({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [packViewerOpen, setPackViewerOpen] = useState(false);
+  usePreloadPackSprites(TURTLE_PACK);
 
   const selectedFoodDef =
     selectedItem?.kind === "food" ? FOOD_MAP[shop.shopFoods[selectedItem.index]?.type] : undefined;
@@ -729,7 +731,7 @@ export default function GameClient({
               </button>
             </div>
 
-            {packViewerOpen && <PackViewer onClose={() => setPackViewerOpen(false)} />}
+            {packViewerOpen && <PackViewer pack={TURTLE_PACK} onClose={() => setPackViewerOpen(false)} />}
           </>
         ) : (
           battleData && (

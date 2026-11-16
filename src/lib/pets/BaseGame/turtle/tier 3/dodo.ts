@@ -3,11 +3,14 @@ import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Dodo: Readonly<StaticPet> = {
   name: "Dodo",
+  id: 23,
   sprite: "/sap/dodo.webp",
   tier: 3,
   baseAttack: 4,
   baseHealth: 2,
   isToken: false,
+  tags: [],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.start_of_battle,
     fn: (ctx) => {

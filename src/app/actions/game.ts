@@ -3,20 +3,19 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { STARTING_LIVES, TURN_GOLD } from "@/lib/game/rules";
 import { generateShop } from "@/lib/game/shop";
 import { SHOP_PET_POOL } from "@/lib/pets";
 import { SHOP_FOOD_POOL } from "@/lib/foods";
+import { deleteActiveGame, findActiveGameId } from "@/lib/game/active-game";
 
 export async function startGame() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const existing = await prisma.game.findFirst({
-    where: { playerId: session.user.id, status: "ACTIVE" },
-    orderBy: { createdAt: "desc" },
-  });
-  if (existing) redirect(`/arena/${existing.id}`);
+  const activeGameId = await findActiveGameId(session.user.id);
+  if (activeGameId) redirect(`/arena/${activeGameId}`);
 
   const shop = generateShop({ turn: 1, pack: SHOP_PET_POOL, foodTypes: SHOP_FOOD_POOL });
   const game = await prisma.game.create({
@@ -36,4 +35,12 @@ export async function startGame() {
     },
   });
   redirect(`/arena/${game.id}`);
+}
+
+export async function abandonGame(gameId: string) {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
+  await deleteActiveGame(session.user.id, gameId);
+  revalidatePath("/packs");
 }

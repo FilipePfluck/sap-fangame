@@ -1,14 +1,17 @@
-import { PetInstance, StaticPet, Trigger } from "@/lib/types";
+import { PetInstance, StaticPet, Trigger, Tag } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Fish: Readonly<StaticPet> = {
   name: "Fish",
+  id: 5,
   sprite: "/sap/fish.webp",
   tier: 1,
   baseAttack: 3,
   baseHealth: 2,
   isToken: false,
+  tags: [Tag.LevelUp],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.level_up,
     // ctx.level is the OLD level (before level-up) — see fireShopAbility call sites.
