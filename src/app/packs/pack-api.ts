@@ -1,7 +1,7 @@
 import type { SavedPackJson } from "@/lib/game/pack-request";
 import type { SerializedPack } from "@/lib/types";
 
-export type SavePackResult = Readonly<{ savedPack: SavedPackJson } | { error: string }>;
+type SavePackResult = Readonly<{ savedPack: SavedPackJson } | { error: string }>;
 
 async function readError(response: Response): Promise<string> {
   const body = await response.json().catch(() => null);

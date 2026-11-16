@@ -4,12 +4,13 @@ import { useMemo, useState, useTransition, type ReactNode } from "react";
 import Image from "next/image";
 import { PET_BY_ID, Turtle } from "@/lib/pets";
 import Link from "next/link";
-import { Pack, TURTLE_PACK } from "@/lib/game/pack";
+import { Pack, TURTLE_PACK, hasRoomForPack } from "@/lib/game/pack";
 import type { SavedPackJson } from "@/lib/game/pack-request";
+import type { SavedPack } from "@/lib/game/pack-store";
 import { MAX_PACKS_PER_USER } from "@/lib/game/rules";
 import PackViewer, { usePreloadPackSprites } from "@/app/arena/[gameId]/PackViewer";
 import Tooltip from "@/app/arena/[gameId]/Tooltip";
-import { BUTTON_CLASS } from "./styles";
+import { BUTTON_CLASS, PRIMARY_BUTTON_CLASS } from "./styles";
 
 enum MatchmakingMode {
   SamePack,
@@ -65,6 +66,17 @@ function PackCardFrame({ selected, onSelect, selectLabel, actions, children }: P
   );
 }
 
+const NEW_PACK_CARD_CLASS = `${CARD_CLASS} flex-col gap-2 border border-zinc-300 dark:border-zinc-600`;
+
+function NewPackCardContent() {
+  return (
+    <>
+      <span className="text-4xl">➕</span>
+      <span className="font-medium">Custom</span>
+    </>
+  );
+}
+
 function ViewPackButton({ onView }: { onView: () => void }) {
   return (
     <Tooltip text="View pack">
@@ -84,15 +96,6 @@ function PackStatusLabels({ pack }: { pack: Pack }) {
     </span>
   );
 }
-
-// A saved pack, built once from its IDs.
-type SavedPackCard = Readonly<{
-  id: number;
-  pack: Pack;
-}>;
-
-const PRIMARY_BUTTON_CLASS =
-  "px-4 py-2 rounded bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-200 transition-colors disabled:opacity-60";
 
 type ActiveGameButtonsProps = {
   activeGameId: string;
@@ -147,14 +150,13 @@ export default function PackMenu({ startGame, abandonGame, activeGameId, savedPa
   // Null while the Turtle pack is selected.
   const [selectedPackId, setSelectedPackId] = useState<number | null>(null);
   const [viewedPack, setViewedPack] = useState<Pack | null>(null);
-  const packCards: SavedPackCard[] = useMemo(
+  const packCards: SavedPack[] = useMemo(
     () => savedPacks.map(({ id, pack }) => ({ id, pack: Pack.fromSerialized(pack) })),
     [savedPacks]
   );
   const selectedPack = packCards.find(({ id }) => id === selectedPackId)?.pack ?? TURTLE_PACK;
   usePreloadPackSprites(selectedPack);
   const matchmakingButton = MATCHMAKING_BUTTONS[matchmakingMode];
-  const hasRoomForPack = savedPacks.length < MAX_PACKS_PER_USER;
 
   return (
     <div className="flex flex-col gap-6">
@@ -171,7 +173,7 @@ export default function PackMenu({ startGame, abandonGame, activeGameId, savedPa
         {activeGameId ? (
           <ActiveGameButtons activeGameId={activeGameId} abandonGame={abandonGame} />
         ) : (
-          // Games use their selected pack from PR 3b.
+          // TODO - Start games with a custom pack (PR 3b).
           <Tooltip text={selectedPackId === null ? undefined : "Custom packs can't start games yet."}>
             <form action={startGame}>
               <button type="submit" disabled={selectedPackId !== null} className={PRIMARY_BUTTON_CLASS}>
@@ -224,16 +226,14 @@ export default function PackMenu({ startGame, abandonGame, activeGameId, savedPa
           );
         })}
 
-        {hasRoomForPack ? (
-          <Link href="/packs/editor" aria-label="New custom pack" className={`${CARD_CLASS} flex-col gap-2 border border-zinc-300 dark:border-zinc-600`}>
-            <span className="text-4xl">➕</span>
-            <span className="font-medium">Custom</span>
+        {hasRoomForPack(savedPacks.length) ? (
+          <Link href="/packs/editor" aria-label="New custom pack" className={NEW_PACK_CARD_CLASS}>
+            <NewPackCardContent />
           </Link>
         ) : (
           <Tooltip text={`You can save up to ${MAX_PACKS_PER_USER} packs.`}>
-            <div aria-label="New custom pack" aria-disabled="true" className={`${CARD_CLASS} flex-col gap-2 border border-zinc-300 dark:border-zinc-600 opacity-60`}>
-              <span className="text-4xl">➕</span>
-              <span className="font-medium">Custom</span>
+            <div aria-label="New custom pack" aria-disabled="true" className={`${NEW_PACK_CARD_CLASS} opacity-60`}>
+              <NewPackCardContent />
             </div>
           </Tooltip>
         )}

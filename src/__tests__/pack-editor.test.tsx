@@ -49,6 +49,10 @@ async function clickAndWait(element: HTMLElement) {
   await act(async () => element.click());
 }
 
+function saveButton(): HTMLButtonElement {
+  return [...container.querySelectorAll("button")].find((element) => element.textContent === "Save")!;
+}
+
 function button(label: string): HTMLButtonElement {
   return container.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)!;
 }
@@ -245,7 +249,6 @@ describe("PackEditor", () => {
     expect([modal.getAttribute("aria-modal"), settings.map((setting) => [setting.textContent, setting.disabled])]).toEqual([
       "true",
       [
-        ["Save", false],
         ["Change name", false],
         ["Export", false],
         ["Import", false],
@@ -598,6 +601,10 @@ describe("PackEditor", () => {
   });
 
   describe("saving", () => {
+    it("shows Save beside Back", () => {
+      expect(saveButton().previousElementSibling!.textContent).toBe("← Back");
+    });
+
     it("loads a saved pack", () => {
       renderSavedPack();
       expect(container.querySelector('[aria-label="Pack name"]:not(input)')!.textContent).toBe("Zoo");
@@ -611,38 +618,33 @@ describe("PackEditor", () => {
 
     it("creates a new pack", async () => {
       const fetchMock = stubFetch(201, SAVED_PACK);
-      click(button("Pack settings"));
-      await clickAndWait(settingsButton("Save"));
+      await clickAndWait(saveButton());
       expect(fetchMock).toHaveBeenCalledWith("/api/packs", expect.objectContaining({ method: "POST" }));
     });
 
     it("updates a saved pack", async () => {
       renderSavedPack();
       const fetchMock = stubFetch(200, SAVED_PACK);
-      click(button("Pack settings"));
-      await clickAndWait(settingsButton("Save"));
+      await clickAndWait(saveButton());
       expect(fetchMock).toHaveBeenCalledWith("/api/packs/7", expect.objectContaining({ method: "PUT" }));
     });
 
     it("moves to the pack's address after its first save", async () => {
       stubFetch(201, SAVED_PACK);
-      click(button("Pack settings"));
-      await clickAndWait(settingsButton("Save"));
+      await clickAndWait(saveButton());
       expect(router.replace).toHaveBeenCalledWith("/packs/editor?packId=7");
     });
 
     it("says the pack was saved", async () => {
       stubFetch(201, SAVED_PACK);
-      click(button("Pack settings"));
-      await clickAndWait(settingsButton("Save"));
-      expect(settingsModal()!.querySelector('[role="status"]')!.textContent).toBe("Saved.");
+      await clickAndWait(saveButton());
+      expect(container.querySelector('[role="status"]')!.textContent).toBe("Saved.");
     });
 
     it("shows why a save failed", async () => {
       stubFetch(409, { error: "You've saved the most packs you can" });
-      click(button("Pack settings"));
-      await clickAndWait(settingsButton("Save"));
-      expect(settingsModal()!.querySelector('[role="alert"]')!.textContent).toBe("You've saved the most packs you can");
+      await clickAndWait(saveButton());
+      expect(container.querySelector('[role="alert"]')!.textContent).toBe("You've saved the most packs you can");
     });
 
     it("asks before deleting", () => {

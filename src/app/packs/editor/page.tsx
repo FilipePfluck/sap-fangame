@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { loadUserPack } from "@/lib/game/pack-store";
 import { parsePackId, toSavedPackJson, type SavedPackJson } from "@/lib/game/pack-request";
-import BackLink from "../BackLink";
 import PackEditor from "./PackEditor";
 
 // The saved pack named by `?packId=`, or undefined for a new pack.
@@ -24,10 +23,5 @@ export default async function PackEditorPage({
 
   const savedPack = await loadEditedPack(session.user.id, (await searchParams).packId);
 
-  return (
-    <>
-      <BackLink href="/packs" />
-      <PackEditor savedPack={savedPack} />
-    </>
-  );
+  return <PackEditor savedPack={savedPack} />;
 }

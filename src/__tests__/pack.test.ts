@@ -10,6 +10,7 @@ import {
   filterPack,
   getRandomPackIds,
   getTooltipPages,
+  hasRoomForPack,
   type PackFilter,
 } from "@/lib/game/pack";
 import { RESERVED_PACK_NAMES } from "@/lib/game/rules";
@@ -353,5 +354,14 @@ describe("getTooltipPages for pets", () => {
 
   it.each(["Duck", "Spider", "Seagull"])("gives %s a single page", (name) => {
     expect(getTooltipPages(PET_REGISTRY[name])).toHaveLength(1);
+  });
+});
+
+describe("hasRoomForPack", () => {
+  it.each([
+    { savedPackCount: 4, expected: true },
+    { savedPackCount: 5, expected: false },
+  ])("is $expected with $savedPackCount saved packs", ({ savedPackCount, expected }) => {
+    expect(hasRoomForPack(savedPackCount)).toBe(expected);
   });
 });

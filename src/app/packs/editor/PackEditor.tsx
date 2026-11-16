@@ -40,6 +40,7 @@ import PackFilterBar, {
 } from "../PackFilterBar";
 import { BUTTON_CLASS, toggleButtonClass } from "../styles";
 import { deletePack, savePack } from "../pack-api";
+import BackLink from "../BackLink";
 
 const NEW_PACK: SerializedPack = { name: "My Pack", icon: Ant.id, pets: [], foods: [], isValid: false };
 
@@ -313,7 +314,7 @@ enum SettingsPanel {
   ConfirmDelete,
 }
 
-// The result of the last save, shown under the Save button.
+// The result of the last save, shown beside the Save button.
 type SaveStatus = Readonly<{ message: string; failed: boolean }>;
 
 type SettingsModalProps = {
@@ -324,17 +325,15 @@ type SettingsModalProps = {
   onImport: (pack: Pack) => void;
   onRandomize: () => void;
   onClear: () => void;
-  // Each resolves to an error message, or null when it worked.
-  onSave: () => Promise<string | null>;
+  // Resolves to an error message, or null once the pack is deleted.
   onDelete: () => Promise<string | null>;
   onClose: () => void;
 };
 
-function SettingsModal({ pack, isSaved, onRename, onImport, onRandomize, onClear, onSave, onDelete, onClose }: SettingsModalProps) {
+function SettingsModal({ pack, isSaved, onRename, onImport, onRandomize, onClear, onDelete, onClose }: SettingsModalProps) {
   const [panel, setPanel] = useState(SettingsPanel.Menu);
-  const [saveStatus, setSaveStatus] = useState<SaveStatus | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [isWaiting, setIsWaiting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [importCode, setImportCode] = useState("");
   const [importError, setImportError] = useState<string | null>(null);
@@ -350,17 +349,10 @@ function SettingsModal({ pack, isSaved, onRename, onImport, onRandomize, onClear
     navigator.clipboard?.writeText(pack.toCode()).then(() => setCopied(true), () => setCopied(false));
   }
 
-  async function save() {
-    setIsWaiting(true);
-    const error = await onSave();
-    setIsWaiting(false);
-    setSaveStatus(error === null ? { message: "Saved.", failed: false } : { message: error, failed: true });
-  }
-
   async function confirmDelete() {
-    setIsWaiting(true);
+    setIsDeleting(true);
     setDeleteError(await onDelete());
-    setIsWaiting(false);
+    setIsDeleting(false);
   }
 
   function importPack() {
@@ -393,17 +385,6 @@ function SettingsModal({ pack, isSaved, onRename, onImport, onRandomize, onClear
 
         {panel === SettingsPanel.Menu && (
           <>
-            <button onClick={save} disabled={isWaiting} className={`px-4 py-2 text-left disabled:opacity-60 ${BUTTON_CLASS}`}>
-              Save
-            </button>
-            {saveStatus && (
-              <span
-                role={saveStatus.failed ? "alert" : "status"}
-                className={`text-sm ${saveStatus.failed ? "text-red-600 dark:text-red-400" : "text-zinc-600 dark:text-zinc-400"}`}
-              >
-                {saveStatus.message}
-              </span>
-            )}
             <button onClick={() => setPanel(SettingsPanel.ChangeName)} className={`px-4 py-2 text-left ${BUTTON_CLASS}`}>
               Change name
             </button>
@@ -433,7 +414,7 @@ function SettingsModal({ pack, isSaved, onRename, onImport, onRandomize, onClear
         {panel === SettingsPanel.ConfirmDelete && (
           <>
             <span>Delete {pack.data.name}? This can&apos;t be undone.</span>
-            <button onClick={confirmDelete} disabled={isWaiting} className={`px-4 py-2 text-red-600 disabled:opacity-60 ${BUTTON_CLASS}`}>
+            <button onClick={confirmDelete} disabled={isDeleting} className={`px-4 py-2 text-red-600 disabled:opacity-60 ${BUTTON_CLASS}`}>
               Delete pack
             </button>
             {deleteError && (
@@ -516,6 +497,8 @@ export default function PackEditor({ savedPack }: PackEditorProps) {
   const router = useRouter();
   const [packId, setPackId] = useState(savedPack?.id ?? null);
   const [serializedPack, setSerializedPack] = useState(savedPack?.pack ?? NEW_PACK);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [filter, setFilter] = useState<PackFilter>(NO_PACK_FILTER);
   const [packViewerOpen, setPackViewerOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -526,14 +509,19 @@ export default function PackEditor({ savedPack }: PackEditorProps) {
   const iconPet = PET_BY_ID[pack.data.icon];
   const isWild = pack.isWild();
 
-  async function save(): Promise<string | null> {
+  async function save() {
+    setIsSaving(true);
     const result = await savePack(packId, serializedPack);
-    if ("error" in result) return result.error;
+    setIsSaving(false);
+    if ("error" in result) {
+      setSaveStatus({ message: result.error, failed: true });
+      return;
+    }
+    setSaveStatus({ message: "Saved.", failed: false });
     if (packId === null) {
       setPackId(result.savedPack.id);
       router.replace(`/packs/editor?packId=${result.savedPack.id}`);
     }
-    return null;
   }
 
   async function deleteSavedPack(): Promise<string | null> {
@@ -545,6 +533,20 @@ export default function PackEditor({ savedPack }: PackEditorProps) {
 
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-3">
+        <BackLink href="/packs" />
+        <button onClick={save} disabled={isSaving} className={`px-4 py-2 text-sm disabled:opacity-60 ${BUTTON_CLASS}`}>
+          Save
+        </button>
+        {saveStatus && (
+          <span
+            role={saveStatus.failed ? "alert" : "status"}
+            className={`text-sm ${saveStatus.failed ? "text-red-600 dark:text-red-400" : "text-zinc-600 dark:text-zinc-400"}`}
+          >
+            {saveStatus.message}
+          </span>
+        )}
+      </div>
       <PackFilterBar filter={filter} onFilterChange={setFilter}>
         <Tooltip text="View pack">
           <button onClick={() => setPackViewerOpen(true)} aria-label="View pack" className={`px-3 py-1 ${BUTTON_CLASS}`}>
@@ -618,7 +620,6 @@ export default function PackEditor({ savedPack }: PackEditorProps) {
         <SettingsModal
           pack={pack}
           isSaved={packId !== null}
-          onSave={save}
           onDelete={deleteSavedPack}
           onRename={(name, icon) => setSerializedPack({ ...serializedPack, name, icon })}
           onImport={(importedPack) => setSerializedPack(importedPack.serialize())}

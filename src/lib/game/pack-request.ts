@@ -14,7 +14,7 @@ const PackRequestSchema = z.object({
 
 const PackIdSchema = z.coerce.number().int().positive();
 
-export type PackRequestResult = Readonly<{ pack: Pack } | { error: string }>;
+type PackRequestResult = Readonly<{ pack: Pack } | { error: string }>;
 
 // A saved pack as the packs API sends it.
 export type SavedPackJson = Readonly<{

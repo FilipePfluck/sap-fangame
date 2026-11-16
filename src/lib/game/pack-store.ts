@@ -1,7 +1,6 @@
 import type { Pack as PackRow } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { Pack } from "@/lib/game/pack";
-import { MAX_PACKS_PER_USER } from "@/lib/game/rules";
+import { Pack, hasRoomForPack } from "@/lib/game/pack";
 import type { SerializedPack } from "@/lib/types";
 
 // The columns of a Pack row that hold the pack itself (prisma/schema.prisma).
@@ -22,11 +21,6 @@ export function toPackRowData({ name, icon, pets, foods }: SerializedPack): Pack
   return { name, iconId: icon, petsId: [...pets], foodsId: [...foods] };
 }
 
-// Pack spec: a user can save at most MAX_PACKS_PER_USER packs.
-export function hasRoomForPack(savedPackCount: number): boolean {
-  return savedPackCount < MAX_PACKS_PER_USER;
-}
-
 // Throws for a saved pet or food ID that no longer exists (see Pack.fromSerialized).
 function toSavedPack(row: PackRow): SavedPack {
   return { id: row.id, pack: Pack.fromSerialized(toSerializedPack(row)) };
@@ -45,8 +39,7 @@ export async function loadUserPack(userId: string, packId: number): Promise<Save
 
 // Null when the user already has MAX_PACKS_PER_USER packs.
 export async function createUserPack(userId: string, pack: Pack): Promise<SavedPack | null> {
-  const savedPackCount = await prisma.pack.count({ where: { ownerId: userId } });
-  if (!hasRoomForPack(savedPackCount)) return null;
+  if (!hasRoomForPack(await prisma.pack.count({ where: { ownerId: userId } }))) return null;
   const row = await prisma.pack.create({ data: { ...toPackRowData(pack.serialize()), ownerId: userId } });
   return { id: row.id, pack };
 }

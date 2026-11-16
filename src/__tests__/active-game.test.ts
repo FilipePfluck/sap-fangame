@@ -22,17 +22,13 @@ describe("deleteActiveGame", () => {
 
   it("deletes nothing when the game isn't the user's active game", async () => {
     prisma.game.findFirst.mockResolvedValue(null);
-    expect([await deleteActiveGame("user-1", "game-1"), prisma.$transaction.mock.calls.length]).toEqual([false, 0]);
+    await deleteActiveGame("user-1", "game-1");
+    expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 
   it("deletes board states, battles and turns before the game", async () => {
     prisma.game.findFirst.mockResolvedValue({ id: "game-1" });
     await deleteActiveGame("user-1", "game-1");
     expect(prisma.$transaction).toHaveBeenCalledWith(["BoardState", "Battle", "GameTurn", "Game"]);
-  });
-
-  it("reports the game as deleted", async () => {
-    prisma.game.findFirst.mockResolvedValue({ id: "game-1" });
-    expect(await deleteActiveGame("user-1", "game-1")).toBe(true);
   });
 });

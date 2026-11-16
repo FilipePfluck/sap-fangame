@@ -54,6 +54,7 @@ import {
 } from "@/lib/foods";
 import {
   FOODS_PER_TIER,
+  MAX_PACKS_PER_USER,
   MAX_SAME_TAG_PER_TIER,
   MAX_SUPER_TAGS_PER_PACK,
   MAX_TIER,
@@ -122,6 +123,11 @@ function isPackCode(value: unknown): value is PackCode {
     isNumberArray(code.Minions) &&
     isNumberArray(code.Spells)
   );
+}
+
+// Pack spec: a user can save at most MAX_PACKS_PER_USER packs.
+export function hasRoomForPack(savedPackCount: number): boolean {
+  return savedPackCount < MAX_PACKS_PER_USER;
 }
 
 // A custom pack's name can't be blank or reserved, in any case.

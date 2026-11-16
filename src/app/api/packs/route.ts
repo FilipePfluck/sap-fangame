@@ -18,8 +18,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await request.json().catch(() => null);
-  const packRequest = parsePackRequest(body);
+  const packRequest = parsePackRequest(await request.json().catch(() => null));
   if ("error" in packRequest) {
     return Response.json({ error: packRequest.error }, { status: 400 });
   }
