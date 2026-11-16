@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import PackMenu from "@/app/packs/PackMenu";
@@ -28,13 +28,24 @@ beforeEach(() => {
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
-  act(() => root.render(<PackMenu startGame={() => {}} savedPacks={[]} />));
+  renderMenu();
 });
 
 afterEach(() => {
   act(() => root.unmount());
   container.remove();
+  vi.clearAllMocks();
 });
+
+const abandonGame = vi.fn(async () => {});
+
+function renderMenu({ savedPacks = [], activeGameId = null }: { savedPacks?: readonly SavedPackJson[]; activeGameId?: string | null } = {}) {
+  act(() =>
+    root.render(
+      <PackMenu startGame={() => {}} abandonGame={abandonGame} activeGameId={activeGameId} savedPacks={savedPacks} />
+    )
+  );
+}
 
 function button(label: string): HTMLButtonElement {
   return container.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)!;
@@ -52,7 +63,11 @@ function hover(element: HTMLElement) {
 }
 
 function renderSavedPacks(savedPacks: readonly SavedPackJson[]) {
-  act(() => root.render(<PackMenu startGame={() => {}} savedPacks={savedPacks} />));
+  renderMenu({ savedPacks });
+}
+
+function buttonWithText(text: string): HTMLButtonElement {
+  return [...container.querySelectorAll("button")].find((element) => element.textContent === text)!;
 }
 
 function newPackCard(): HTMLElement {
@@ -183,6 +198,38 @@ describe("PackMenu", () => {
     it("disables ➕ at 5 saved packs", () => {
       renderSavedPacks([5, 6, 7, 8, 9].map((id) => ({ ...INCOMPLETE_PACK, id })));
       expect(newPackCard().getAttribute("aria-disabled")).toBe("true");
+    });
+  });
+
+  describe("game in progress", () => {
+    beforeEach(() => renderMenu({ activeGameId: "game-1" }));
+
+    it("links Continue to the game", () => {
+      const continueLink = [...container.querySelectorAll("a")].find((link) => link.textContent === "Continue")!;
+      expect(continueLink.getAttribute("href")).toBe("/arena/game-1");
+    });
+
+    it("hides Start game", () => {
+      expect(container.querySelector('form button[type="submit"]')).toBeNull();
+    });
+
+    it("asks before abandoning", () => {
+      click(buttonWithText("Abandon"));
+      expect(container.querySelector('[role="group"][aria-label="Abandon game"] span')!.textContent).toBe(
+        "Abandon your game? It will be deleted."
+      );
+    });
+
+    it("abandons the game once confirmed", async () => {
+      click(buttonWithText("Abandon"));
+      await act(async () => buttonWithText("Abandon game").click());
+      expect(abandonGame).toHaveBeenCalledWith("game-1");
+    });
+
+    it("keeps the game from Keep playing", () => {
+      click(buttonWithText("Abandon"));
+      click(buttonWithText("Keep playing"));
+      expect(abandonGame).not.toHaveBeenCalled();
     });
   });
 });

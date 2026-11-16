@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, useTransition, type ReactNode } from "react";
 import Image from "next/image";
 import { PET_BY_ID, Turtle } from "@/lib/pets";
 import Link from "next/link";
@@ -91,12 +91,58 @@ type SavedPackCard = Readonly<{
   pack: Pack;
 }>;
 
+const PRIMARY_BUTTON_CLASS =
+  "px-4 py-2 rounded bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-200 transition-colors disabled:opacity-60";
+
+type ActiveGameButtonsProps = {
+  activeGameId: string;
+  abandonGame: (gameId: string) => Promise<void>;
+};
+
+// Shown instead of Start game while the player has a game in progress.
+function ActiveGameButtons({ activeGameId, abandonGame }: ActiveGameButtonsProps) {
+  const [confirmingAbandon, setConfirmingAbandon] = useState(false);
+  const [isAbandoning, startAbandoning] = useTransition();
+
+  if (!confirmingAbandon) {
+    return (
+      <>
+        <Link href={`/arena/${activeGameId}`} className={PRIMARY_BUTTON_CLASS}>
+          Continue
+        </Link>
+        <button onClick={() => setConfirmingAbandon(true)} className={`px-4 py-2 ${BUTTON_CLASS}`}>
+          Abandon
+        </button>
+      </>
+    );
+  }
+
+  return (
+    <div role="group" aria-label="Abandon game" className="flex items-center gap-3">
+      <span>Abandon your game? It will be deleted.</span>
+      <button
+        onClick={() => startAbandoning(() => abandonGame(activeGameId))}
+        disabled={isAbandoning}
+        className={`px-4 py-2 text-red-600 disabled:opacity-60 ${BUTTON_CLASS}`}
+      >
+        Abandon game
+      </button>
+      <button onClick={() => setConfirmingAbandon(false)} disabled={isAbandoning} className={`px-4 py-2 ${BUTTON_CLASS}`}>
+        Keep playing
+      </button>
+    </div>
+  );
+}
+
 type PackMenuProps = {
   startGame: () => void | Promise<void>;
+  abandonGame: (gameId: string) => Promise<void>;
+  // The player's game in progress, if any.
+  activeGameId: string | null;
   savedPacks: readonly SavedPackJson[];
 };
 
-export default function PackMenu({ startGame, savedPacks }: PackMenuProps) {
+export default function PackMenu({ startGame, abandonGame, activeGameId, savedPacks }: PackMenuProps) {
   const [matchmakingMode, setMatchmakingMode] = useState(MatchmakingMode.SamePack);
   // Null while the Turtle pack is selected.
   const [selectedPackId, setSelectedPackId] = useState<number | null>(null);
@@ -122,18 +168,18 @@ export default function PackMenu({ startGame, savedPacks }: PackMenuProps) {
             {matchmakingButton.icon}
           </button>
         </Tooltip>
-        {/* Games use their selected pack from PR 3b. */}
-        <Tooltip text={selectedPackId === null ? undefined : "Custom packs can't start games yet."}>
-          <form action={startGame}>
-            <button
-              type="submit"
-              disabled={selectedPackId !== null}
-              className="px-4 py-2 rounded bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-200 transition-colors disabled:opacity-60"
-            >
-              Start game
-            </button>
-          </form>
-        </Tooltip>
+        {activeGameId ? (
+          <ActiveGameButtons activeGameId={activeGameId} abandonGame={abandonGame} />
+        ) : (
+          // Games use their selected pack from PR 3b.
+          <Tooltip text={selectedPackId === null ? undefined : "Custom packs can't start games yet."}>
+            <form action={startGame}>
+              <button type="submit" disabled={selectedPackId !== null} className={PRIMARY_BUTTON_CLASS}>
+                Start game
+              </button>
+            </form>
+          </Tooltip>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-4">
