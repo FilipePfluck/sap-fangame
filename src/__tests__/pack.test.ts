@@ -15,8 +15,8 @@ import {
 } from "@/lib/game/pack";
 import { RESERVED_PACK_NAMES } from "@/lib/game/rules";
 import { Tag, type SerializedPack } from "@/lib/types";
-import { ALL_FOODS, FOOD_REGISTRY, TURTLE_PACK_FOODS } from "@/lib/foods";
-import { ALL_PETS, PET_REGISTRY, TURTLE_PACK_PETS } from "@/lib/pets";
+import { ALL_FOODS, FOOD_REGISTRY, SHOP_FOOD_POOL, TURTLE_PACK_FOODS } from "@/lib/foods";
+import { ALL_PETS, PET_REGISTRY, SHOP_PET_POOL, TURTLE_PACK_PETS } from "@/lib/pets";
 
 // Turtle's 60 pets (IDs 1–60) and three foods per tier: Apple, Honey and
 // Asparagus (27), then Turtle's foods 3–17.
@@ -363,5 +363,25 @@ describe("hasRoomForPack", () => {
     { savedPackCount: 5, expected: false },
   ])("is $expected with $savedPackCount saved packs", ({ savedPackCount, expected }) => {
     expect(hasRoomForPack(savedPackCount)).toBe(expected);
+  });
+});
+
+describe("shop pools", () => {
+  it("rolls the pack's pets", () => {
+    const pack = Pack.fromSerialized({ ...VALID_PACK, pets: [1, 2], foods: [] });
+    expect(pack.shopPets().map((pet) => pet.name)).toEqual(["Ant", "Beaver"]);
+  });
+
+  it("rolls the pack's foods", () => {
+    const pack = Pack.fromSerialized({ ...VALID_PACK, pets: [], foods: [1, 2] });
+    expect(pack.shopFoods().map((food) => food.name)).toEqual(["Apple", "Honey"]);
+  });
+
+  it("rolls the same pets for Turtle as the Turtle shop pool", () => {
+    expect(new Set(TURTLE_PACK.shopPets())).toEqual(new Set(SHOP_PET_POOL));
+  });
+
+  it("rolls the same foods for Turtle as the Turtle shop pool", () => {
+    expect(new Set(TURTLE_PACK.shopFoods())).toEqual(new Set(SHOP_FOOD_POOL));
   });
 });

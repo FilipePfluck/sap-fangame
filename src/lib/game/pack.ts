@@ -226,6 +226,15 @@ export class Pack {
     return getTierSprites(this.data.tier);
   }
 
+  // What this pack's shops can roll, from every tier.
+  shopPets(): StaticPet[] {
+    return this.data.tier.flatMap(({ pets }) => pets.map((pet) => PET_BY_ID[pet.id]));
+  }
+
+  shopFoods(): FoodType[] {
+    return this.data.tier.flatMap(({ foods }) => foods);
+  }
+
   // The pack as an import/export code (see PackCode).
   toCode(): string {
     const { name, icon, pets, foods } = this.serialize();

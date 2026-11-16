@@ -58,6 +58,8 @@ model Game {
   playerId    String
   player      User       @relation(fields: [playerId], references: [id])
   status      GameStatus @default(ACTIVE)
+  // The pack this game rolls, as a SerializedPack. Null for games from before packs, which roll Turtle.
+  pack        Json?
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
