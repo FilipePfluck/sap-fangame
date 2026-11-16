@@ -42,3 +42,26 @@ export async function loadUserPack(userId: string, packId: number): Promise<Save
   const row = await prisma.pack.findFirst({ where: { id: packId, ownerId: userId } });
   return row ? toSavedPack(row) : null;
 }
+
+// Null when the user already has MAX_PACKS_PER_USER packs.
+export async function createUserPack(userId: string, pack: Pack): Promise<SavedPack | null> {
+  const savedPackCount = await prisma.pack.count({ where: { ownerId: userId } });
+  if (!hasRoomForPack(savedPackCount)) return null;
+  const row = await prisma.pack.create({ data: { ...toPackRowData(pack.serialize()), ownerId: userId } });
+  return { id: row.id, pack };
+}
+
+// False when the pack doesn't exist or belongs to someone else.
+export async function updateUserPack(userId: string, packId: number, pack: Pack): Promise<boolean> {
+  const { count } = await prisma.pack.updateMany({
+    where: { id: packId, ownerId: userId },
+    data: toPackRowData(pack.serialize()),
+  });
+  return count > 0;
+}
+
+// False when the pack doesn't exist or belongs to someone else.
+export async function deleteUserPack(userId: string, packId: number): Promise<boolean> {
+  const { count } = await prisma.pack.deleteMany({ where: { id: packId, ownerId: userId } });
+  return count > 0;
+}
