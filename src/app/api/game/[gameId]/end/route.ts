@@ -5,8 +5,9 @@ import { simulateBattle } from "@/lib/game/battle";
 import { generateShop, getUnlockedTiers, pickFrozenItems, clearDiscount } from "@/lib/game/shop";
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
 import { fireBoardShopAbility } from "@/lib/game/shop-ability";
-import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
-import { SHOP_FOOD_POOL } from "@/lib/foods";
+import { PET_REGISTRY } from "@/lib/pets";
+import { getGamePack, type Pack } from "@/lib/game/pack";
+import { getPackKind, opponentPackKinds, type MatchmakingMode } from "@/lib/game/matchmaking";
 import { pickRandom } from "@/lib/utils/random";
 import { createPet } from "@/lib/game/pet";
 import { TURN_GOLD, TROPHIES_TO_WIN } from "@/lib/game/rules";
@@ -15,10 +16,11 @@ import { PetInstance, Trigger } from "@/lib/types";
 
 const EndTurnSchema = z.object(FrozenPositionsShape);
 
-function buildGhostTeam(turn: number): PetInstance[] {
+// A random team from the player's own pack, for when no real opponent is found.
+function buildGhostTeam(turn: number, pack: Pack): PetInstance[] {
   const count = turn >= 2 ? 5 : 3;
   const unlockedTiers = getUnlockedTiers(turn);
-  const pool = SHOP_PET_POOL.filter((p) => unlockedTiers.includes(p.tier));
+  const pool = pack.shopPets().filter((p) => unlockedTiers.includes(p.tier));
 
   if (pool.length === 0) return [];
 
@@ -59,6 +61,8 @@ export async function POST(
   }
 
   const { lives, trophies, turnNumber } = state.turn;
+  const pack = getGamePack(game.pack);
+  const packKind = getPackKind(pack);
   const emptyShop = { shopPets: [], shopFoods: [] };
 
   // End-turn fires before this turn's battle (reacting to the *previous*
@@ -81,6 +85,7 @@ export async function POST(
       lives,
       trophies,
       team: toPrismaJson(preBattleBoard),
+      packKind,
     },
   });
 
@@ -89,6 +94,7 @@ export async function POST(
   >`
     SELECT "playerName", "team" FROM "SubmittedTeam"
     WHERE "playerId" != ${session.user.id} AND "turnNumber" = ${turnNumber}
+      AND "packKind"::text = ANY(${opponentPackKinds(packKind, game.matchmakingMode as MatchmakingMode)})
     ORDER BY
       CASE WHEN "lives" = ${lives} AND "trophies" = ${trophies} THEN 0 ELSE 1 END,
       "createdAt" ASC
@@ -97,7 +103,7 @@ export async function POST(
 
   const opponentTeam = matchedSubmission
     ? (matchedSubmission.team as PetInstance[])
-    : buildGhostTeam(turnNumber);
+    : buildGhostTeam(turnNumber, pack);
   const opponentName = matchedSubmission?.playerName ?? null;
 
   const { result, steps } = simulateBattle(preBattleBoard, opponentTeam, PET_REGISTRY);
@@ -108,8 +114,8 @@ export async function POST(
 
   const generatedShop = generateShop({
     turn: turnNumber + 1,
-    pack: SHOP_PET_POOL,
-    foodTypes: SHOP_FOOD_POOL,
+    pack: pack.shopPets(),
+    foodTypes: pack.shopFoods(),
     frozenPets: frozenPets.map(clearDiscount),
     frozenFoods: frozenFoods.map(clearDiscount),
   });

@@ -3,7 +3,7 @@ import { applyFoodEffect } from "@/lib/game/food";
 import { fireBoardShopAbility } from "@/lib/game/shop-ability";
 import { getFoodCost } from "@/lib/game/costs";
 import { PET_REGISTRY } from "@/lib/pets";
-import { Cupcake } from "@/lib/foods/cupcake";
+import { Cupcake } from "@/lib/foods/BaseGame/turtle/tier 2/cupcake";
 import { ApiBoard, Trigger } from "@/lib/types";
 import { EMPTY_SHOP, pet } from "@/__tests__/helpers";
 

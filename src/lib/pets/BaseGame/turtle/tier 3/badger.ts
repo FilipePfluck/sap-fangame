@@ -4,11 +4,14 @@ import { BattleActions } from "@/lib/game/ability-actions";
 
 export const Badger: Readonly<StaticPet> = {
   name: "Badger",
+  id: 21,
   sprite: "/sap/badger.webp",
   tier: 3,
   baseAttack: 6,
   baseHealth: 3,
   isToken: false,
+  tags: [],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.faint,
     fn: (ctx) => {

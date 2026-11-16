@@ -4,8 +4,7 @@ import { getLastBoardState } from "@/lib/game/board";
 import { ROLL_COST } from "@/lib/game/costs";
 import { generateShop, pickFrozenItems } from "@/lib/game/shop";
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
-import { SHOP_PET_POOL } from "@/lib/pets";
-import { SHOP_FOOD_POOL } from "@/lib/foods";
+import { getGamePack } from "@/lib/game/pack";
 import { z } from "zod";
 
 const RollSchema = z.object(FrozenPositionsShape);
@@ -45,10 +44,11 @@ export async function POST(
 
   const { frozenPets, frozenFoods } = pickFrozenItems(state.shop, frozenPetPositions, frozenFoodPositions);
 
+  const pack = getGamePack(game.pack);
   const newShop = generateShop({
     turn: state.turn.turnNumber,
-    pack: SHOP_PET_POOL,
-    foodTypes: SHOP_FOOD_POOL,
+    pack: pack.shopPets(),
+    foodTypes: pack.shopFoods(),
     frozenPets,
     frozenFoods,
   });

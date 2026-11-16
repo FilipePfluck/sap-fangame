@@ -2,8 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { STARTING_LIVES, TURN_GOLD } from "@/lib/game/rules";
 import { generateShop } from "@/lib/game/shop";
-import { ALL_PETS } from "@/lib/pets";
-import { TURTLE_PACK_FOODS } from "@/lib/foods";
+import { TURTLE_PACK } from "@/lib/game/pack";
 
 export async function POST() {
   const session = await auth();
@@ -13,10 +12,8 @@ export async function POST() {
 
   const shop = generateShop({
     turn: 1,
-    // TODO - Use a dedicated Pack once players can choose one; ALL_PETS keeps
-    // every pet testable until then.
-    pack: ALL_PETS,
-    foodTypes: TURTLE_PACK_FOODS,
+    pack: TURTLE_PACK.shopPets(),
+    foodTypes: TURTLE_PACK.shopFoods(),
   });
 
   const board = [null, null, null, null, null];

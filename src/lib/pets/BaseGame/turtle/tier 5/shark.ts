@@ -1,15 +1,18 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap } from "@/lib/pets/ability";
 
 const STATS_PER_LEVEL = 2;
 
 export const Shark: Readonly<StaticPet> = {
   name: "Shark",
+  id: 49,
   sprite: "/sap/Shark.png",
   tier: 5,
   baseAttack: 2,
   baseHealth: 2,
   isToken: false,
+  tags: [Tag.Summon],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.friend_faints,
     fn: (ctx) => {

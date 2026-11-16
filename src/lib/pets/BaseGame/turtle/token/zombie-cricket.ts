@@ -2,11 +2,14 @@ import type { StaticPet } from "@/lib/types";
 
 export const ZombieCricket: Readonly<StaticPet> = {
   name: "Zombie Cricket",
+  id: 65,
   sprite: "/sap/zombie-cricket.webp",
   tier: 1,
   baseAttack: 1,
   baseHealth: 1,
   isToken: true,
+  tags: [],
+  superTags: 0,
   abilities: new Map(),
   description: "No ability.",
 };

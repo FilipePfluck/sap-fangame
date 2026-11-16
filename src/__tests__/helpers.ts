@@ -28,11 +28,14 @@ export function pet(petData: Partial<PetInstance> = {}): PetInstance {
 export function staticPet(name: string, ability: Ability, tier = 1): StaticPet {
   return {
     name,
+    id: 0,
     sprite: "/sap/sloth.webp",
     tier,
     baseAttack: 1,
     baseHealth: 1,
     isToken: false,
+    tags: [],
+    superTags: 0,
     abilities: new Map([[ability.trigger, ability]]),
     description: "",
   };

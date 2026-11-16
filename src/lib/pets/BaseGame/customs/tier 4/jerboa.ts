@@ -1,15 +1,18 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { createAbilityMap, tryIncrementTriggerCount } from "@/lib/pets/ability";
 
 const TRIGGER_LIMIT = 1;
 
 export const Jerboa: Readonly<StaticPet> = {
   name: "Jerboa",
+  id: 105,
   sprite: "/sap/Jerboa.png",
   tier: 4,
   baseAttack: 1,
   baseHealth: 3,
   isToken: false,
+  tags: [Tag.Buff],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.friend_ate_food,
     fn: (ctx) => {

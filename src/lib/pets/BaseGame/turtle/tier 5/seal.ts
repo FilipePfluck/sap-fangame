@@ -1,14 +1,17 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { pickN } from "@/lib/utils/random";
 import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Seal: Readonly<StaticPet> = {
   name: "Seal",
+  id: 48,
   sprite: "/sap/Seal.webp",
   tier: 5,
   baseAttack: 3,
   baseHealth: 8,
   isToken: false,
+  tags: [Tag.Food],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.friend_ate_food,
     fn: (ctx) => {

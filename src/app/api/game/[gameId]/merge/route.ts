@@ -4,7 +4,8 @@ import { getLastBoardState } from "@/lib/game/board";
 import { mergePets, mergeError, levelUpRewardEarned } from "@/lib/game/merge";
 import { applyFrozenFlags, getRewardTier } from "@/lib/game/shop";
 import { FrozenPositionsShape } from "@/lib/game/frozen-shape";
-import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
+import { PET_REGISTRY } from "@/lib/pets";
+import { getGamePack } from "@/lib/game/pack";
 import { resolveLevelUp } from "@/lib/game/shop-ability";
 import { z } from "zod";
 import { ApiBoard, ShopState } from "@/lib/types";
@@ -81,7 +82,7 @@ export async function POST(
       preMergeLevel,
       {
         rewardTier: getRewardTier(state.turn.turnNumber),
-        rewardPool: SHOP_PET_POOL,
+        rewardPool: getGamePack(game.pack).shopPets(),
         petRegistry: PET_REGISTRY,
         earnsReward: levelUpRewardEarned(petFrom, petTo),
       }

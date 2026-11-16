@@ -4,11 +4,14 @@ import { createAbilityMap } from "@/lib/pets/ability";
 
 export const Mammoth: Readonly<StaticPet> = {
   name: "Mammoth",
+  id: 57,
   sprite: "/sap/Mammoth.png",
   tier: 6,
   baseAttack: 4,
   baseHealth: 12,
   isToken: false,
+  tags: [],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.faint,
     fn: (ctx) => {

@@ -1,3 +1,6 @@
+export const PRIMARY_BUTTON_CLASS =
+  "px-4 py-2 rounded bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-200 transition-colors disabled:opacity-60";
+
 export const BUTTON_CLASS =
   "rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors";
 

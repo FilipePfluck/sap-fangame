@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { MelonPerk } from "@/lib/perks/melon";
 import {
   createAbilityMap,
@@ -11,11 +11,14 @@ const TRIGGER_LIMIT = 1;
 // times per turn"; this one scales the attack with level instead.
 export const Ox: Readonly<StaticPet> = {
   name: "Ox",
+  id: 28,
   sprite: "/sap/Ox.webp",
   tier: 3,
   baseAttack: 1,
   baseHealth: 3,
   isToken: false,
+  tags: [Tag.Perk],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.friend_ahead_faints,
     fn: (ctx) => {

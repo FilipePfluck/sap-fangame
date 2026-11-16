@@ -1,4 +1,4 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { pickRandom } from "@/lib/utils/random";
 import { createAbilityMap } from "@/lib/pets/ability";
 import { getMinimumXpFor } from "@/lib/game/board";
@@ -8,11 +8,14 @@ const SUMMONED_TIER = 3;
 
 export const Spider: Readonly<StaticPet> = {
   name: "Spider",
+  id: 18,
   sprite: "/sap/Spider.webp",
   tier: 2,
   baseAttack: 2,
   baseHealth: 2,
   isToken: false,
+  tags: [Tag.Summon],
+  superTags: 2,
   abilities: createAbilityMap({
     trigger: Trigger.faint,
     fn: (ctx) => {

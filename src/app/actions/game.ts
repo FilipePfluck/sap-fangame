@@ -1,27 +1,32 @@
 "use server";
 
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
+import { prisma, toPrismaJson } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { STARTING_LIVES, TURN_GOLD } from "@/lib/game/rules";
 import { generateShop } from "@/lib/game/shop";
-import { SHOP_PET_POOL } from "@/lib/pets";
-import { SHOP_FOOD_POOL } from "@/lib/foods";
+import { loadStartingPack } from "@/lib/game/pack-store";
+import { isMatchmakingMode, type MatchmakingMode } from "@/lib/game/matchmaking";
+import { deleteActiveGame, findActiveGameId } from "@/lib/game/active-game";
 
-export async function startGame() {
+// `packId` is the saved pack to play, or null for Turtle.
+export async function startGame(packId: number | null, matchmakingMode: MatchmakingMode) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const existing = await prisma.game.findFirst({
-    where: { playerId: session.user.id, status: "ACTIVE" },
-    orderBy: { createdAt: "desc" },
-  });
-  if (existing) redirect(`/arena/${existing.id}`);
+  const activeGameId = await findActiveGameId(session.user.id);
+  if (activeGameId) redirect(`/arena/${activeGameId}`);
 
-  const shop = generateShop({ turn: 1, pack: SHOP_PET_POOL, foodTypes: SHOP_FOOD_POOL });
+  const pack = await loadStartingPack(session.user.id, packId);
+  if (!pack || !isMatchmakingMode(matchmakingMode)) redirect("/packs");
+
+  const shop = generateShop({ turn: 1, pack: pack.shopPets(), foodTypes: pack.shopFoods() });
   const game = await prisma.game.create({
     data: {
       playerId: session.user.id,
+      pack: toPrismaJson(pack.serialize()),
+      matchmakingMode,
       turns: { create: { turnNumber: 1, lives: STARTING_LIVES, trophies: 0 } },
     },
     include: { turns: true },
@@ -36,4 +41,12 @@ export async function startGame() {
     },
   });
   redirect(`/arena/${game.id}`);
+}
+
+export async function abandonGame(gameId: string) {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
+  await deleteActiveGame(session.user.id, gameId);
+  revalidatePath("/packs");
 }

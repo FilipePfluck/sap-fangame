@@ -1,15 +1,18 @@
-import { StaticPet, Trigger } from "@/lib/types";
+import { StaticPet, Trigger, Tag } from "@/lib/types";
 import { livingPets } from "@/lib/utils/combat";
 import { createAbilityMap } from "@/lib/pets/ability";
 import { BattleActions } from "@/lib/game/ability-actions";
 
 export const Dolphin: Readonly<StaticPet> = {
   name: "Dolphin",
+  id: 25,
   sprite: "/sap/dolphin.webp",
   tier: 3,
   baseAttack: 4,
   baseHealth: 3,
   isToken: false,
+  tags: [Tag.Disruption],
+  superTags: 0,
   abilities: createAbilityMap({
     trigger: Trigger.start_of_battle,
     fn: (ctx) => {

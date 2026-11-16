@@ -25,6 +25,7 @@ export default async function ArenaPage({
     <GameClient
       key={`${gameId}-${state.turn.turnNumber}`}
       gameId={gameId}
+      gamePack={game.pack}
       initialBoard={state.board}
       initialShop={state.shop}
       initialGold={state.goldRemaining}
