@@ -2,7 +2,8 @@ import { auth } from "@/auth";
 import { prisma, toPrismaJson } from "@/lib/prisma";
 import { getLastBoardState } from "@/lib/game/board";
 import { FOOD_REGISTRY } from "@/lib/foods";
-import { PET_REGISTRY, SHOP_PET_POOL } from "@/lib/pets";
+import { PET_REGISTRY } from "@/lib/pets";
+import { getGamePack } from "@/lib/game/pack-store";
 import { applyFoodEffect, feedError } from "@/lib/game/food";
 import { applyFrozenFlags, getRewardTier } from "@/lib/game/shop";
 import { resolveExperienceLevelUps } from "@/lib/game/shop-ability";
@@ -84,7 +85,7 @@ export async function POST(
     { shopPets: shopNow.shopPets, shopFoods: newShopFoods },
     {
       rewardTier: getRewardTier(state.turn.turnNumber),
-      rewardPool: SHOP_PET_POOL,
+      rewardPool: getGamePack(game.pack).shopPets(),
       petRegistry: PET_REGISTRY,
     }
   );
