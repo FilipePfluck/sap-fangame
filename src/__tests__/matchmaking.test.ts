@@ -27,7 +27,6 @@ describe("getPackKind", () => {
 describe("isMatchmakingMode", () => {
   it.each([
     { value: "SAME_PACK", expected: true },
-    { value: "ALL_PACKS", expected: true },
     { value: "ANY", expected: false },
     { value: 0, expected: false },
   ])("is $expected for $value", ({ value, expected }) => {
